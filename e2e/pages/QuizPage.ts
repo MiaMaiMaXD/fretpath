@@ -15,6 +15,15 @@ export class QuizPage {
     }
   }
 
+  /** texts[i] is the visible choice text to click for question "ข้อ i+1"; null skips the question. */
+  async answerByText(texts: (string | null)[]) {
+    for (const [i, text] of texts.entries()) {
+      if (text === null) continue;
+      const group = this.page.getByRole('radiogroup', { name: `ข้อ ${i + 1}`, exact: true });
+      await group.getByRole('radio', { name: text, exact: true }).check();
+    }
+  }
+
   async submit() {
     await this.page.getByRole('button', { name: 'ส่งคำตอบ' }).click();
   }

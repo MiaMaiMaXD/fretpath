@@ -70,3 +70,20 @@ export function bangkokDate(offsetDays: number): string {
   const shifted = new Date(Date.UTC(y, m - 1, d + offsetDays));
   return shifted.toISOString().slice(0, 10);
 }
+
+/** Map each answer's choice_id to its visible choice text (page order = answer order). */
+export async function choiceTexts(db: Db, answers: QuizAnswer[]): Promise<string[]> {
+  const res = await db
+    .from('quiz_choices')
+    .select('id, text')
+    .in(
+      'id',
+      answers.map((a) => a.choice_id),
+    );
+  if (res.error) throw new Error(`choice text lookup failed: ${res.error.message}`);
+  return answers.map((a) => {
+    const c = res.data.find((x) => x.id === a.choice_id);
+    if (!c) throw new Error(`choice ${a.choice_id} not found`);
+    return c.text;
+  });
+}
