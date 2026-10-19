@@ -21,8 +21,12 @@ test('TC-AUTH-01 signup, confirm email, land on dashboard with lesson 1 unlocked
 
     // The /path page arrives in Task 5: assert the unlock through the DB for now.
     const admin = adminClient();
-    const { data: users } = await admin.auth.admin.listUsers({ perPage: 200 });
-    const user = users.users.find((u) => u.email === email);
+    let user: { id: string } | undefined;
+    for (let pg = 1; !user; pg++) {
+      const { data } = await admin.auth.admin.listUsers({ page: pg, perPage: 200 });
+      user = data.users.find((u) => u.email === email);
+      if (data.users.length < 200) break;
+    }
     expect(user).toBeTruthy();
     const { data: lesson } = await admin.from('lessons').select('id').eq('slug', 'guitar-anatomy-tuning').single();
     const { data: progress } = await admin
@@ -40,11 +44,13 @@ test('TC-AUTH-01 signup, confirm email, land on dashboard with lesson 1 unlocked
 test('TC-AUTH-02 password shorter than 8 shows Thai error under field @regression', async ({ page }) => {
   const signup = new SignupPage(page);
   await signup.goto();
-  await signup.signup(newEmail(), '1234567');
+  const email = newEmail();
+  await signup.signup(email, '1234567');
   await expect(page.getByText('รหัสผ่านต้องยาวอย่างน้อย 8 ตัวอักษร')).toBeVisible();
   await expect(page.getByLabel('รหัสผ่าน', { exact: true })).toHaveAccessibleDescription(
     'รหัสผ่านต้องยาวอย่างน้อย 8 ตัวอักษร',
   );
+  await expect(page.getByLabel('อีเมล')).toHaveValue(email);
 });
 
 test('TC-AUTH-03 unconfirmed account cannot log in @regression', async ({ page }) => {
@@ -70,6 +76,7 @@ test('TC-AUTH-04 wrong password shows generic message @smoke @regression', async
   await login.goto();
   await login.login(member.email, 'wrongpass1');
   await expect(page.getByText('อีเมลหรือรหัสผ่านไม่ถูกต้อง')).toBeVisible();
+  await expect(page.getByLabel('อีเมล')).toHaveValue(member.email);
 
   await login.goto();
   await login.login(newEmail(), 'wrongpass1');

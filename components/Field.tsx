@@ -4,9 +4,10 @@ type Props = {
   type?: string;
   autoComplete?: string;
   error?: string;
+  defaultValue?: string;
 };
 
-export function Field({ name, label, type = 'text', autoComplete, error }: Props) {
+export function Field({ name, label, type = 'text', autoComplete, error, defaultValue }: Props) {
   const errorId = `${name}-error`;
   return (
     <div className="flex flex-col gap-1">
@@ -14,7 +15,10 @@ export function Field({ name, label, type = 'text', autoComplete, error }: Props
         {label}
       </label>
       <input
+        // key remounts the input so a returned value survives the React 19 form reset.
+        key={defaultValue ?? ''}
         id={name}
+        defaultValue={defaultValue}
         name={name}
         type={type}
         autoComplete={autoComplete}

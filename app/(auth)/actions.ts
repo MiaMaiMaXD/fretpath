@@ -17,7 +17,7 @@ export async function signUp(_prev: ActionState, formData: FormData): Promise<Ac
   const email = str(formData, 'email').trim();
   const password = str(formData, 'password');
   const fieldErrors = validateCredentials({ email, password });
-  if (Object.keys(fieldErrors).length > 0) return { ok: false, fieldErrors };
+  if (Object.keys(fieldErrors).length > 0) return { ok: false, fieldErrors, values: { email } };
 
   // Created inside the action so the PKCE code-verifier cookie is set on this response.
   const supabase = await createClient();
@@ -26,7 +26,7 @@ export async function signUp(_prev: ActionState, formData: FormData): Promise<Ac
     password,
     options: { emailRedirectTo: `${siteUrl()}/auth/callback?next=/dashboard` },
   });
-  if (error) return { ok: false, message: thaiError(errorCodeFrom(error)) };
+  if (error) return { ok: false, message: thaiError(errorCodeFrom(error)), values: { email } };
   return { ok: true, message: 'เราส่งลิงก์ยืนยันไปที่อีเมลของคุณแล้ว' };
 }
 
@@ -34,14 +34,14 @@ export async function signIn(_prev: ActionState, formData: FormData): Promise<Ac
   const email = str(formData, 'email').trim();
   const password = str(formData, 'password');
   const next = safeNextPath(str(formData, 'next'));
-  if (!email || !password) return { ok: false, message: thaiError('INVALID_CREDENTIALS') };
+  if (!email || !password) return { ok: false, message: thaiError('INVALID_CREDENTIALS'), values: { email } };
 
   const supabase = await createClient();
   const { error } = await supabase.auth.signInWithPassword({ email, password });
   if (error) {
     const code = errorCodeFrom(error);
     // Unknown user and wrong password must look identical.
-    return { ok: false, message: thaiError(code === 'UNKNOWN' ? 'INVALID_CREDENTIALS' : code) };
+    return { ok: false, message: thaiError(code === 'UNKNOWN' ? 'INVALID_CREDENTIALS' : code), values: { email } };
   }
   redirect(next);
 }
@@ -55,7 +55,7 @@ export async function signOut(): Promise<void> {
 export async function requestPasswordReset(_prev: ActionState, formData: FormData): Promise<ActionState> {
   const email = str(formData, 'email').trim();
   const fieldErrors = validateCredentials({ email, password: '12345678' });
-  if (fieldErrors.email) return { ok: false, fieldErrors: { email: fieldErrors.email } };
+  if (fieldErrors.email) return { ok: false, fieldErrors: { email: fieldErrors.email }, values: { email } };
 
   const supabase = await createClient();
   // Errors are deliberately ignored so the response never reveals whether the account exists.

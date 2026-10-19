@@ -14,7 +14,7 @@ export function LoginForm({ next }: { next: string }) {
   return (
     <form action={action} className="flex flex-col gap-4">
       <input type="hidden" name="next" value={next} />
-      <Field name="email" label="อีเมล" type="email" autoComplete="email" error={state.fieldErrors?.email} />
+      <Field name="email" label="อีเมล" type="email" autoComplete="email" error={state.fieldErrors?.email} defaultValue={state.values?.email} />
       <Field
         name="password"
         label="รหัสผ่าน"
@@ -32,7 +32,7 @@ export function SignupForm() {
   const [state, action] = useActionState(signUp, initial);
   return (
     <form action={action} className="flex flex-col gap-4">
-      <Field name="email" label="อีเมล" type="email" autoComplete="email" error={state.fieldErrors?.email} />
+      <Field name="email" label="อีเมล" type="email" autoComplete="email" error={state.fieldErrors?.email} defaultValue={state.values?.email} />
       <Field
         name="password"
         label="รหัสผ่าน"
@@ -50,7 +50,7 @@ export function ForgotForm() {
   const [state, action] = useActionState(requestPasswordReset, initial);
   return (
     <form action={action} className="flex flex-col gap-4">
-      <Field name="email" label="อีเมล" type="email" autoComplete="email" error={state.fieldErrors?.email} />
+      <Field name="email" label="อีเมล" type="email" autoComplete="email" error={state.fieldErrors?.email} defaultValue={state.values?.email} />
       <FormMessage state={state} />
       <SubmitButton>ส่งลิงก์ตั้งรหัสผ่านใหม่</SubmitButton>
     </form>
