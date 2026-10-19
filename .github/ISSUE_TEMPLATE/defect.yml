@@ -1,0 +1,87 @@
+name: รายงานข้อบกพร่อง (Defect Report)
+description: แจ้งข้อบกพร่องที่พบระหว่างการทดสอบ FretPath
+title: "[BUG] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        กรุณากรอกให้ครบเพื่อให้ทำซ้ำและแก้ไขได้ ดูเกณฑ์ severity/priority ใน `docs/qa/test-plan.md`
+  - type: input
+    id: summary
+    attributes:
+      label: สรุปข้อบกพร่อง
+      description: อธิบายสั้น ๆ ในหนึ่งประโยค
+      placeholder: "เช่น สอบได้ 60% ที่ pass_score 60 แล้วบทถัดไปไม่ปลดล็อก"
+    validations:
+      required: true
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Severity (ผลกระทบต่อระบบ)
+      description: "Critical = ระบบใช้ไม่ได้/ข้อมูลรั่ว/ความปลอดภัยถูกข้าม; High = ฟังก์ชันหลักใช้ไม่ได้และไม่มีทางเลี่ยง; Medium = ฟังก์ชันผิดแต่มีทางเลี่ยง; Low = เล็กน้อย/ด้านการแสดงผล"
+      options:
+        - Critical
+        - High
+        - Medium
+        - Low
+    validations:
+      required: true
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority (ลำดับการแก้)
+      description: "P1 = แก้ทันที; P2 = แก้ในรอบนี้; P3 = แก้เมื่อมีเวลา"
+      options:
+        - P1
+        - P2
+        - P3
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: สภาพแวดล้อม
+      description: สภาพแวดล้อม (Local / CI / Preview / Production), เบราว์เซอร์และเวอร์ชัน, อุปกรณ์/ขนาดจอ, commit หรือ Preview URL
+      placeholder: |
+        สภาพแวดล้อม: Local
+        เบราว์เซอร์: Chrome 130, Windows 11
+        Commit: abc1234
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: ขั้นตอนทำซ้ำ
+      placeholder: |
+        1. เข้าสู่ระบบด้วยบัญชีผู้เรียน
+        2. ...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: ผลที่คาดหวัง
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: ผลจริง
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: หลักฐาน
+      description: ภาพหน้าจอ วิดีโอ log หรือลิงก์ Playwright trace/report (ลากไฟล์มาวางได้)
+    validations:
+      required: false
+  - type: input
+    id: test-case
+    attributes:
+      label: รหัส TC ที่เกี่ยวข้อง
+      description: รหัสจาก `docs/qa/test-cases.md` (ถ้าพบนอกเหนือ TC ให้เว้นว่างไว้ และพิจารณาเพิ่ม TC ใหม่)
+      placeholder: "เช่น TC-QZ-02"
+    validations:
+      required: false
