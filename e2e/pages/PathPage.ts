@@ -22,6 +22,7 @@ export class PathPage {
   }
 
   notice(): Locator {
-    return this.page.getByRole('alert');
+    // Next.js injects its own role=alert route announcer; exclude it.
+    return this.page.getByRole('alert').and(this.page.locator(':not(#__next-route-announcer__)'));
   }
 }
