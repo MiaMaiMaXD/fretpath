@@ -11,7 +11,10 @@ test.beforeAll(async () => {
   l2 = await lessonIdBySlug(db, 'first-chords');
 });
 
-test('TC-SEC-01 member cannot read answer keys @security', async ({ memberDb }) => {
+test('TC-SEC-01 member cannot read answer keys @security', async ({ memberDb, adminDb }) => {
+  // Positive control: the table has rows, admin can read them.
+  const control = await adminDb.from('quiz_answer_keys').select('*');
+  expect(control.data?.length).toBeGreaterThan(0);
   const { data } = await memberDb.from('quiz_answer_keys').select('*');
   expect(data).toEqual([]);
 });
@@ -32,7 +35,9 @@ test('TC-SEC-02 member cannot write progress or attempts directly @security', as
 
 test('TC-SEC-03 member cannot promote self to admin @security', async ({ memberDb, member }) => {
   const r = await memberDb.from('profiles').update({ role: 'admin' }).eq('id', member.id);
-  expect(r.error).not.toBeNull();
+  expect(r.error?.code).toBe('42501');
+  const after = await adminClient().from('profiles').select('role').eq('id', member.id).single();
+  expect(after.data?.role).toBe('member');
   const rpc = await memberDb.rpc('set_user_role', { p_user: member.id, p_role: 'admin' });
   expect(rpc.error?.message).toContain('NOT_ADMIN');
 });
@@ -55,7 +60,10 @@ test('TC-SEC-04 member cannot read another member practice logs @security', asyn
   expect(data).toEqual([]);
 });
 
-test('TC-SEC-05 anonymous cannot read lessons @security', async ({ anonDb }) => {
+test('TC-SEC-05 anonymous cannot read lessons @security', async ({ anonDb, memberDb }) => {
+  // Positive control: an authenticated member sees lessons, so [] is not an empty table.
+  const control = await memberDb.from('lessons').select('*');
+  expect(control.data?.length).toBeGreaterThan(0);
   expect((await anonDb.from('lessons').select('*')).data).toEqual([]);
 });
 
