@@ -53,8 +53,8 @@ export function Field({
       </label>
       {as === 'textarea' ? (
         <CountedTextarea
-          // key remounts so a returned value survives the React 19 form reset.
-          key={`${resetKey}:${defaultValue ?? ''}`}
+          // key remounts (re-syncs the counter) after a successful save.
+          key={resetKey}
           id={id}
           name={name}
           defaultValue={defaultValue}
@@ -64,7 +64,6 @@ export function Field({
         />
       ) : as === 'select' ? (
         <select
-          key={defaultValue ?? ''}
           id={id}
           name={name}
           defaultValue={defaultValue ?? ''}
@@ -82,8 +81,6 @@ export function Field({
         </select>
       ) : (
         <input
-          // key remounts the input so a returned value survives the React 19 form reset.
-          key={defaultValue ?? ''}
           id={id}
           defaultValue={defaultValue}
           name={name}

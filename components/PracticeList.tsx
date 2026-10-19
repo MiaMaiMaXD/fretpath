@@ -5,6 +5,7 @@ import { deletePracticeLog, updatePracticeLog } from '@/app/(learner)/practice/a
 import { FormMessage } from '@/components/FormMessage';
 import { PracticeFields, type LessonOption } from '@/components/PracticeFields';
 import { SubmitButton } from '@/components/SubmitButton';
+import { keepValuesSubmit } from '@/components/useKeepValuesSubmit';
 import type { ActionState } from '@/lib/action-state';
 import type { PracticeLog } from '@/lib/data/practice';
 import { activityLabel } from '@/lib/practice-activities';
@@ -15,14 +16,14 @@ const BTN = 'rounded border border-neutral-400 px-3 py-1 disabled:opacity-50';
 
 function EditRow({ log, today, lessons, onDone }: Shared & { log: PracticeLog; onDone: () => void }) {
   const initial: ActionState = { ok: false };
-  const [state, action] = useActionState(async (prev: ActionState, fd: FormData) => {
+  const [state, action, pending] = useActionState(async (prev: ActionState, fd: FormData) => {
     const r = await updatePracticeLog(log.id, prev, fd);
     if (r.ok) onDone();
     return r;
   }, initial);
   const v = state.values ?? {};
   return (
-    <form action={action} className="flex flex-col gap-3">
+    <form onSubmit={keepValuesSubmit(action)} className="flex flex-col gap-3">
       <PracticeFields
         idPrefix={`edit-${log.id}-`}
         today={today}
@@ -38,7 +39,7 @@ function EditRow({ log, today, lessons, onDone }: Shared & { log: PracticeLog; o
       />
       <FormMessage state={state} />
       <div className="flex gap-2">
-        <SubmitButton>บันทึก</SubmitButton>
+        <SubmitButton pending={pending}>บันทึก</SubmitButton>
         <button type="button" className={BTN} onClick={onDone}>
           ยกเลิก
         </button>
@@ -51,12 +52,16 @@ function DeleteDialog({ id, onClose }: { id: string; onClose: () => void }) {
   const [pending, start] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const dialogRef = useRef<HTMLDialogElement>(null);
+  const cancelRef = useRef<HTMLButtonElement>(null);
   const titleId = `delete-title-${id}`;
 
   // Native modal: focus trap, Escape and inert background come from showModal().
   useEffect(() => {
     const d = dialogRef.current;
-    if (d && !d.open) d.showModal();
+    if (d && !d.open) {
+      d.showModal();
+      cancelRef.current?.focus();
+    }
   }, []);
 
   return (
@@ -64,6 +69,9 @@ function DeleteDialog({ id, onClose }: { id: string; onClose: () => void }) {
       ref={dialogRef}
       aria-labelledby={titleId}
       onClose={onClose}
+      onCancel={(e) => {
+        if (pending) e.preventDefault();
+      }}
       className="m-auto w-full max-w-sm rounded bg-white p-4 text-neutral-900 backdrop:bg-black/50 dark:bg-neutral-900 dark:text-neutral-100"
     >
       <div className="flex flex-col gap-3">
@@ -90,7 +98,7 @@ function DeleteDialog({ id, onClose }: { id: string; onClose: () => void }) {
           >
             ลบ
           </button>
-          <button autoFocus type="button" disabled={pending} className={BTN} onClick={() => dialogRef.current?.close()}>
+          <button ref={cancelRef} type="button" disabled={pending} className={BTN} onClick={() => dialogRef.current?.close()}>
             ยกเลิก
           </button>
         </div>

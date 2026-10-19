@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { useEffect, useRef } from 'react';
 import type { QuizQuestion, QuizResult } from '@/lib/quiz';
 
 export function QuizResultView({
@@ -12,11 +13,14 @@ export function QuizResultView({
   slug: string;
   onRetry: () => void;
 }) {
+  const scoreRef = useRef<HTMLParagraphElement>(null);
+  // Move focus to the score so screen-reader and keyboard users land on the result.
+  useEffect(() => scoreRef.current?.focus(), []);
   const byQuestion = new Map(result.results.map((r) => [r.question_id, r]));
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-baseline gap-3">
-        <p data-testid="quiz-score" className="text-4xl font-bold">
+        <p ref={scoreRef} tabIndex={-1} data-testid="quiz-score" className="text-4xl font-bold outline-none">
           {result.score_pct}%
         </p>
         <p className={result.passed ? 'font-semibold text-green-700' : 'font-semibold text-red-600'}>

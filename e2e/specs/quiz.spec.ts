@@ -106,7 +106,7 @@ test('TC-QZ-27 last lesson shows course finished @regression', async ({ memberPa
   await expect(memberPage.getByRole('link', { name: 'ไปบทถัดไป' })).toHaveCount(0);
 });
 
-test('TC-QZ-23 network failure keeps answers and offers resend @regression', async ({ memberPage, adminDb }) => {
+test('TC-QZ-23 network failure keeps answers and offers resend @smoke @regression', async ({ memberPage, adminDb }) => {
   const quiz = new QuizPage(memberPage);
   const answers = await buildAnswers(adminDb, await lessonIdBySlug(adminDb, L1), 5);
   const texts = await choiceTexts(adminDb, answers);
@@ -134,18 +134,27 @@ test('TC-QZ-23 network failure keeps answers and offers resend @regression', asy
   await expect(memberPage.getByTestId('quiz-score')).toHaveText('100%');
 });
 
-test('TC-QZ-22 double click submits once @regression', async ({ memberPage, member, adminDb }) => {
+test('TC-QZ-22 double click submits once @smoke @regression', async ({ memberPage, member, adminDb }) => {
   const quiz = new QuizPage(memberPage);
   const answers = await buildAnswers(adminDb, await lessonIdBySlug(adminDb, L1), 5);
   await quiz.goto(L1);
   await quiz.answerByText(await choiceTexts(adminDb, answers));
   await memberPage.getByRole('button', { name: 'ส่งคำตอบ' }).dblclick();
   await expect(memberPage.getByTestId('quiz-score')).toBeVisible();
-  const { count } = await adminDb
-    .from('quiz_attempts')
-    .select('id', { count: 'exact', head: true })
-    .eq('user_id', member.id);
-  expect(count).toBe(1);
+  const countAttempts = async () => {
+    const { count } = await adminDb
+      .from('quiz_attempts')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', member.id);
+    return count;
+  };
+  expect(await countAttempts()).toBe(1);
+  // A late duplicate request would show up shortly after the score; it must never appear.
+  await memberPage.waitForLoadState('networkidle');
+  await expect
+    .poll(async () => (await countAttempts()) === 1, { timeout: 3000, intervals: [500] })
+    .toBe(true);
+  expect(await countAttempts()).toBe(1);
 });
 
 test('TC-QZ-28 locked quiz URL redirects to path @regression', async ({ memberPage }) => {

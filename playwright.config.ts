@@ -12,8 +12,8 @@ export default defineConfig({
   fullyParallel: true,
   retries: process.env.CI ? 1 : 0,
   // Headless Firefox on Windows stalls (30s+ hangs in random tests) with the default
-  // cores/2 workers; 4 keeps all three projects stable.
-  workers: 4,
+  // cores/2 workers, so cap local runs at 4. CI keeps Playwright's default; PW_WORKERS overrides both.
+  workers: process.env.PW_WORKERS ? Number(process.env.PW_WORKERS) : process.env.CI ? undefined : 4,
   reporter: [['html', { open: 'never' }], ['list']],
   use: {
     baseURL,

@@ -16,7 +16,7 @@
 | FR-01.2 | M | TC-AUTH-01, TC-AUTH-03, TC-PATH-17 | ทำแล้ว (อัตโนมัติ) |
 | FR-01.3 | M | TC-AUTH-04, TC-AUTH-05, TC-AUTH-07, TC-AUTH-08 | ทำแล้ว (อัตโนมัติ) |
 | FR-01.4 | M | TC-AUTH-06 | ทำแล้ว (อัตโนมัติ) |
-| FR-01.5 | M | TC-AUTH-09, TC-AUTH-10 | ทำแล้ว (อัตโนมัติ); TC-AUTH-10 ใช้ `toPass` retry เป็น workaround ที่ทราบ (ดู `test-cases.md`) |
+| FR-01.5 | M | TC-AUTH-09, TC-AUTH-10 | ทำแล้ว (อัตโนมัติ) |
 | FR-01.6 | M | TC-AUTH-01, TC-PATH-03, TC-PATH-14, TC-PATH-17, TC-PATH-19 | ทำแล้ว (อัตโนมัติ) ทั้งทริกเกอร์ DB และขั้นตอนสมัครผ่านหน้าเว็บ |
 | FR-01.7 | S | — | รอแผนที่ 3 |
 | FR-01.8 | C | — | รอแผนที่ 3 |

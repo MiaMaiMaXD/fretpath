@@ -14,6 +14,7 @@ export function YouTubeEmbed({ url, title }: { url: string; title: string }) {
           title={`วิดีโอบทเรียน: ${title}`}
           className="h-full w-full"
           loading="lazy"
+          referrerPolicy="strict-origin-when-cross-origin"
           allow="accelerometer; encrypted-media; gyroscope; picture-in-picture"
           allowFullScreen
           onError={() => setFailed(true)}

@@ -51,7 +51,7 @@ Priority: P1 แก้ทันที · P2 แก้ในรอบนี้ ·
 |---|---|---|
 | Boundary Value Analysis | คะแนน 59/60 ที่ `pass_score` 60; นาทีฝึก 0/1/600/601; รหัสผ่าน 7/8 ตัว; เป้าหมายต่อสัปดาห์ -1/0/5000/5001; บันทึกสั้น 500/501; ความกว้าง 375px | TC-QZ-02, TC-QZ-12, TC-QZ-13, TC-PRC-03, TC-PRC-06, TC-AUTH-02, TC-AUTH-10, TC-MOB-01 |
 | Equivalence Partitioning | อีเมลถูก/ผิดรูปแบบ/ไม่มีในระบบ; วันที่ อดีต/วันนี้/อนาคต; `next` ภายใน/ภายนอกเว็บ | TC-AUTH-01, TC-AUTH-04, TC-AUTH-07, TC-PRC-04, TC-PRC-05 |
-| State Transition | บทเรียน ล็อก → เรียนได้ → จบแล้ว; draft ↔ published; ยังไม่ยืนยันอีเมล → ยืนยัน | TC-PATH-10, TC-PATH-13, TC-PATH-14, TC-PATH-17, TC-AUTH-03 |
+| State Transition | บทเรียน ล็อก → เรียนได้ → จบแล้ว; draft ↔ published; ยังไม่ยืนยันอีเมล → ยืนยัน | TC-PATH-10, TC-PATH-13, TC-PATH-14, TC-PATH-17, TC-PATH-19, TC-AUTH-03 |
 | Decision Table | ปลดล็อก: (ผ่าน/ไม่ผ่าน) × (มีบทถัดไป/บทสุดท้าย) × (สอบครั้งแรก/สอบซ้ำ) = 8 กรณี | TC-QZ-01, 02, 05–11 (ตารางใน `test-cases.md`) |
 | Role-based / Security | anon / member / admin; ผู้เรียน A เข้าถึงข้อมูลผู้เรียน B | TC-SEC-01 … TC-SEC-17 |
 | Non-functional (accessibility) | axe-core สแกนหน้าหลัก | TC-SEC-18 |
@@ -72,8 +72,7 @@ Priority: P1 แก้ทันที · P2 แก้ในรอบนี้ ·
 - **Vitest** (`npm run test:unit`): unit test ฝั่งเว็บ รันเร็ว ไม่ต้องใช้ฐานข้อมูล
 - **Mailpit** (อีเมล local/CI ของ Supabase CLI): เปิดที่ `http://127.0.0.1:54324` ใช้ดึงลิงก์ยืนยันอีเมลและตั้งรหัสผ่านใหม่ (helper `e2e/utils/mailpit.ts`); ไม่มีอีเมลจริงถูกส่งออก — ต่างจากข้อ "อีเมลแจ้งเตือนผู้เรียน" ที่อยู่นอกขอบเขต
 - **Playwright setup/teardown projects + storageState:** โปรเจกต์ `setup` (`e2e/auth.setup.ts`) สร้างผู้เรียนกลางและบันทึก session ที่ `e2e/.auth/member.json` (อ่านผ่านค่าคงที่ `MEMBER_STATE`); โปรเจกต์ `teardown` ลบผู้ใช้นั้นหลังจบ. ใช้เฉพาะเทสต์ที่ **อ่านอย่างเดียว** (เช่น `/path`, `/lessons/*`); เทสต์ที่เขียนข้อมูลใช้ fixture `member`/`memberPage` ที่สร้างผู้ใช้ใหม่ต่อเทสต์และล้างหลังจบ (ข้อมูลไม่ปนกัน)
-- **จำนวน worker = 4** (`workers: 4` ใน `playwright.config.ts`): Firefox headless บน Windows ค้าง (หน่วง 30 วินาทีขึ้นไปแบบสุ่ม) เมื่อใช้ค่าเริ่มต้น (cores/2); ลดเป็น 4 แล้วผ่านครบ 3 โปรเจกต์ซ้ำหลายรอบ — บันทึกไว้เป็นข้อจำกัดของเครื่องทดสอบ ไม่ใช่ข้อบกพร่องของแอป
-- **Workaround ที่ทราบ:** TC-AUTH-10 ใช้ `toPass` (retry) ครอบ fill+save เพราะ race ของการ re-key ฟอร์ม; ตามรอยไว้เพื่อแก้ที่ต้นเหตุในรอบ fix สุดท้ายของแผนที่ 2 (สอดคล้องกับ R4)
+- **จำนวน worker = 4 (local)** (`workers` ใน `playwright.config.ts`: 4 ในเครื่อง, ค่าเริ่มต้นใน CI, override ด้วย `PW_WORKERS`): Firefox headless บน Windows ค้าง (หน่วง 30 วินาทีขึ้นไปแบบสุ่ม) เมื่อใช้ค่าเริ่มต้น (cores/2); ลดเป็น 4 แล้วผ่านครบ 3 โปรเจกต์ซ้ำหลายรอบ — บันทึกไว้เป็นข้อจำกัดของเครื่องทดสอบ ไม่ใช่ข้อบกพร่องของแอป
 - **ข้อจำกัดของตัวเทสต์:** `TC-LSN-04` ตรวจว่าปุ่มดีดสายทำงานโดยไม่ error แต่ไม่ได้ตรวจเสียงจริง
 
 ## 6. เกณฑ์เริ่มและเกณฑ์จบการทดสอบ (สเปกข้อ 6.1)

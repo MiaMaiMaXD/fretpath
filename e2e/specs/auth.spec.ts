@@ -66,6 +66,14 @@ test('TC-AUTH-03 unconfirmed account cannot log in @regression', async ({ page }
     await login.login(email, 'Passw0rd!');
     await expect(page.getByText('กรุณายืนยันอีเมลก่อนเข้าสู่ระบบ')).toBeVisible();
     await expect(page).toHaveURL(/\/login/);
+
+    // The unconfirmed notice offers a resend; it sends a second confirmation email.
+    const first = await latestLinkFor(email);
+    // Local GoTrue allows one confirmation email per address per second (auth.email.max_frequency).
+    await page.waitForTimeout(1500);
+    await page.getByRole('button', { name: 'ส่งลิงก์ยืนยันอีกครั้ง' }).click();
+    await expect(page.getByText('ถ้าบัญชีนี้ยังไม่ได้ยืนยัน เราได้ส่งลิงก์ไปแล้ว')).toBeVisible();
+    await expect.poll(() => latestLinkFor(email), { timeout: 10_000 }).not.toBe(first);
   } finally {
     await deleteUserByEmail(email);
   }
@@ -116,14 +124,25 @@ test('TC-AUTH-06 forgot password always shows same message and reset works @regr
   await expect(page).toHaveURL(/\/dashboard/);
 });
 
-test('TC-AUTH-07 next parameter never leaves the site @security @regression', async ({ page, member }) => {
+test('TC-AUTH-07 next parameter never leaves the site @security @regression', async ({ page, member }, testInfo) => {
+  const baseURL = testInfo.project.use.baseURL ?? 'http://localhost:3000';
+  const origin = new URL(baseURL).origin;
   const login = new LoginPage(page);
-  await login.goto('https://evil.example');
-  await login.login(member.email, member.password);
-  await expect(page).toHaveURL(/localhost:3000\/dashboard$/);
+  for (const evil of ['https://evil.example', '//evil.example', '/\\evil.example']) {
+    await login.goto(evil);
+    await login.login(member.email, member.password);
+    await expect(page).toHaveURL(/\/dashboard$/);
+    expect(new URL(page.url()).origin).toBe(origin);
+    await page.context().clearCookies();
+  }
+
+  // A callback without a code cannot sign anyone in and must not bounce to the external `next`.
+  await page.goto('/auth/callback?next=//evil.example');
+  await expect(page).toHaveURL(/\/login\?error=link/);
+  expect(new URL(page.url()).origin).toBe(origin);
 });
 
-test('TC-AUTH-08 expired session returns to original page after login @regression', async ({ page, member }) => {
+test('TC-AUTH-08 expired session returns to original page after login @smoke @regression', async ({ page, member }) => {
   await page.goto('/practice');
   await expect(page).toHaveURL(/\/login\?next=%2Fpractice$/);
   const login = new LoginPage(page);

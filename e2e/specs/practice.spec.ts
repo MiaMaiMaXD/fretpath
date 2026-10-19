@@ -46,7 +46,7 @@ test('TC-PRC-03 minutes boundaries 0/1/600/601 @regression', async ({ memberPage
 test.describe('another browser timezone', () => {
   test.use({ timezoneId: 'America/Los_Angeles' });
 
-  test('TC-PRC-04 date defaults to Bangkok today in another browser timezone @regression', async ({ memberPage }) => {
+  test('TC-PRC-04 date defaults to Bangkok today in another browser timezone @smoke @regression', async ({ memberPage }) => {
     const practice = new PracticePage(memberPage);
     await practice.goto();
     const date = memberPage.getByLabel('วันที่');
@@ -80,7 +80,7 @@ test('TC-PRC-06 note longer than 500 characters is rejected @regression', async 
   await expect(memberPage.getByText('0/500')).toBeVisible();
 });
 
-test('TC-PRC-07 timer fills minutes with "ใช้เวลานี้" @regression', async ({ memberPage }) => {
+test('TC-PRC-07 timer fills minutes with "ใช้เวลานี้" @smoke @regression', async ({ memberPage }) => {
   const practice = new PracticePage(memberPage);
   await memberPage.clock.install();
   await practice.goto();
@@ -109,6 +109,7 @@ test('TC-PRC-08 edit and delete own log @regression', async ({ memberPage }) => 
   await practice.rows().first().getByRole('button', { name: 'ลบ', exact: true }).click();
   const dialog = memberPage.getByRole('dialog', { name: 'ลบบันทึกนี้?' });
   await expect(dialog).toBeVisible();
+  await expect(dialog.getByRole('button', { name: 'ยกเลิก', exact: true })).toBeFocused();
   await dialog.getByRole('button', { name: 'ยกเลิก', exact: true }).click();
   await expect(dialog).toHaveCount(0);
   await expect(practice.rows()).toHaveCount(1);

@@ -12,7 +12,7 @@ export default async function LoginPage({
       <h1 className="text-2xl font-semibold">เข้าสู่ระบบ</h1>
       {error === 'link' ? (
         <p role="alert" className="text-red-600">
-          ลิงก์หมดอายุหรือใช้แล้ว กรุณาขอใหม่
+          ลิงก์ใช้ไม่ได้ หากยืนยันอีเมลแล้วให้เข้าสู่ระบบได้เลย หรือขอลิงก์ใหม่
         </p>
       ) : null}
       <LoginForm next={next ?? ''} />

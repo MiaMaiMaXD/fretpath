@@ -40,10 +40,30 @@ export async function signIn(_prev: ActionState, formData: FormData): Promise<Ac
   const { error } = await supabase.auth.signInWithPassword({ email, password });
   if (error) {
     const code = errorCodeFrom(error);
-    // Unknown user and wrong password must look identical.
-    return { ok: false, message: thaiError(code === 'UNKNOWN' ? 'INVALID_CREDENTIALS' : code), values: { email } };
+    // Unknown user and wrong password must look identical; outages and rate limits keep their own message.
+    const clientError = typeof error.status === 'number' && error.status >= 400 && error.status < 500;
+    const shown = code === 'UNKNOWN' && clientError ? 'INVALID_CREDENTIALS' : code;
+    return { ok: false, code: shown, message: thaiError(shown), values: { email } };
   }
   redirect(next);
+}
+
+export async function resendConfirmation(_prev: ActionState, formData: FormData): Promise<ActionState> {
+  const email = str(formData, 'email').trim();
+  if (email) {
+    const supabase = await createClient();
+    // Errors are deliberately ignored so the response never reveals whether the account exists.
+    try {
+      await supabase.auth.resend({
+        type: 'signup',
+        email,
+        options: { emailRedirectTo: `${siteUrl()}/auth/callback?next=/dashboard` },
+      });
+    } catch {
+      // ignored on purpose
+    }
+  }
+  return { ok: true, message: 'ถ้าบัญชีนี้ยังไม่ได้ยืนยัน เราได้ส่งลิงก์ไปแล้ว' };
 }
 
 export async function signOut(): Promise<void> {

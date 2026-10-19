@@ -2,8 +2,9 @@
 
 import { useFormStatus } from 'react-dom';
 
-export function SubmitButton({ children }: { children: React.ReactNode }) {
-  const { pending } = useFormStatus();
+export function SubmitButton({ children, pending: pendingProp }: { children: React.ReactNode; pending?: boolean }) {
+  const status = useFormStatus();
+  const pending = pendingProp ?? status.pending;
   return (
     <button
       type="submit"

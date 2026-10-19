@@ -31,12 +31,12 @@ export function getAudioContext(): AudioContext | null {
 }
 
 /** Plucked-string sound: a few harmonics with a fast decay envelope. */
-export function pluck(ctx: AudioContext, hz: number, durationSec = 1.5): void {
+export function pluck(ctx: AudioContext, hz: number, durationSec = 1.5, volume = 1): void {
   try {
     const t0 = ctx.currentTime;
     const gain = ctx.createGain();
     gain.gain.setValueAtTime(0.0001, t0);
-    gain.gain.linearRampToValueAtTime(0.35, t0 + 0.01);
+    gain.gain.linearRampToValueAtTime(0.35 * volume, t0 + 0.01);
     gain.gain.exponentialRampToValueAtTime(0.0001, t0 + durationSec);
     gain.connect(ctx.destination);
     const harmonics = [

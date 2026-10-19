@@ -9,6 +9,9 @@ export type ErrorCode =
   | 'INVALID_CREDENTIALS'
   | 'EMAIL_NOT_CONFIRMED'
   | 'NETWORK'
+  | 'RATE_LIMITED'
+  | 'WEAK_PASSWORD'
+  | 'SAME_PASSWORD'
   | 'UNKNOWN';
 
 const MESSAGES: Record<ErrorCode, string> = {
@@ -22,6 +25,9 @@ const MESSAGES: Record<ErrorCode, string> = {
   INVALID_CREDENTIALS: 'อีเมลหรือรหัสผ่านไม่ถูกต้อง',
   EMAIL_NOT_CONFIRMED: 'กรุณายืนยันอีเมลก่อนเข้าสู่ระบบ',
   NETWORK: 'เชื่อมต่อไม่สำเร็จ กรุณาลองใหม่',
+  RATE_LIMITED: 'มีการลองหลายครั้งเกินไป กรุณารอสักครู่แล้วลองใหม่',
+  WEAK_PASSWORD: 'รหัสผ่านนี้ไม่ปลอดภัยพอ กรุณาตั้งรหัสใหม่',
+  SAME_PASSWORD: 'รหัสผ่านใหม่ต้องไม่ซ้ำกับรหัสเดิม',
   UNKNOWN: 'เกิดข้อผิดพลาด กรุณาลองใหม่',
 };
 
@@ -35,12 +41,23 @@ export function thaiError(code: string): string {
 
 const AUTH_CODES: Record<string, ErrorCode> = {
   invalid_credentials: 'INVALID_CREDENTIALS',
+  user_not_found: 'INVALID_CREDENTIALS',
   email_not_confirmed: 'EMAIL_NOT_CONFIRMED',
+  over_request_rate_limit: 'RATE_LIMITED',
+  over_email_send_rate_limit: 'RATE_LIMITED',
+  weak_password: 'WEAK_PASSWORD',
+  same_password: 'SAME_PASSWORD',
 };
 
-export function errorCodeFrom(e: { message?: string; code?: string } | null): ErrorCode {
+type ErrorLike = { message?: string; code?: string; status?: number; name?: string };
+
+export function errorCodeFrom(e: ErrorLike | null): ErrorCode {
   if (!e) return 'UNKNOWN';
   if (e.code && Object.hasOwn(AUTH_CODES, e.code)) return AUTH_CODES[e.code];
+  if (e.status === 429) return 'RATE_LIMITED';
+  if (e.status === 0 || (e.status !== undefined && e.status >= 500) || e.name === 'AuthRetryableFetchError') {
+    return 'NETWORK';
+  }
   if (e.message && isErrorCode(e.message)) return e.message;
   return 'UNKNOWN';
 }

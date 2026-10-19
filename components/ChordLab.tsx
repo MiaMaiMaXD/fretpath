@@ -34,8 +34,10 @@ export function ChordLab() {
         onClick={() => {
           const ctx = getAudioContext();
           if (!ctx) return;
-          chordFrequencies(name).forEach((hz, i) => {
-            window.setTimeout(() => pluck(ctx, hz, 2), i * 60);
+          const freqs = chordFrequencies(name);
+          // Scale each voice by 1/n so a six-string chord does not clip.
+          freqs.forEach((hz, i) => {
+            window.setTimeout(() => pluck(ctx, hz, 2, 1 / freqs.length), i * 60);
           });
         }}
         className="self-start rounded border px-4 py-2 disabled:opacity-50"

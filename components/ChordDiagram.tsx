@@ -44,7 +44,7 @@ export function ChordDiagram({ name }: { name: ChordName }) {
           <g key={i}>
             <circle cx={sx(i)} cy={cy} r={9} fill="currentColor" />
             {fingers[i] ? (
-              <text x={sx(i)} y={cy + 4} textAnchor="middle" fontSize={11} fill="white">
+              <text x={sx(i)} y={cy + 4} textAnchor="middle" fontSize={11} className="fill-white dark:fill-neutral-900">
                 {fingers[i]}
               </text>
             ) : null}

@@ -1,6 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import type { Database } from "@/lib/database.types";
+import { safeNextPath } from "@/lib/safe-next";
 
 const PROTECTED = ["/dashboard", "/path", "/lessons", "/practice", "/profile", "/reset-password"];
 
@@ -42,7 +43,7 @@ export async function proxy(request: NextRequest) {
     target = new URL("/login", request.url);
     target.searchParams.set("next", pathname + search);
   } else if (user && isGuestOnly) {
-    target = new URL("/dashboard", request.url);
+    target = new URL(safeNextPath(request.nextUrl.searchParams.get("next")), request.url);
   }
   if (target) {
     const redirect = NextResponse.redirect(target);
