@@ -13,5 +13,7 @@ describe('siteUrl', () => {
     expect(siteUrl()).toBe('http://localhost:3000');
     process.env.NEXT_PUBLIC_SITE_URL = 'https://x.example/';
     expect(siteUrl()).toBe('https://x.example');
+    process.env.NEXT_PUBLIC_SITE_URL = '';
+    expect(siteUrl()).toBe('http://localhost:3000');
   });
 });
