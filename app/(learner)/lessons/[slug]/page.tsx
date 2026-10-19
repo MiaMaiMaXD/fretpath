@@ -1,6 +1,8 @@
 import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
+import { ChordLab } from '@/components/ChordLab';
 import { LessonMarkdown } from '@/components/LessonMarkdown';
+import { StringPlayer } from '@/components/StringPlayer';
 import { YouTubeEmbed } from '@/components/YouTubeEmbed';
 import { getLessonForLearner } from '@/lib/data/lesson';
 
@@ -15,6 +17,8 @@ export default async function LessonPage({ params }: { params: Promise<{ slug: s
       <h1 className="text-2xl font-semibold break-words">{lesson.title}</h1>
       {videoUrl ? <YouTubeEmbed url={videoUrl} title={lesson.title} /> : null}
       <LessonMarkdown source={contentMd} />
+      <StringPlayer />
+      {lesson.sortOrder >= 2 && lesson.sortOrder <= 5 ? <ChordLab /> : null}
       <Link href={`/lessons/${lesson.slug}/quiz`} className="self-start rounded border px-4 py-2 font-medium">
         ทำแบบทดสอบ
       </Link>
