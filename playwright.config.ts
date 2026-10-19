@@ -19,6 +19,9 @@ export default defineConfig({
     screenshot: 'only-on-failure',
   },
   projects: [
+    { name: 'setup', testMatch: /auth\.setup\.ts/, teardown: 'teardown' },
+    { name: 'teardown', testMatch: /auth\.teardown\.ts/ },
+    // TODO(Task 3): add `dependencies: ['setup']` to the browser projects once /login exists.
     { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
     { name: 'firefox', use: { ...devices['Desktop Firefox'] } },
     { name: 'mobile', use: { ...devices['Pixel 7'] } },

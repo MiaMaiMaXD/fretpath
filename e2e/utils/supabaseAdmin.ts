@@ -48,6 +48,18 @@ export async function createTestUser(
   return { id, email, password, role };
 }
 
+/** Deletes a user who signed up through the UI (id unknown). No-op if not found. */
+export async function deleteUserByEmail(email: string): Promise<void> {
+  const admin = adminClient();
+  for (let page = 1; ; page++) {
+    const { data, error } = await admin.auth.admin.listUsers({ page, perPage: 200 });
+    if (error) throw new Error(`deleteUserByEmail list failed: ${error.message}`);
+    const found = data.users.find((u) => u.email?.toLowerCase() === email.toLowerCase());
+    if (found) return deleteTestUser(found.id);
+    if (data.users.length < 200) return;
+  }
+}
+
 export async function deleteTestUser(id: string): Promise<void> {
   const { error } = await adminClient().auth.admin.deleteUser(id);
   if (error) throw new Error(`deleteTestUser failed: ${error.message}`);
