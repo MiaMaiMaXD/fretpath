@@ -12,19 +12,23 @@ export async function latestLinkFor(
   const deadline = Date.now() + (opts.timeoutMs ?? 15_000);
   const base = mailpitUrl();
   while (Date.now() < deadline) {
-    const res = await fetch(`${base}/api/v1/search?query=${encodeURIComponent(`to:"${email}"`)}`);
-    if (res.ok) {
-      const { messages } = (await res.json()) as Search;
-      // Newest first; check each message until one carries a matching link.
-      for (const m of messages ?? []) {
-        const msgRes = await fetch(`${base}/api/v1/message/${m.ID}`);
-        if (!msgRes.ok) continue;
-        const msg = (await msgRes.json()) as Message;
-        const body = `${msg.HTML ?? ''}\n${msg.Text ?? ''}`.replace(/&amp;/g, '&');
-        const urls = body.match(/https?:\/\/[^\s"'<>]+/g) ?? [];
-        const hit = urls.find((u) => u.includes(contains));
-        if (hit) return hit;
+    try {
+      const res = await fetch(`${base}/api/v1/search?query=${encodeURIComponent(`to:"${email}"`)}`);
+      if (res.ok) {
+        const { messages } = (await res.json()) as Search;
+        // Newest first; check each message until one carries a matching link.
+        for (const m of messages ?? []) {
+          const msgRes = await fetch(`${base}/api/v1/message/${m.ID}`);
+          if (!msgRes.ok) continue;
+          const msg = (await msgRes.json()) as Message;
+          const body = `${msg.HTML ?? ''}\n${msg.Text ?? ''}`.replace(/&amp;/g, '&');
+          const urls = body.match(/https?:\/\/[^\s"'<>]+/g) ?? [];
+          const hit = urls.find((u) => u.includes(contains));
+          if (hit) return hit;
+        }
       }
+    } catch {
+      // Transient Mailpit/network error: retry until the deadline.
     }
     await new Promise((r) => setTimeout(r, 500));
   }

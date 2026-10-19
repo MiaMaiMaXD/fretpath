@@ -9,7 +9,7 @@ export class LoginPage {
 
   async login(email: string, password: string) {
     await this.page.getByLabel('อีเมล').fill(email);
-    await this.page.getByLabel('รหัสผ่าน').fill(password);
+    await this.page.getByLabel('รหัสผ่าน', { exact: true }).fill(password);
     await this.page.getByRole('button', { name: 'เข้าสู่ระบบ' }).click();
   }
 }
