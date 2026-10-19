@@ -20,6 +20,8 @@ type Props = {
   placeholder?: string;
   /** textarea only: the N in the "count/N" counter */
   maxCount?: number;
+  /** textarea only: change to remount (re-sync the counter) after a successful save */
+  resetKey?: number;
 };
 
 const CONTROL = 'rounded border border-neutral-400 bg-transparent px-3 py-2';
@@ -39,6 +41,7 @@ export function Field({
   options = [],
   placeholder,
   maxCount,
+  resetKey = 0,
 }: Props) {
   const id = `${idPrefix}${name}`;
   const errorId = `${id}-error`;
@@ -51,7 +54,7 @@ export function Field({
       {as === 'textarea' ? (
         <CountedTextarea
           // key remounts so a returned value survives the React 19 form reset.
-          key={defaultValue ?? ''}
+          key={`${resetKey}:${defaultValue ?? ''}`}
           id={id}
           name={name}
           defaultValue={defaultValue}
@@ -70,7 +73,7 @@ export function Field({
           aria-describedby={describedBy}
           className={CONTROL}
         >
-          {placeholder !== undefined ? <option value="">{placeholder}</option> : null}
+          {placeholder !== undefined ? <option value=''>{placeholder}</option> : null}
           {options.map((o) => (
             <option key={o.value} value={o.value}>
               {o.label}

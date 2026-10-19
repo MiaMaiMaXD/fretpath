@@ -50,24 +50,23 @@ function EditRow({ log, today, lessons, onDone }: Shared & { log: PracticeLog; o
 function DeleteDialog({ id, onClose }: { id: string; onClose: () => void }) {
   const [pending, start] = useTransition();
   const [error, setError] = useState<string | null>(null);
-  const cancelRef = useRef<HTMLButtonElement>(null);
+  const dialogRef = useRef<HTMLDialogElement>(null);
   const titleId = `delete-title-${id}`;
 
+  // Native modal: focus trap, Escape and inert background come from showModal().
   useEffect(() => {
-    cancelRef.current?.focus();
+    const d = dialogRef.current;
+    if (d && !d.open) d.showModal();
   }, []);
 
   return (
-    <div className="fixed inset-0 z-10 flex items-center justify-center bg-black/50 p-4">
-      <div
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby={titleId}
-        onKeyDown={(e) => {
-          if (e.key === 'Escape') onClose();
-        }}
-        className="flex w-full max-w-sm flex-col gap-3 rounded bg-white p-4 text-neutral-900 dark:bg-neutral-900 dark:text-neutral-100"
-      >
+    <dialog
+      ref={dialogRef}
+      aria-labelledby={titleId}
+      onClose={onClose}
+      className="m-auto w-full max-w-sm rounded bg-white p-4 text-neutral-900 backdrop:bg-black/50 dark:bg-neutral-900 dark:text-neutral-100"
+    >
+      <div className="flex flex-col gap-3">
         <h2 id={titleId} className="text-lg font-semibold">
           ลบบันทึกนี้?
         </h2>
@@ -91,18 +90,19 @@ function DeleteDialog({ id, onClose }: { id: string; onClose: () => void }) {
           >
             ลบ
           </button>
-          <button ref={cancelRef} type="button" disabled={pending} className={BTN} onClick={onClose}>
+          <button autoFocus type="button" disabled={pending} className={BTN} onClick={() => dialogRef.current?.close()}>
             ยกเลิก
           </button>
         </div>
       </div>
-    </div>
+    </dialog>
   );
 }
 
 function Row({ log, today, lessons }: Shared & { log: PracticeLog }) {
   const [editing, setEditing] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const deleteBtnRef = useRef<HTMLButtonElement>(null);
   return (
     <li className="rounded border border-neutral-300 p-3 dark:border-neutral-700">
       {editing ? (
@@ -113,18 +113,26 @@ function Row({ log, today, lessons }: Shared & { log: PracticeLog }) {
             <time dateTime={log.practicedOn}>{log.practicedOn}</time> · {log.minutes} นาที · {activityLabel(log.activity)}
           </p>
           {log.lessonTitle ? <p className="text-sm">บทเรียน: {log.lessonTitle}</p> : null}
-          {log.note ? <p className="whitespace-pre-wrap text-sm">{log.note}</p> : null}
+          {log.note ? <p className="whitespace-pre-wrap break-words text-sm">{log.note}</p> : null}
           <div className="flex gap-2 pt-1">
             <button type="button" className={BTN} onClick={() => setEditing(true)}>
               แก้ไข
             </button>
-            <button type="button" className={BTN} onClick={() => setDeleting(true)}>
+            <button ref={deleteBtnRef} type="button" className={BTN} onClick={() => setDeleting(true)}>
               ลบ
             </button>
           </div>
         </div>
       )}
-      {deleting ? <DeleteDialog id={log.id} onClose={() => setDeleting(false)} /> : null}
+      {deleting ? (
+        <DeleteDialog
+          id={log.id}
+          onClose={() => {
+            setDeleting(false);
+            deleteBtnRef.current?.focus();
+          }}
+        />
+      ) : null}
     </li>
   );
 }

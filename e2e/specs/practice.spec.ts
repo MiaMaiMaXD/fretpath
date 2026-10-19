@@ -29,6 +29,7 @@ test('TC-PRC-03 minutes boundaries 0/1/600/601 @regression', async ({ memberPage
   await practice.goto();
 
   for (const bad of [0, 601]) {
+    await practice.goto(); // fresh page so the previous attempt's error cannot satisfy the assertion
     await practice.fill({ minutes: bad, activity: 'song' });
     await practice.save();
     await expect(memberPage.getByText(MINUTES_ERROR)).toBeVisible();
@@ -76,6 +77,7 @@ test('TC-PRC-06 note longer than 500 characters is rejected @regression', async 
   await practice.fill({ minutes: 20, activity: 'other', note: 'ก'.repeat(500) });
   await practice.save();
   await expect(practice.rows()).toHaveCount(1);
+  await expect(memberPage.getByText('0/500')).toBeVisible();
 });
 
 test('TC-PRC-07 timer fills minutes with "ใช้เวลานี้" @regression', async ({ memberPage }) => {
@@ -110,6 +112,14 @@ test('TC-PRC-08 edit and delete own log @regression', async ({ memberPage }) => 
   await dialog.getByRole('button', { name: 'ยกเลิก', exact: true }).click();
   await expect(dialog).toHaveCount(0);
   await expect(practice.rows()).toHaveCount(1);
+
+  const deleteBtn = practice.rows().first().getByRole('button', { name: 'ลบ', exact: true });
+  await expect(deleteBtn).toBeFocused();
+  await deleteBtn.click();
+  await expect(dialog).toBeVisible();
+  await memberPage.keyboard.press('Escape');
+  await expect(dialog).toHaveCount(0);
+  await expect(deleteBtn).toBeFocused();
 
   await practice.rows().first().getByRole('button', { name: 'ลบ', exact: true }).click();
   await memberPage.getByRole('dialog').getByRole('button', { name: 'ลบ', exact: true }).click();

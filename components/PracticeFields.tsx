@@ -9,10 +9,11 @@ type Props = {
   today: string;
   lessons: LessonOption[];
   errors?: FieldErrors;
+  noteResetKey?: number;
   values: { practicedOn: string; minutes: string; activity: string; note: string; lessonId: string };
 };
 
-export function PracticeFields({ idPrefix, today, lessons, errors, values }: Props) {
+export function PracticeFields({ idPrefix, today, lessons, errors, values, noteResetKey }: Props) {
   return (
     <>
       <Field
@@ -49,6 +50,7 @@ export function PracticeFields({ idPrefix, today, lessons, errors, values }: Pro
         as="textarea"
         required={false}
         maxCount={500}
+        resetKey={noteResetKey}
         error={errors?.note}
         defaultValue={values.note}
       />

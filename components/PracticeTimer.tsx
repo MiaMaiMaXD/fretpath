@@ -38,7 +38,7 @@ export function PracticeTimer({ onUse }: { onUse: (minutes: number) => void }) {
             type="button"
             className={BTN}
             onClick={() => {
-              setAccumulatedMs(elapsed);
+              setAccumulatedMs(accumulatedMs + Date.now() - startedAt);
               setStartedAt(null);
             }}
           >

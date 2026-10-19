@@ -1,6 +1,6 @@
 'use client';
 
-import { useActionState, useRef } from 'react';
+import { useActionState, useRef, useState } from 'react';
 import { createPracticeLog } from '@/app/(learner)/practice/actions';
 import { FormMessage } from '@/components/FormMessage';
 import { PracticeFields, type LessonOption } from '@/components/PracticeFields';
@@ -10,7 +10,12 @@ import type { ActionState } from '@/lib/action-state';
 
 export function PracticeForm({ today, lessons }: { today: string; lessons: LessonOption[] }) {
   const initial: ActionState = { ok: false };
-  const [state, action] = useActionState(createPracticeLog, initial);
+  const [saves, setSaves] = useState(0);
+  const [state, action] = useActionState(async (prev: ActionState, fd: FormData) => {
+    const r = await createPracticeLog(prev, fd);
+    if (r.ok) setSaves((n) => n + 1);
+    return r;
+  }, initial);
   const formRef = useRef<HTMLFormElement>(null);
   const v = state.values ?? {};
 
@@ -28,6 +33,7 @@ export function PracticeForm({ today, lessons }: { today: string; lessons: Lesso
           today={today}
           lessons={lessons}
           errors={state.fieldErrors}
+          noteResetKey={saves}
           values={{
             practicedOn: v.practicedOn ?? today,
             minutes: v.minutes ?? '',
