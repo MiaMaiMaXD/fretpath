@@ -51,7 +51,7 @@ fretpath/
   lib/supabase/server.ts                    createClient() ฝั่งเซิร์ฟเวอร์ (cookies)
   lib/supabase/browser.ts                   createClient() ฝั่งเบราว์เซอร์
   lib/database.types.ts                     สร้างจาก `supabase gen types`
-  middleware.ts                             รีเฟรชเซสชัน Supabase
+  proxy.ts                                  รีเฟรชเซสชัน Supabase
   supabase/config.toml
   supabase/migrations/
     20261020000001_schema.sql               ตารางและข้อจำกัด
