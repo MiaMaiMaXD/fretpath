@@ -22,7 +22,7 @@ test('TC-PATH-15 locked card has no link to content @regression', async ({ page 
   await expect(path.card(SLUGS[1]).getByRole('link')).toHaveCount(0);
 });
 
-test('TC-PATH-16 locked redirect shows notice and no horizontal overflow @regression', async ({ page }) => {
+test('TC-PATH-18 locked redirect shows notice and no horizontal overflow @regression', async ({ page }) => {
   await page.setViewportSize({ width: 375, height: 800 });
   const path = new PathPage(page);
   await page.goto('/path?locked=first-chords');
