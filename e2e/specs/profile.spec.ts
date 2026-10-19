@@ -26,8 +26,13 @@ test('TC-AUTH-10 weekly goal boundaries @regression', async ({ memberPage }) => 
     await expect(memberPage.getByLabel('เป้าหมายนาทีฝึกต่อสัปดาห์')).toHaveValue(String(bad));
   }
   for (const good of [0, 5000]) {
-    await profile.save({ displayName: 'มิว', weeklyGoalMinutes: good });
-    await expect(memberPage.getByText('บันทึกแล้ว')).toBeVisible();
+    // After an invalid submit React re-keys the (uncontrolled) input one render after the
+    // error text appears, which can discard a value filled in that instant. Retry the
+    // fill+save as a unit until the saved message shows.
+    await expect(async () => {
+      await profile.save({ displayName: 'มิว', weeklyGoalMinutes: good });
+      await expect(memberPage.getByText('บันทึกแล้ว')).toBeVisible({ timeout: 2000 });
+    }).toPass();
     await expect(memberPage.getByText(GOAL_ERROR)).toHaveCount(0);
     await memberPage.reload();
     await expect(memberPage.getByLabel('เป้าหมายนาทีฝึกต่อสัปดาห์')).toHaveValue(String(good));

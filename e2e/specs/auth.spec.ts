@@ -108,6 +108,8 @@ test('TC-AUTH-06 forgot password always shows same message and reset works @regr
   await expect(page).toHaveURL(/\/dashboard/);
 
   await page.getByRole('button', { name: 'ออกจากระบบ' }).click();
+  // Wait for sign-out to finish; navigating away mid-action leaves the session alive.
+  await expect(page).toHaveURL(/\/$/);
   const login = new LoginPage(page);
   await login.goto();
   await login.login(member.email, 'NewPassw0rd!');
