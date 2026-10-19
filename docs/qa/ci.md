@@ -10,10 +10,25 @@
 Trigger: `pull_request` ไป `main` และ `push` ไป `main` (รันเก่าของ PR เดียวกันจะถูกยกเลิกอัตโนมัติ; รันบน `main` ไม่ถูกยกเลิก)
 
 ลำดับขั้นตอนใน job: `npm ci` → ติดตั้ง Supabase CLI (2.121.0 ตรงกับ devDependency) → `supabase start` → `supabase test db` (pgTAP 001–006)
-→ `npm run lint` → `npm run typecheck` → ตั้ง env จาก `supabase status -o env` → `npm run build` → ติดตั้ง Chromium
+→ `npm run lint` → `npm run typecheck` → `npm run test:unit` (Vitest) → ตั้ง env จาก `supabase status -o env` → `npm run build` → ติดตั้ง Chromium
 → `playwright test --project=chromium --grep "@smoke|@security"` → อัปโหลด `playwright-report/` เป็น artifact (ทุกครั้ง เก็บ 14 วัน)
 
 หมายเหตุ: คีย์ที่ใช้เป็นคีย์ demo ของ Supabase local stack ใน runner จึงไม่ต้องตั้ง GitHub Secrets
+
+## ความครอบคลุมของ `--grep "@smoke|@security"` หลังแผนที่ 2 (ตรวจเมื่อ 2026-10-19)
+
+ตรวจด้วย `npx playwright test --project=chromium --grep "@smoke|@security" --list` — `ci.yml` **ไม่ต้องแก้**: ค่า grep เดิมครอบคลุม UI `@smoke` ใหม่ทั้งหมดแล้ว และโปรเจกต์ `setup`/`teardown` ถูกดึงมารันเป็น dependency ตามปกติ (จึงมี `e2e/.auth/member.json` ให้เทสต์ที่ใช้ `MEMBER_STATE`) รวม 28 รายการ = setup 1 + teardown 1 + `e2e/api` 13 + UI 13
+
+UI `@smoke` ที่เพิ่ม (11 เทสต์): TC-AUTH-01, TC-AUTH-04, TC-AUTH-09 · TC-PATH-14, TC-PATH-16, TC-PATH-17 · TC-QZ-21, TC-QZ-25 · TC-PRC-02 · TC-DSH-02, TC-DSH-05
+UI `@security` ที่เพิ่ม (2 เทสต์): TC-AUTH-07, TC-PRC-05
+(ที่เหลือใน `e2e/specs/` เป็น `@regression` ล้วน — รันในเครื่องบน `chromium`, `firefox`, `mobile` ไม่รันใน CI ตามการออกแบบ)
+
+### เวลารันและ timeout (ประมาณการ ยังไม่ใช่ค่าจริง)
+
+- ยังไม่มีผลรัน CI จริงของ branch แผนที่ 2 (ยังไม่ push) ค่าอ้างอิงเดียวที่วัดจริงคือ PR #1 (แผนที่ 1) = 4 นาที 42 วินาที ซึ่งมีเทสต์ Playwright เพียง `e2e/api` 13 เทสต์
+- แผนที่ 2 เพิ่ม: Vitest (วินาที), `next build` ที่ใหญ่ขึ้น และ UI E2E 13 เทสต์ ที่ใช้เวลาต่อเทสต์หลักวินาทีถึงสิบกว่าวินาที (บางเทสต์สมัครสมาชิกผ่าน Mailpit); จากการรันในเครื่อง (`--project=chromium` ทั้ง `e2e/` 60 เทสต์ผ่าน) ประมาณการว่าเพิ่มราว 2–4 นาที → รวมคาดว่า **ราว 7–10 นาที** ซึ่งต่ำกว่า `timeout-minutes: 30` มาก จึงยังไม่แยก step หรือเพิ่ม `--workers`
+- **งานติดตาม:** ตรวจเวลาจริงของ check `ci` บน PR แผนที่ 2 และบันทึกตัวเลขที่นี่; ถ้าเกิน ~20 นาที ให้แยก UI smoke เป็น step ของตัวเอง หรือปรับ `workers` (ปัจจุบัน `workers: 4` ใน `playwright.config.ts`, retry ใน CI = 1 ครั้ง)
+- ความเสี่ยง: เทสต์ที่ผูกกับ Mailpit/Supabase local ต้องการให้ `supabase start` เปิด Mailpit (พอร์ต 54324) ซึ่งเป็นค่าเริ่มต้นของ CLI 2.121.0 — ยืนยันซ้ำเมื่อเห็นรันจริงครั้งแรก
 
 ## ผลการตรวจสอบ CI
 
