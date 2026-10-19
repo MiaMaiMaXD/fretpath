@@ -29,6 +29,15 @@ async function signedInClient(user: TestUser): Promise<Db> {
   return db;
 }
 
+// Teardown must not mask the test's own error: log cleanup failures instead of throwing.
+async function safeDelete(id: string): Promise<void> {
+  try {
+    await deleteTestUser(id);
+  } catch (e) {
+    console.warn(`teardown: failed to delete test user ${id}`, e);
+  }
+}
+
 // Fixtures are lazy: a user is only created when a test requests it.
 export const test = base.extend<Fixtures>({
   member: async ({}, use) => {
@@ -36,7 +45,7 @@ export const test = base.extend<Fixtures>({
     try {
       await use(user);
     } finally {
-      await deleteTestUser(user.id);
+      await safeDelete(user.id);
     }
   },
   otherMember: async ({}, use) => {
@@ -44,7 +53,7 @@ export const test = base.extend<Fixtures>({
     try {
       await use(user);
     } finally {
-      await deleteTestUser(user.id);
+      await safeDelete(user.id);
     }
   },
   admin: async ({}, use) => {
@@ -52,7 +61,7 @@ export const test = base.extend<Fixtures>({
     try {
       await use(user);
     } finally {
-      await deleteTestUser(user.id);
+      await safeDelete(user.id);
     }
   },
   memberDb: async ({ member }, use) => {

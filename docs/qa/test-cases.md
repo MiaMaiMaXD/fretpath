@@ -16,8 +16,8 @@ TC ของ FR-01, FR-02, FR-05, FR-06, FR-07 และ NFR-02 … NFR-07 จ�
 | PRC | FR-05 | | |
 
 **ตัวย่อชื่อไฟล์เทสต์อัตโนมัติ** (ทุกไฟล์อยู่ใต้ `supabase/tests/` และ `e2e/api/`)
-- `003` = `supabase/tests/003_rls.test.sql` · `004` = `004_submit_quiz.test.sql` · `005` = `005_content_rules.test.sql` · `002` = `002_auth_triggers.test.sql`
-- `rls.spec` = `e2e/api/rls.spec.ts` · `submit-quiz.spec` = `e2e/api/submit-quiz.spec.ts` (Playwright; เขียนใน Task 9 — ชื่อเทสต์ใช้รหัส TC ในเอกสารนี้)
+- `003` = `supabase/tests/003_rls.test.sql` · `004` = `004_submit_quiz.test.sql` · `005` = `005_content_rules.test.sql` · `002` = `002_auth_triggers.test.sql` · `006` = `006_final_review.test.sql`
+- `rls.spec` = `e2e/api/rls.spec.ts` · `submit-quiz.spec` = `e2e/api/submit-quiz.spec.ts` (Playwright; อยู่ใน `e2e/api/` แล้ว — ชื่อเทสต์ใช้รหัส TC ในเอกสารนี้)
 - ชื่อในวงเล็บคือชื่อเทสต์ pgTAP (`test_...`) ในไฟล์นั้น
 
 **คอลัมน์ "M/A":** Manual หรือ Automated; ถ้าเป็น Automated เฉพาะระดับ pgTAP จะระบุเฉพาะไฟล์ pgTAP; ถ้ายังไม่ได้ automate จะเขียน "ยังไม่ automate" และระบุแผน (ไม่นับเป็นความครอบคลุมอัตโนมัติ)
@@ -28,6 +28,9 @@ TC ของ FR-01, FR-02, FR-05, FR-06, FR-07 และ NFR-02 … NFR-07 จ�
 - `explanation` เก็บใน `quiz_answer_keys` (อ่านได้เฉพาะแอดมิน) และ `submit_quiz` คืนให้ผู้เรียนหลังส่งเท่านั้น; `quiz_questions` ไม่มีคอลัมน์ `explanation`
 - ผู้ไม่ล็อกอินอ่าน `lessons` แล้วได้ผลว่าง (ไม่ใช่ error)
 - ผู้ไม่ล็อกอินเรียก `submit_quiz` ถูกปฏิเสธด้วยสิทธิ์ (SQLSTATE `42501`); ผู้ล็อกอินที่ไม่ผ่านเงื่อนไขในฟังก์ชันได้ `P0001` + รหัส error ข้างต้น
+- `submit_quiz` ปฏิเสธบทที่ข้อมูลไม่สมบูรณ์ (ไม่มีคำถามเลย, มีคำถามที่ไม่มีแถวใน `quiz_answer_keys`, หรือจำนวนตัวเลือกนอกช่วง 2–6) ด้วย `LESSON_INCOMPLETE` (ตรวจหลังตรวจการล็อก ก่อนตรวจรูปแบบคำตอบ)
+- คอร์สฟรีที่เปลี่ยนเป็น published ภายหลัง (ทริกเกอร์ `enroll_after_course_publish`) ลงทะเบียนผู้ใช้ทุกคนที่มีอยู่แล้วและปลดล็อกบทแรกที่ published; คอร์สไม่ฟรีไม่ลงทะเบียนอัตโนมัติ
+- วันที่ฝึกเทียบกับ "วันนี้" ตามเวลา `Asia/Bangkok` ผ่านฟังก์ชัน `public.bangkok_date(timestamptz)`
 - คะแนน `score_pct = round(ถูก / ทั้งหมด × 100)` ปัดแบบ half-up; ผ่านเมื่อ `score_pct ≥ pass_score` (ค่าเริ่มต้น 60)
 
 ---
@@ -43,14 +46,14 @@ TC ของ FR-01, FR-02, FR-05, FR-06, FR-07 และ NFR-02 … NFR-07 จ�
 | TC-SEC-05 | ผู้ไม่ล็อกอินอ่านบทเรียนไม่ได้ | NFR-01 | ไม่มี session; มีบท published | 1. GET `lessons` ด้วย anon key | ได้ผลว่าง ไม่ใช่ error; ไม่เห็นบทเรียนใดเลย | High | Security | Role-based | Automated | `e2e/api/rls.spec.ts`; `003` (`test_anon_cannot_read_lessons`) |
 | TC-SEC-06 | บทที่ล็อกเห็นชื่อแต่ไม่เห็นเนื้อหาและคำถาม | NFR-01, FR-03.1, FR-03.4 | ผู้เรียน A ลงทะเบียนแล้ว; บท 1 ปลดล็อก, บท 2 ล็อก | 1. SELECT `lessons` บท 2<br>2. SELECT `lesson_contents` บท 2<br>3. SELECT `quiz_questions` บท 2<br>4. SELECT `lesson_contents` บท 1 | 1 เห็นหัวบท (ชื่อ, `pass_score`)<br>2–3 ผลว่าง<br>4 เห็นเนื้อหา | High | Security | Role-based, State Transition | Automated | `e2e/api/rls.spec.ts`; `003` (`test_locked_lesson_title_visible`, `test_locked_lesson_content_hidden`, `test_locked_lesson_questions_hidden`, `test_unlocked_lesson_content_visible`) |
 | TC-SEC-07 | `submit_quiz` กับบทที่ล็อกได้ `LESSON_LOCKED` | NFR-01, FR-03.4, FR-04.3 | ผู้เรียน A; บท 2 ล็อก (ไม่มีแถว `lesson_progress`) | 1. เรียก RPC `submit_quiz(บท 2, คำตอบครบถูกต้อง)` ด้วย token A | ได้ error `LESSON_LOCKED`; ไม่มี `quiz_attempts` ใหม่ | High | Security | Role-based, Decision Table | Automated | `e2e/api/submit-quiz.spec.ts`; `004` (`test_locked_lesson_rejected`) |
-| TC-SEC-08 | ผู้ไม่ล็อกอินเรียก `submit_quiz` ไม่ได้ | NFR-01, FR-04.3 | ไม่มี session | 1. เรียก RPC `submit_quiz(บท 1, [])` ด้วย anon key | ถูกปฏิเสธด้วยสิทธิ์ (`42501`) ไม่มีผลลัพธ์คะแนนและไม่มี attempt ถูกสร้าง | High | Security | Role-based | Automated | `004` (`test_anon_cannot_submit`); e2e: ยังไม่เขียน (เสนอเพิ่มใน Task 9) |
+| TC-SEC-08 | ผู้ไม่ล็อกอินเรียก `submit_quiz` ไม่ได้ | NFR-01, FR-04.3 | ไม่มี session | 1. เรียก RPC `submit_quiz(บท 1, [])` ด้วย anon key | ถูกปฏิเสธด้วยสิทธิ์ (`42501`) ไม่มีผลลัพธ์คะแนนและไม่มี attempt ถูกสร้าง | High | Security | Role-based | Automated | `004` (`test_anon_cannot_submit`); e2e: ยังไม่เขียน |
 | TC-SEC-09 | ผู้เรียนเรียก `set_user_role` ไม่ได้ | NFR-01, FR-07.1 | ผู้เรียน A | 1. RPC `set_user_role(A, 'admin')` ด้วย token A | error `NOT_ADMIN`; role ไม่เปลี่ยน | High | Security | Role-based | Automated | `003` (`test_member_cannot_call_set_user_role`); e2e: ยังไม่เขียน |
 | TC-SEC-10 | ผู้เรียนแก้บันทึกการฝึกของผู้อื่นไม่ได้ | NFR-01, FR-05.4 | ผู้เรียน A, B; B มี log | 1. ล็อกอินเป็น A, UPDATE `practice_logs SET minutes = 1` ที่ `user_id` = B | ไม่มีแถวถูกแก้ (0 rows); log ของ B ไม่เปลี่ยน | High | Security | Role-based | Automated | `003` (`test_member_cannot_update_others_logs`); e2e: ยังไม่เขียน |
 | TC-SEC-11 | บทฉบับร่างและบทที่ถูกเปลี่ยนกลับเป็นฉบับร่างมองไม่เห็นสำหรับผู้เรียน | NFR-01, FR-07.4 | บท draft หนึ่งบท; อีกบทที่ A ปลดล็อกแล้วแต่แอดมินเปลี่ยนเป็น draft | 1. A SELECT `lessons` ของทั้งสองบท<br>2. A SELECT `lesson_contents` ของบทที่ถูกเปลี่ยนกลับ | ไม่เห็นทั้งหัวบทและเนื้อหา | High | Security | State Transition (draft ↔ published) | Automated | `003` (`test_member_cannot_see_draft_lessons`, `test_unpublished_lesson_hidden`, `test_unpublished_lesson_content_hidden`) |
 | TC-SEC-12 | คำอธิบายเฉลยอ่านไม่ได้ก่อนส่ง | NFR-01, FR-04.3 | ผู้เรียน A ล็อกอิน | 1. SELECT `explanation` จาก `quiz_answer_keys`<br>2. ตรวจว่า `quiz_questions` ไม่มีคอลัมน์ `explanation` | 1 ผลว่าง<br>2 ไม่มีคอลัมน์ดังกล่าว | High | Security | Role-based | Automated | `003` (`test_member_cannot_read_explanations`, `test_quiz_questions_has_no_explanation_column`) |
 | TC-SEC-13 | แอดมินอ่านเฉลย อ่านบันทึกทุกคน และตั้ง role ได้ | NFR-01, FR-07.1 | แอดมินล็อกอิน | 1. SELECT `quiz_answer_keys`<br>2. SELECT `practice_logs` ของผู้เรียน B<br>3. RPC `set_user_role` | ทั้งสามสำเร็จ | Medium | Positive | Role-based | Automated | `003` (`test_admin_reads_answer_keys`, `test_admin_reads_all_logs`, `test_admin_can_set_user_role`) |
 | TC-SEC-14 | ผู้ไม่ล็อกอินอ่านเฉพาะคอร์สที่เผยแพร่ | NFR-01 | คอร์ส published และ draft | 1. GET `courses` ด้วย anon key | เห็นเฉพาะคอร์ส published | Medium | Positive | Role-based | Automated | `003` (`test_anon_reads_published_courses`) |
-| TC-SEC-15 | ผู้เรียนอ่านความคืบหน้า ผลสอบ และ enrollments ของผู้อื่นไม่ได้ | NFR-01, FR-04.5 | ผู้เรียน A, B; B มี `lesson_progress`, `quiz_attempts`, `quiz_attempt_answers`, `enrollments` | 1. A SELECT แต่ละตารางโดยกรอง `user_id` = B | ทุกตารางคืนผลว่าง | High | Security | Role-based | Manual | ยังไม่ automate (นโยบายอยู่ในสเปก 4.3; `003` ยังไม่ครอบคลุมตารางเหล่านี้ — เสนอเพิ่ม pgTAP/Task 9) |
+| TC-SEC-15 | ผู้เรียนอ่านความคืบหน้า ผลสอบ และ enrollments ของผู้อื่นไม่ได้ | NFR-01, FR-04.5 | ผู้เรียน A, B; B มี `lesson_progress`, `quiz_attempts`, `quiz_attempt_answers`, `enrollments` | 1. A SELECT แต่ละตารางโดยกรอง `user_id` = B | ทุกตารางคืนผลว่าง | High | Security | Role-based | Manual | ยังไม่ automate (นโยบายอยู่ในสเปก 4.3; `003` ยังไม่ครอบคลุมตารางเหล่านี้) |
 | TC-SEC-16 | ไม่มี service role key ในโค้ดฝั่งเบราว์เซอร์ | NFR-01 | build production แล้ว | 1. ค้น `SUPABASE_SERVICE_ROLE_KEY` และค่า key ใน `src/` (ยกเว้น `e2e/`) และใน output ของ `next build` (`.next/static`)<br>2. ตรวจว่าตัวแปรไม่มีคำนำหน้า `NEXT_PUBLIC_` | ไม่พบทั้งชื่อตัวแปรและค่า key ในไฟล์ที่ส่งถึงเบราว์เซอร์ | High | Security | Static check | Manual | ยังไม่ automate (วางแผนเป็นขั้นตอน grep ใน CI) |
 | TC-SEC-17 | ผู้เรียนเข้าหน้าแอดมินไม่ได้ | NFR-01, FR-07.1 | ผู้เรียนล็อกอิน; หน้า `/admin` พร้อมใช้ (แผนที่ 3) | 1. เปิด `/admin`, `/admin/lessons`, `/admin/lessons/[id]` ด้วยบัญชีผู้เรียน<br>2. เปิดซ้ำด้วยผู้ไม่ล็อกอิน | ผู้เรียนถูกปฏิเสธ/พากลับ; ผู้ไม่ล็อกอินถูกพาไป `/login` | High | Security | Role-based | Automated (แผนที่ 3) | ยังไม่มี — จะเขียนใน `e2e/specs/` พร้อมหลังบ้านแอดมิน |
 
@@ -73,6 +76,7 @@ TC ของ FR-01, FR-02, FR-05, FR-06, FR-07 และ NFR-02 … NFR-07 จ�
 | TC-PATH-11 | เผยแพร่บทใหม่ไม่ปลดล็อกให้ผู้ที่ยังไม่ผ่านบทก่อนหน้า | FR-03.5 | ผู้เรียน B ยังไม่ผ่านบท 1 | 1. แอดมินเผยแพร่บท 2<br>2. ตรวจ `lesson_progress` ของ B | B ไม่มีแถวของบท 2 (ยังล็อก) | High | Negative | Decision Table | Automated | `005` (`test_publish_does_not_unlock_for_incomplete_learner`) |
 | TC-PATH-12 | เผยแพร่บทที่อยู่หลังบท draft: ปลดล็อกข้ามบท draft ถูกต้อง | FR-03.5, FR-03.3 | ผู้เรียน A จบบท ก่อนหน้า; มีบท draft คั่นกลาง | 1. เผยแพร่บทที่อยู่หลังบท draft<br>2. ตรวจผู้เรียนที่จบ/ไม่จบ | ผู้ที่จบบท published ก่อนหน้าได้ปลดล็อก; ผู้ที่ไม่จบไม่ได้ | Medium | Boundary | Decision Table | Automated | `005` (`test_unlock_skips_draft_for_completed_learner`, `test_unlock_skips_draft_not_for_incomplete_learner`) |
 | TC-PATH-13 | การเปลี่ยนสถานะบท ล็อก → เรียนได้ → จบแล้ว ไม่ถอยกลับ | FR-03.1, FR-04.5 | บทที่ผู้เรียนจบแล้ว | 1. สอบบทเดิมซ้ำได้คะแนนต่ำกว่า `pass_score`<br>2. ตรวจ `status` | `status` ยังเป็น completed และ `best_score` เดิม | High | Boundary | State Transition | Automated | `004` (`test_completed_not_downgraded`, `test_best_score_kept_on_lower_retake`); ดู TC-QZ-09 |
+| TC-PATH-14 | เผยแพร่คอร์สฟรีภายหลัง: ลงทะเบียนผู้ใช้เดิมและปลดล็อกบทแรก; คอร์สไม่ฟรีไม่ลงทะเบียน | FR-01.6, FR-03.2 | ผู้ใช้ A มีอยู่แล้ว; คอร์สฟรี (draft) กับคอร์สไม่ฟรี (draft) มีบท published 1–2 บท | 1. เผยแพร่ทั้งสองคอร์ส<br>2. ตรวจ `enrollments` และ `lesson_progress` ของ A | A ลงทะเบียนคอร์สฟรี (`source = free`) และมีแถว unlocked เฉพาะบท sort_order ต่ำสุด; ไม่มี enrollment คอร์สไม่ฟรี | High | Positive | State Transition | Automated | `006` (`test_publish_free_course_enrolls_existing_user`, `test_publish_free_course_unlocks_first_lesson`, `test_publish_paid_course_does_not_enroll`) |
 
 ---
 
@@ -119,16 +123,29 @@ TC ของ FR-01, FR-02, FR-05, FR-06, FR-07 และ NFR-02 … NFR-07 จ�
 | TC-QZ-21 | หน้าผลลัพธ์แสดงคะแนน ผ่าน/ไม่ผ่าน เฉลยรายข้อ และปุ่มที่ถูกต้อง | FR-04.4 | ผู้เรียนส่งแบบทดสอบแล้ว | 1. สอบผ่านบทที่มีบทถัดไป<br>2. สอบผ่านบทสุดท้าย<br>3. สอบไม่ผ่าน | 1 ปุ่ม "ไปบทถัดไป"<br>2 ปุ่ม "จบคอร์สแล้ว"<br>3 ปุ่ม "ทบทวนบทเรียน" และ "สอบใหม่"; ทุกกรณีแสดงคะแนน (%) เฉลยและคำอธิบายรายข้อ | High | Positive | Decision Table | Automated (แผนที่ 2) | ยังไม่มี — ยังไม่ automate (ข้อมูลระดับ DB ดู TC-QZ-03, TC-QZ-07) |
 | TC-QZ-22 | กดส่งซ้ำระหว่างรอผลไม่ได้ | FR-04.6 | หน้าแบบทดสอบตอบครบ; หน่วงเครือข่าย | 1. กดส่ง<br>2. กดส่งอีกทันทีขณะรอผล | ปุ่มส่งถูกปิดระหว่างรอ; มี attempt เพียง 1 แถว (ระดับ DB: ส่งซ้ำไม่ทำให้ข้อมูลผิด ดู TC-QZ-06) | High | Negative | Error guessing | Automated (แผนที่ 2) | ยังไม่มี — ยังไม่ automate |
 | TC-QZ-23 | เครือข่ายล้มเหลวแล้วส่งอีกครั้งโดยคำตอบไม่หาย | FR-04.6 | หน้าแบบทดสอบตอบครบ | 1. ตัดเครือข่าย (offline) แล้วกดส่ง<br>2. เปิดเครือข่าย กด "ส่งอีกครั้ง" | แสดงข้อความผิดพลาดภาษาไทย คำตอบที่เลือกยังอยู่; ส่งใหม่สำเร็จและได้ผลปกติ | High | Negative | Error guessing | Automated (แผนที่ 2) | ยังไม่มี — ยังไม่ automate (ทดลองด้วย Playwright `context.setOffline`) |
+| TC-QZ-24 | บทที่ข้อมูลไม่สมบูรณ์ถูกปฏิเสธด้วย `LESSON_INCOMPLETE` | FR-04.3, NFR-01 | ผู้เรียนบทที่ปลดล็อกแล้ว; (ก) ลบแถว `quiz_answer_keys` ของข้อหนึ่ง (ข) ลบคำถามทั้งหมดของบท | 1. เรียก `submit_quiz` ของแต่ละบท | error `LESSON_INCOMPLETE` ทั้งสองกรณี ไม่มี attempt ถูกบันทึก | High | Negative | Error Guessing | Automated | `006` (`test_missing_answer_key_lesson_incomplete`, `test_zero_question_lesson_incomplete`) |
 
 ---
 
-## 5. สรุปจำนวน TC (ชุดแรก)
+## 5. FR-05 และ FR-07 (ระดับ DB)
+
+| รหัส | ชื่อ | อ้างอิง | เงื่อนไขก่อนเริ่ม | ขั้นตอน | ผลที่คาดหวัง | ความสำคัญ | ประเภท | เทคนิค | M/A | ไฟล์เทสต์อัตโนมัติ |
+|---|---|---|---|---|---|---|---|---|---|---|
+| TC-PRC-01 | วันที่ฝึกเป็นวันนี้ (เวลา Bangkok) ได้ วันพรุ่งนี้ไม่ได้ | FR-05.2 | ผู้เรียน A; timezone ของ session ตั้งให้ช้ากว่า Bangkok | 1. บันทึกการฝึกด้วย `practiced_on` = วันนี้ตามเวลา Bangkok<br>2. บันทึกด้วยวันพรุ่งนี้<br>3. เรียก `bangkok_date` ที่ขอบเที่ยงคืน (UTC 16:59 และ 17:30) | ข้อ 1 สำเร็จ; ข้อ 2 error `FUTURE_DATE`; `bangkok_date` ให้วันเดิม/วันถัดไปตามลำดับ | High | Boundary | BVA | Automated (ระดับ DB; UI รอแผนที่ 2) | `003` (`test_practice_date_today_ok`, `test_practice_date_tomorrow_rejected`); `006` (`test_bangkok_date_*`, `test_practice_trigger_uses_bangkok_date`) |
+| TC-ADM-01 | เผยแพร่บทที่ไม่สมบูรณ์ไม่ได้ | FR-07.5 | บท draft ที่ (ก) ไม่มีคำถาม (ข) มีคำถามไม่มีข้อถูก (ค) มีคำถามที่มีตัวเลือกเดียว | 1. เปลี่ยนสถานะเป็น published | error `LESSON_INCOMPLETE` ทุกกรณี; บทที่ครบเผยแพร่ได้ | High | Negative | Decision Table | Automated (ระดับ DB; UI รอแผนที่ 3) | `005` (`test_cannot_publish_without_questions`, `test_cannot_publish_question_without_key`, `test_cannot_publish_question_with_one_choice`, `test_complete_draft_publishes`) |
+| TC-ADM-02 | ลบบทที่มีผู้เรียนเคยเรียนไม่ได้ | FR-07.6 | บทที่มีแถว `lesson_progress` หรือ `quiz_attempts`; อีกบทที่ไม่มีข้อมูลผู้เรียน | 1. ลบแต่ละบท | บทแรก error `LESSON_HAS_LEARNERS` (ให้เปลี่ยนเป็น draft แทน); บทหลังลบได้ | High | Negative | Equivalence Partitioning | Automated (ระดับ DB; UI รอแผนที่ 3) | `005` (`test_cannot_delete_lesson_with_learners`, `test_can_delete_untouched_lesson`) |
+
+---
+
+## 6. สรุปจำนวน TC (ชุดแรก)
 
 | พื้นที่ | จำนวน TC | Automated แล้ว (pgTAP และ/หรือ e2e ที่ตั้งชื่อไว้) | ยังไม่ automate / รอแผนที่ 2–3 |
 |---|---|---|---|
 | TC-SEC (NFR-01) | 17 | 14 (SEC-01–14) | 3 (SEC-15, 16, 17) |
-| TC-PATH (FR-03) | 13 | 11 (PATH-02–07, 09–13) | 2 (PATH-01, 08) |
-| TC-QZ (FR-04) | 23 | 15 (QZ-01–07, 09, 10, 12, 14, 16, 17 และ QZ-18, QZ-20 เฉพาะระดับ API/DB) | 8 (QZ-08, 11, 13, 15, 19, 21, 22, 23) |
-| รวม | 53 | — | — |
+| TC-PATH (FR-03) | 14 | 12 (PATH-02–07, 09–14) | 2 (PATH-01, 08) |
+| TC-QZ (FR-04) | 24 | 16 (QZ-01–07, 09, 10, 12, 14, 16, 17, 24 และ QZ-18, QZ-20 เฉพาะระดับ API/DB) | 8 (QZ-08, 11, 13, 15, 19, 21, 22, 23) |
+| TC-PRC (FR-05, ระดับ DB) | 1 | 1 (PRC-01) | 0 |
+| TC-ADM (FR-07, ระดับ DB) | 2 | 2 (ADM-01, 02) | 0 |
+| รวม | 58 | — | — |
 
-หมายเหตุ: "Automated แล้ว" รวมเทสต์ pgTAP ที่มีอยู่ใน `supabase/tests/` และเทสต์ Playwright ที่ Task 9 จะเขียนตามรหัส TC-SEC-01…07 และ TC-QZ-01…04; TC-QZ-18 และ TC-QZ-20 เป็น Automated เฉพาะส่วน API/DB ส่วน UI ยังเป็น Manual
+หมายเหตุ: "Automated แล้ว" รวมเทสต์ pgTAP ที่มีอยู่ใน `supabase/tests/` และเทสต์ Playwright ใน `e2e/api/` ที่ตั้งชื่อตามรหัส TC-SEC-01…07 และ TC-QZ-01…04; TC-QZ-18 และ TC-QZ-20 เป็น Automated เฉพาะส่วน API/DB ส่วน UI ยังเป็น Manual

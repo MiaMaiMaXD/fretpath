@@ -110,6 +110,6 @@ Priority: P1 แก้ทันที · P2 แก้ในรอบนี้ ·
 | Test Cases | `docs/qa/test-cases.md` | FR-03, FR-04, NFR-01 ครบ; ส่วนอื่นต่อในแผนที่ 2–3 |
 | RTM | `docs/qa/rtm.md` | ครบทุกแถว; TC ส่วนที่เหลือรอแผนที่ 2–3 |
 | เทมเพลต Defect Report | `.github/ISSUE_TEMPLATE/defect.yml` | พร้อมใช้ |
-| ชุดเทสต์อัตโนมัติ | `supabase/tests/`, `e2e/` | pgTAP 001–005 มีแล้ว; Playwright security ใน Task 9 |
+| ชุดเทสต์อัตโนมัติ | `supabase/tests/`, `e2e/` | pgTAP 001–006 และ Playwright `e2e/api` มีแล้ว |
 | รายงานการรันเทสต์ | HTML report ของ Playwright (CI artifact) | ตามการรันจริง |
 | Test Summary Report | `docs/qa/test-summary.md` | ปิดโครงการ |

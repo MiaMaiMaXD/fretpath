@@ -34,10 +34,15 @@ export async function createTestUser(
   const id = data.user.id;
 
   if (role === 'admin') {
-    const { error: roleError } = await admin.from('profiles').update({ role }).eq('id', id);
-    if (roleError) {
+    const { data: updated, error: roleError } = await admin
+      .from('profiles')
+      .update({ role })
+      .eq('id', id)
+      .select('role')
+      .single();
+    if (roleError || updated?.role !== 'admin') {
       await admin.auth.admin.deleteUser(id);
-      throw new Error(`createTestUser role update failed: ${roleError.message}`);
+      throw new Error(`createTestUser role update failed: ${roleError?.message ?? 'role not applied'}`);
     }
   }
   return { id, email, password, role };
