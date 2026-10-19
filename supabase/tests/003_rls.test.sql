@@ -1,6 +1,6 @@
 begin;
 \ir helpers/auth.psql
-select plan(21);
+select plan(23);
 
 -- fixtures (as postgres)
 with c as (
@@ -46,12 +46,20 @@ select is_empty(format('select 1 from lessons where id = %L', :'draft'), 'test_m
 -- test_unpublished_lesson_content_hidden
 select is_empty(format('select 1 from lessons where id = %L', :'lu'), 'test_unpublished_lesson_hidden');
 select is_empty(format('select 1 from lesson_contents where lesson_id = %L', :'lu'), 'test_unpublished_lesson_content_hidden');
--- test_practice_date_uses_bangkok_today
+-- test_member_cannot_read_explanations: explanation exists only on admin-only quiz_answer_keys
+select is_empty($$ select 1 from information_schema.columns
+  where table_schema = 'public' and table_name = 'quiz_questions' and column_name = 'explanation' $$,
+  'test_quiz_questions_has_no_explanation_column');
+select is_empty($$ select explanation from quiz_answer_keys $$, 'test_member_cannot_read_explanations');
+-- test_practice_date_uses_bangkok_today: session date far behind Bangkok, so a current_date/UTC
+-- implementation would reject "today in Bangkok" for most of the day
+set local timezone = 'Etc/GMT+12';
 select lives_ok($$ insert into practice_logs(user_id, practiced_on, minutes, activity)
   values (auth.uid(), (now() at time zone 'Asia/Bangkok')::date, 10, 'x') $$, 'test_practice_date_today_ok');
 select throws_ok($$ insert into practice_logs(user_id, practiced_on, minutes, activity)
   values (auth.uid(), (now() at time zone 'Asia/Bangkok')::date + 1, 10, 'x') $$, 'P0001', 'FUTURE_DATE',
   'test_practice_date_tomorrow_rejected');
+reset timezone;
 select tests.authenticate_anon();
 -- test_anon_cannot_read_lessons
 select is_empty($$ select 1 from lessons $$, 'test_anon_cannot_read_lessons');

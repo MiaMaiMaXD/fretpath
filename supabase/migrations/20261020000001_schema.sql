@@ -80,7 +80,6 @@ create table public.quiz_questions (
   lesson_id uuid not null references public.lessons (id) on delete cascade,
   prompt text not null,
   image_url text,
-  explanation text,
   sort_order int not null default 0,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
@@ -99,6 +98,8 @@ create table public.quiz_choices (
 create table public.quiz_answer_keys (
   question_id uuid primary key references public.quiz_questions (id) on delete cascade,
   correct_choice_id uuid not null,
+  -- explanation lives here (admin-only) so it cannot leak the answer before submission
+  explanation text,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   -- the correct choice must belong to the same question

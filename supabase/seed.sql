@@ -9,15 +9,16 @@ declare
   v_lesson uuid; v_q uuid := gen_random_uuid(); v_c uuid; v_key uuid;
 begin
   select id into v_lesson from public.lessons where slug = p_lesson_slug;
-  insert into public.quiz_questions (id, lesson_id, prompt, explanation, sort_order)
-  values (v_q, v_lesson, p_prompt, p_expl, p_n);
+  insert into public.quiz_questions (id, lesson_id, prompt, sort_order)
+  values (v_q, v_lesson, p_prompt, p_n);
   for i in 1..array_length(p_choices, 1) loop
     v_c := gen_random_uuid();
     insert into public.quiz_choices (id, question_id, text, sort_order)
     values (v_c, v_q, p_choices[i], i);
     if i = p_correct then v_key := v_c; end if;
   end loop;
-  insert into public.quiz_answer_keys (question_id, correct_choice_id) values (v_q, v_key);
+  insert into public.quiz_answer_keys (question_id, correct_choice_id, explanation)
+  values (v_q, v_key, p_expl);
 end $$;
 
 insert into public.courses (slug, title, description, is_free, status, sort_order)

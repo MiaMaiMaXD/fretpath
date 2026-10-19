@@ -57,8 +57,8 @@ begin
   values (v_lesson, '# Content ' || p_sort, null);
   for i in 1..p_questions loop
     v_q := gen_random_uuid();
-    insert into public.quiz_questions (id, lesson_id, prompt, explanation, sort_order)
-    values (v_q, v_lesson, 'Question ' || i, 'Explanation ' || i, i);
+    insert into public.quiz_questions (id, lesson_id, prompt, sort_order)
+    values (v_q, v_lesson, 'Question ' || i, i);
     v_first := null;
     for j in 1..3 loop
       v_c := gen_random_uuid();
@@ -66,7 +66,8 @@ begin
       values (v_c, v_q, 'Choice ' || j, j);
       if j = 1 then v_first := v_c; end if;
     end loop;
-    insert into public.quiz_answer_keys (question_id, correct_choice_id) values (v_q, v_first);
+    insert into public.quiz_answer_keys (question_id, correct_choice_id, explanation)
+      values (v_q, v_first, 'Explanation ' || i);
   end loop;
   if p_status <> 'draft' then
     update public.lessons set status = p_status where id = v_lesson;
