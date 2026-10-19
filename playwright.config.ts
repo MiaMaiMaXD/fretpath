@@ -21,10 +21,9 @@ export default defineConfig({
   projects: [
     { name: 'setup', testMatch: /auth\.setup\.ts/, teardown: 'teardown' },
     { name: 'teardown', testMatch: /auth\.teardown\.ts/ },
-    // TODO(Task 3): add `dependencies: ['setup']` to the browser projects once /login exists.
-    { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
-    { name: 'firefox', use: { ...devices['Desktop Firefox'] } },
-    { name: 'mobile', use: { ...devices['Pixel 7'] } },
+    { name: 'chromium', dependencies: ['setup'], use: { ...devices['Desktop Chrome'] } },
+    { name: 'firefox', dependencies: ['setup'], use: { ...devices['Desktop Firefox'] } },
+    { name: 'mobile', dependencies: ['setup'], use: { ...devices['Pixel 7'] } },
   ],
   webServer: {
     command: 'npm run start',
