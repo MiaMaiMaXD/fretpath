@@ -1,6 +1,6 @@
 begin;
 \ir helpers/auth.psql
-select plan(26);
+select plan(27);
 
 select tests.create_user('schema-test@example.com') as u \gset
 with c as (
@@ -33,6 +33,11 @@ select throws_ok(format('update lessons set sort_order = 1 where id = %L', :'l2'
 select throws_ok(format('update lessons set sort_order = 2 where id = %L; update lessons set sort_order = 1 where id = %L', :'l1', :'l2'), '23505');
 -- ... and succeed with deferral (constraints re-checked immediately at the end)
 select lives_ok (format('set constraints all deferred; update lessons set sort_order = 2 where id = %L; update lessons set sort_order = 1 where id = %L; set constraints all immediate', :'l1', :'l2'));
+
+-- helpers work while authenticated (security definer)
+select tests.authenticate_as(:'u');
+select lives_ok(format('select tests.make_lesson(%L, 3)', :'c'), 'make_lesson works as authenticated');
+select tests.clear_auth();
 
 select * from finish();
 rollback;

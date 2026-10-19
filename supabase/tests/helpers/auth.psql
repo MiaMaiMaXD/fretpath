@@ -4,7 +4,7 @@ create schema if not exists tests;
 grant usage on schema tests to anon, authenticated;
 
 create or replace function tests.create_user(p_email text, p_role user_role default 'member')
-returns uuid language plpgsql as $$
+returns uuid language plpgsql security definer set search_path = public, extensions, pg_temp as $$
 declare v_id uuid := gen_random_uuid();
 begin
   insert into auth.users (
@@ -45,7 +45,7 @@ end $$;
 create or replace function tests.make_lesson(
   p_course uuid, p_sort int, p_status content_status default 'published',
   p_pass int default 60, p_questions int default 5)
-returns uuid language plpgsql as $$
+returns uuid language plpgsql security definer set search_path = public, extensions, pg_temp as $$
 declare
   v_lesson uuid := gen_random_uuid();
   v_q uuid; v_first uuid; v_c uuid;
