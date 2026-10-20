@@ -13,6 +13,7 @@ export const MEMBER_STATE = 'e2e/.auth/member.json';
 type Fixtures = {
   member: TestUser;
   memberPage: Page;
+  adminPage: Page;
   otherMember: TestUser;
   admin: TestUser;
   memberDb: Db;
@@ -57,6 +58,13 @@ export const test = base.extend<Fixtures>({
     const login = new LoginPage(page);
     await login.goto();
     await login.login(member.email, member.password);
+    await page.waitForURL(/\/dashboard/);
+    await use(page);
+  },
+  adminPage: async ({ admin, page }, use) => {
+    const login = new LoginPage(page);
+    await login.goto();
+    await login.login(admin.email, admin.password);
     await page.waitForURL(/\/dashboard/);
     await use(page);
   },

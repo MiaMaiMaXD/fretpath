@@ -36,12 +36,16 @@ export async function proxy(request: NextRequest) {
 
   const { pathname, search } = request.nextUrl;
   const isProtected = PROTECTED.some((p) => pathname === p || pathname.startsWith(`${p}/`));
+  const isAdminPath = pathname === "/admin" || pathname.startsWith("/admin/");
   const isGuestOnly = pathname === "/login" || pathname === "/signup";
 
   let target: URL | null = null;
-  if (!user && isProtected) {
+  if (!user && (isProtected || isAdminPath)) {
     target = new URL("/login", request.url);
     target.searchParams.set("next", pathname + search);
+  } else if (user && isAdminPath) {
+    const { data: isAdmin } = await supabase.rpc("is_admin");
+    if (!isAdmin) target = new URL("/dashboard", request.url);
   } else if (user && isGuestOnly) {
     target = new URL(safeNextPath(request.nextUrl.searchParams.get("next")), request.url);
   }
