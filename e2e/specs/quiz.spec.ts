@@ -1,3 +1,4 @@
+import type { Request } from '@playwright/test';
 import { test, expect } from '../fixtures';
 import { QuizPage } from '../pages/QuizPage';
 import { PathPage } from '../pages/PathPage';
@@ -139,22 +140,26 @@ test('TC-QZ-22 double click submits once @smoke @regression', async ({ memberPag
   const answers = await buildAnswers(adminDb, await lessonIdBySlug(adminDb, L1), 5);
   await quiz.goto(L1);
   await quiz.answerByText(await choiceTexts(adminDb, answers));
+
+  // Count Server Action requests and track them until every one has finished.
+  const actions = new Set<Request>();
+  const done = new Set<Request>();
+  memberPage.on('request', (r) => {
+    if (r.headers()['next-action'] !== undefined) actions.add(r);
+  });
+  memberPage.on('requestfinished', (r) => done.add(r));
+  memberPage.on('requestfailed', (r) => done.add(r));
+
   await memberPage.getByRole('button', { name: 'ส่งคำตอบ' }).dblclick();
   await expect(memberPage.getByTestId('quiz-score')).toBeVisible();
-  const countAttempts = async () => {
-    const { count } = await adminDb
-      .from('quiz_attempts')
-      .select('id', { count: 'exact', head: true })
-      .eq('user_id', member.id);
-    return count;
-  };
-  expect(await countAttempts()).toBe(1);
-  // A late duplicate request would show up shortly after the score; it must never appear.
-  await memberPage.waitForLoadState('networkidle');
-  await expect
-    .poll(async () => (await countAttempts()) === 1, { timeout: 3000, intervals: [500] })
-    .toBe(true);
-  expect(await countAttempts()).toBe(1);
+  await expect.poll(() => actions.size > 0 && [...actions].every((r) => done.has(r))).toBe(true);
+  expect(actions.size, 'Server Action requests').toBe(1);
+
+  const { count } = await adminDb
+    .from('quiz_attempts')
+    .select('id', { count: 'exact', head: true })
+    .eq('user_id', member.id);
+  expect(count).toBe(1);
 });
 
 test('TC-QZ-28 locked quiz URL redirects to path @regression', async ({ memberPage }) => {
