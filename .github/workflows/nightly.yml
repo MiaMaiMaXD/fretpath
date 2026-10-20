@@ -118,11 +118,32 @@ jobs:
           retention-days: 14
           if-no-files-found: ignore
 
+      - name: Lighthouse summary
+        if: ${{ !cancelled() }}
+        run: |
+          node -e '
+            const fs = require("fs");
+            const dir = ".lighthouseci";
+            const files = fs.existsSync(dir) ? fs.readdirSync(dir).filter(f => /^lhr-.*\.json$/.test(f)) : [];
+            const med = a => a.sort((x, y) => x - y)[Math.floor(a.length / 2)];
+            const runs = files.map(f => JSON.parse(fs.readFileSync(`${dir}/${f}`, "utf8")));
+            if (!runs.length) { console.log("no Lighthouse results"); process.exit(0); }
+            const lcp = med(runs.map(r => r.audits["largest-contentful-paint"].numericValue));
+            const tti = med(runs.map(r => r.audits["interactive"]?.numericValue ?? NaN));
+            const tbt = med(runs.map(r => r.audits["total-blocking-time"].numericValue));
+            const a11y = med(runs.map(r => r.categories.accessibility.score));
+            const out = `| metric (median of ${runs.length}) | value |\n|---|---|\n| LCP | ${Math.round(lcp)} ms |\n| TTI | ${Math.round(tti)} ms |\n| TBT | ${Math.round(tbt)} ms |\n| accessibility | ${a11y} |\n`;
+            console.log(out);
+            fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, `### Lighthouse (production)\n\n${out}`);
+          '
+
       - name: Upload Lighthouse reports
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: lighthouse-report
           path: .lighthouseci/
+          # upload-artifact v4 skips dot-directories unless told otherwise.
+          include-hidden-files: true
           retention-days: 14
-          if-no-files-found: ignore
+          if-no-files-found: warn
