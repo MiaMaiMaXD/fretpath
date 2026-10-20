@@ -46,6 +46,20 @@ async function safeDelete(id: string): Promise<void> {
 
 // Fixtures are lazy: a user is only created when a test requests it.
 export const test = base.extend<Fixtures>({
+  // Wrap `page` (lazy, so API-only tests never create one): fail on CSP violations.
+  page: async ({ page }, use) => {
+    const violations: string[] = [];
+    page.on('console', (msg) => {
+      if (msg.text().includes('Content Security Policy')) violations.push(msg.text());
+    });
+    await page.addInitScript(() => {
+      document.addEventListener('securitypolicyviolation', (e) => {
+        console.error(`Content Security Policy violation: ${e.violatedDirective} ${e.blockedURI}`);
+      });
+    });
+    await use(page);
+    expect(violations, 'CSP violations in console').toEqual([]);
+  },
   member: async ({}, use) => {
     const user = await createTestUser({ role: 'member' });
     try {
