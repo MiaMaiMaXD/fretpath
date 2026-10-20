@@ -39,6 +39,8 @@ export function Metronome() {
     let nextTime = ctx.currentTime + 0.05;
     let beat = 0;
     const pump = () => {
+      // after a throttled/backgrounded tab, skip missed beats instead of firing them all at once
+      if (nextTime < ctx.currentTime) nextTime = ctx.currentTime + 0.05;
       const horizon = ctx.currentTime + LOOKAHEAD_MS / 1000;
       while (nextTime < horizon) {
         scheduleClicks(ctx, bpmRef.current, nextTime, 1, beat);

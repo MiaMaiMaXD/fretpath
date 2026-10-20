@@ -33,6 +33,9 @@ describe('validateLessonInput', () => {
     expect(validateLessonInput({ ...ok, videoUrl: '' }).videoUrl).toBeUndefined();
     expect(validateLessonInput({ ...ok, videoUrl: 'https://youtu.be/dQw4w9WgXcQ' }).videoUrl).toBeUndefined();
     expect(validateLessonInput({ ...ok, videoUrl: 'https://vimeo.com/1' }).videoUrl).toBe('ต้องเป็นลิงก์ YouTube');
+    // passes the DB prefix check but cannot be embedded (12-char id)
+    expect(validateLessonInput({ ...ok, videoUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQx' }).videoUrl).toBe('ต้องเป็นลิงก์ YouTube');
+    expect(validateLessonInput({ ...ok, videoUrl: 'https://youtu.be/dQw4w9WgXcQx' }).videoUrl).toBe('ต้องเป็นลิงก์ YouTube');
   });
 });
 

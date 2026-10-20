@@ -22,20 +22,30 @@ export type AdminOverview = { courses: CourseCount[]; learnerCount: number };
 export async function getAdminOverview(): Promise<AdminOverview> {
   await requireAdmin();
   const supabase = await createClient();
-  const [courses, lessons, learners] = await Promise.all([
+  const [courses, learners] = await Promise.all([
     supabase.from('courses').select('id, slug, title').order('sort_order'),
-    supabase.from('lessons').select('course_id, status'),
     supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('role', 'member'),
   ]);
   if (courses.error) throw new Error(courses.error.message);
-  if (lessons.error) throw new Error(lessons.error.message);
   if (learners.error) throw new Error(learners.error.message);
-  return {
-    courses: (courses.data ?? []).map((c) => {
-      const ls = (lessons.data ?? []).filter((l) => l.course_id === c.id);
-      const published = ls.filter((l) => l.status === 'published').length;
-      return { ...c, published, draft: ls.length - published };
+  // head-only count queries per course/status: no lesson rows are loaded, so no 1000-row cap applies
+  const counted = await Promise.all(
+    (courses.data ?? []).map(async (c) => {
+      const count = async (status: 'published' | 'draft') => {
+        const r = await supabase
+          .from('lessons')
+          .select('id', { count: 'exact', head: true })
+          .eq('course_id', c.id)
+          .eq('status', status);
+        if (r.error) throw new Error(r.error.message);
+        return r.count ?? 0;
+      };
+      const [published, draft] = await Promise.all([count('published'), count('draft')]);
+      return { ...c, published, draft };
     }),
+  );
+  return {
+    courses: counted,
     learnerCount: learners.count ?? 0,
   };
 }

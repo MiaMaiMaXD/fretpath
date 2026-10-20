@@ -30,7 +30,7 @@ UI `@security` ที่เพิ่ม (2 เทสต์): TC-AUTH-07, TC-PRC-
 
 เพิ่มในแผนที่ 3:
 - `@smoke` (5 เทสต์): TC-ADM-03, TC-ADM-04, TC-ADM-09, TC-ADM-18 (admin smoke) · TC-AUTH-11 (ลิงก์ยืนยันอีเมลข้ามอุปกรณ์)
-- `@security` (9 เทสต์): TC-SEC-19, TC-SEC-20, TC-SEC-21, TC-SEC-22, TC-SEC-23, TC-SEC-25, TC-AUTH-14 (UI/ระดับ DB ผ่าน spec) · TC-SEC-24 ทำงาน 3 รายการ (`/`, `/login`, `/api/health`) ใน `e2e/api/headers.spec.ts`
+- `@security` (8 เทสต์): TC-SEC-19, TC-SEC-20, TC-SEC-21, TC-SEC-22, TC-SEC-23, TC-SEC-25, TC-AUTH-14 (UI/ระดับ DB ผ่าน spec) · TC-SEC-24 ทำงาน 3 รายการ (`/`, `/login`, `/api/health`) ใน `e2e/api/headers.spec.ts`
 (สรุป: UI เพิ่ม 12 = smoke 5 + security 7 ; `e2e/api` เพิ่ม 3 จาก TC-SEC-24; ที่เหลือใน `e2e/specs/` เป็น `@regression` ล้วน — รันในเครื่องบน `chromium`, `firefox`, `mobile` ไม่รันใน CI ตามการออกแบบ)
 
 ### เวลารันและ timeout

@@ -103,11 +103,12 @@ export async function publishLesson(id: string): Promise<LessonActionResult> {
   }
   if (check.data.length > 0) return { ok: false, problems: check.data };
 
-  const { error } = await supabase.from('lessons').update({ status: 'published' }).eq('id', id);
+  const { data, error } = await supabase.from('lessons').update({ status: 'published' }).eq('id', id).select('id');
   if (error) {
     const code = errorCodeFrom(error);
     return { ok: false, code, message: thaiError(code) };
   }
+  if (!data || data.length === 0) return { ok: false, code: 'LESSON_NOT_FOUND', message: thaiError('LESSON_NOT_FOUND') };
   refresh(id);
   return { ok: true };
 }
@@ -115,11 +116,12 @@ export async function publishLesson(id: string): Promise<LessonActionResult> {
 export async function unpublishLesson(id: string): Promise<LessonActionResult> {
   await requireAdmin();
   const supabase = await createClient();
-  const { error } = await supabase.from('lessons').update({ status: 'draft' }).eq('id', id);
+  const { data, error } = await supabase.from('lessons').update({ status: 'draft' }).eq('id', id).select('id');
   if (error) {
     const code = errorCodeFrom(error);
     return { ok: false, code, message: thaiError(code) };
   }
+  if (!data || data.length === 0) return { ok: false, code: 'LESSON_NOT_FOUND', message: thaiError('LESSON_NOT_FOUND') };
   refresh(id);
   return { ok: true };
 }
@@ -127,11 +129,12 @@ export async function unpublishLesson(id: string): Promise<LessonActionResult> {
 export async function deleteLesson(id: string): Promise<LessonActionResult> {
   await requireAdmin();
   const supabase = await createClient();
-  const { error } = await supabase.from('lessons').delete().eq('id', id);
+  const { data, error } = await supabase.from('lessons').delete().eq('id', id).select('id');
   if (error) {
     const code = errorCodeFrom(error);
     return { ok: false, code, message: thaiError(code), offerDraft: code === 'LESSON_HAS_LEARNERS' };
   }
+  if (!data || data.length === 0) return { ok: false, code: 'LESSON_NOT_FOUND', message: thaiError('LESSON_NOT_FOUND') };
   refresh();
   return { ok: true };
 }

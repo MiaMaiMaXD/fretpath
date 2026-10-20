@@ -24,6 +24,7 @@ export async function signUp(_prev: ActionState, formData: FormData): Promise<Ac
   const { error } = await supabase.auth.signUp({
     email,
     password,
+    // Production fallback until the hosted email templates link to /auth/confirm with {{ .TokenHash }}.
     options: { emailRedirectTo: `${siteUrl()}/auth/callback?next=/dashboard` },
   });
   if (error) return { ok: false, message: thaiError(errorCodeFrom(error)), values: { email } };
