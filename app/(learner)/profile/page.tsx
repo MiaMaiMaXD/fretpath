@@ -1,3 +1,4 @@
+import { AvatarUpload } from '@/components/AvatarUpload';
 import { getMyProfile } from '@/lib/data/profile';
 import { ProfileForm } from './form';
 
@@ -6,6 +7,7 @@ export default async function ProfilePage() {
   return (
     <div className="flex flex-col gap-4">
       <h1 className="text-2xl font-semibold">โปรไฟล์</h1>
+      <AvatarUpload userId={p.id} avatarUrl={p.avatarUrl} />
       <p>
         <span className="text-sm font-medium">อีเมล</span>
         <br />
