@@ -58,9 +58,11 @@ jobs:
       - name: Start throwaway Postgres (no logs)
         run: |
           set -euo pipefail
-          docker run -d --name restore-pg --log-driver none             -e POSTGRES_PASSWORD=postgres -p 5432:5432 postgres:17 > /dev/null
+          docker run -d --name restore-pg --log-driver none \
+            -e POSTGRES_PASSWORD=postgres -p 5432:5432 postgres:17 > /dev/null
+          # Check over TCP: the image's init phase serves the unix socket only, then restarts.
           for i in $(seq 1 30); do
-            if docker exec restore-pg pg_isready -U postgres > /dev/null 2>&1; then exit 0; fi
+            if docker exec restore-pg pg_isready -h 127.0.0.1 -U postgres > /dev/null 2>&1; then exit 0; fi
             sleep 2
           done
           echo "::error::throwaway Postgres did not become ready"
