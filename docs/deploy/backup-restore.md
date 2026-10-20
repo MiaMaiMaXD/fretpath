@@ -25,10 +25,11 @@ gh run download <run-id> --repo <owner>/<repo> -n fretpath-backup
 ## ถอดรหัส
 
 ```bash
-gpg --batch --pinentry-mode loopback -d fretpath-backup-YYYY-MM-DD.tar.gz.gpg > backup.tar.gz
-# หรือไม่ใส่ --batch เพื่อให้ gpg ถามรหัสผ่าน
+gpg -d fretpath-backup-YYYY-MM-DD.tar.gz.gpg > backup.tar.gz   # gpg จะถาม passphrase
 mkdir restore && tar xzf backup.tar.gz -C restore   # ได้ roles.sql schema.sql data.sql
 ```
+
+ความเข้ากันได้: ไฟล์ถูกสร้างด้วย `gpg --symmetric --cipher-algo AES256` (โหมด MDC ปกติ ไม่ใช้ AEAD ที่ไม่ได้สั่ง) จึงถอดรหัสได้ด้วย GnuPG 2.1 ขึ้นไป (ubuntu-latest ใช้ 2.4.x) ไม่ต้องใช้ตัวเลือกพิเศษ
 
 ใช้ passphrase ที่เก็บไว้นอก GitHub (secret `BACKUP_PASSPHRASE`) ถ้า passphrase หาย backup เก่าจะเปิดไม่ได้เลย ลบไฟล์ `backup.tar.gz` และโฟลเดอร์ `restore` ทิ้งเมื่อเสร็จ
 
@@ -36,9 +37,7 @@ mkdir restore && tar xzf backup.tar.gz -C restore   # ได้ roles.sql schema
 
 ```bash
 npx supabase start
-npx supabase db reset                      # สร้าง schema + seed ใหม่
-# ล้าง seed ก่อนโหลด data เพื่อกัน duplicate key
-psql postgresql://postgres:postgres@127.0.0.1:54322/postgres -c "truncate public.lessons cascade"
+npx supabase db reset --no-seed            # สร้าง schema ใหม่โดยไม่ใส่ seed (กัน duplicate key ใน public/auth/storage)
 psql postgresql://postgres:postgres@127.0.0.1:54322/postgres -f restore/data.sql
 ```
 
@@ -47,7 +46,7 @@ psql postgresql://postgres:postgres@127.0.0.1:54322/postgres -f restore/data.sql
 
 ## กู้คืนลงโปรเจกต์ Supabase ใหม่
 
-1. สร้างโปรเจกต์ใหม่ (เวอร์ชัน Postgres เดียวกับของเดิม) แล้วเอา connection string แบบ direct หรือ session pooler
+1. สร้างโปรเจกต์ใหม่ (เวอร์ชัน Postgres เดียวกับของเดิม) แล้วเอา connection string แบบ Session Pooler (พอร์ต 5432) เท่านั้น เพราะ direct connection เป็น IPv6 อย่างเดียว
 2. ใช้ migration ของ repo สร้าง schema: `npx supabase link --project-ref <ref>` แล้ว `npx supabase db push` (แนะนำ เพราะ schema ที่ Supabase จัดการเองจะตรงเวอร์ชัน) แล้วโหลดข้อมูล:
    ```bash
    psql "$NEW_DB_URL" -f restore/data.sql
@@ -68,7 +67,7 @@ workflow ใช้ service `postgres:17` ถ้าโปรเจกต์ produ
 
 ## สิ่งที่ทีมต้องทำ (TODO)
 
-- [ ] ตั้ง secret `SUPABASE_DB_URL` (connection string ของ production แบบ direct หรือ session pooler พอร์ต 5432 ไม่ใช่ transaction pooler 6543; รหัสผ่านต้อง percent-encode)
+- [ ] ตั้ง secret `SUPABASE_DB_URL` (connection string ของ production แบบ Session Pooler พอร์ต 5432 เท่านั้น: direct connection เป็น IPv6 อย่างเดียวและ GitHub runner ไม่มี IPv6, และห้ามใช้ transaction pooler 6543; รหัสผ่านต้อง percent-encode)
 - [ ] ตั้ง secret `BACKUP_PASSPHRASE` (สุ่มยาว และเก็บสำเนาใน password manager นอก GitHub)
 - [ ] Actions > Backup > Run workflow ครั้งแรก
 - [ ] TC-OPS-03: ดาวน์โหลด artifact แล้ว `file fretpath-backup-*.gpg` ต้องบอกว่าเป็น PGP/GPG encrypted data และไม่มีไฟล์ `.sql` ใน artifact

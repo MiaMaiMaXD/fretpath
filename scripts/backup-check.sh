@@ -50,6 +50,28 @@ restore_file() {
 echo "Preparing scratch database $db"
 run_admin -c "drop database if exists $db with (force)" -c "create database $db"
 
+# Supabase's reserved roles are NOT in a --role-only dump; create the ones the schema
+# references (GRANT / OWNER TO / policies) so real schema breakage is not buried in noise.
+run_admin <<'SQL'
+do $$
+declare r text;
+begin
+  foreach r in array array['anon','authenticated','service_role','authenticator','supabase_admin',
+    'supabase_auth_admin','supabase_storage_admin','dashboard_user','supabase_realtime_admin']
+  loop
+    if not exists (select 1 from pg_roles where rolname = r) then
+      execute format('create role %I', r);
+    end if;
+  end loop;
+end $$;
+SQL
+# Schemas/extensions the dump expects (created inside the scratch database).
+run_target -v ON_ERROR_STOP=0 <<'SQL' > /dev/null 2>&1 || true
+create schema if not exists extensions;
+create extension if not exists pgcrypto with schema extensions;
+create extension if not exists "uuid-ossp" with schema extensions;
+SQL
+
 # Roles are cluster-wide; "already exists" errors are expected and ignored.
 $psql_bin "$admin_url" -X -q -v ON_ERROR_STOP=0 < "$dir/roles.sql" > /dev/null 2>&1 || true
 echo "restore roles: done (errors ignored)"
@@ -66,4 +88,6 @@ if [ "$count" -lt 1 ]; then
   echo "::error::FAIL: public.lessons is empty after restore" >&2
   exit 1
 fi
+users="$(run_target -t -A -c 'select count(*) from auth.users' 2>/dev/null | tr -d '[:space:]' || true)"
+echo "auth.users count after restore: ${users:-unavailable}"
 echo "RESTORE CHECK PASSED (lessons=$count)"
