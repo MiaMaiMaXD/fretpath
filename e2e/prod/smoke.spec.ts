@@ -39,10 +39,13 @@ test('TC-PRD-04 seed test accounts do not exist on production @prod', async ({ p
 });
 
 test('TC-PRD-06 public course list shows guitar-basics @prod', async () => {
-  const url = process.env.PROD_SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.PROD_SUPABASE_ANON_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  test.skip(!url || !key, 'PROD_SUPABASE_URL / PROD_SUPABASE_ANON_KEY not set');
-  const db = createClient(url!, key!, { auth: { persistSession: false, autoRefreshToken: false } });
+  // Only local runs may fall back to the (seeded) local DB; a real PROD_URL must bring its own keys,
+  // otherwise this would query the local database and pass falsely.
+  const local = isLocal(process.env.PROD_URL);
+  const url = process.env.PROD_SUPABASE_URL ?? (local ? process.env.NEXT_PUBLIC_SUPABASE_URL : undefined);
+  const key = process.env.PROD_SUPABASE_ANON_KEY ?? (local ? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY : undefined);
+  if (!url || !key) throw new Error('PROD_SUPABASE_URL and PROD_SUPABASE_ANON_KEY are required when PROD_URL is not local');
+  const db = createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } });
   const { data, error } = await db.from('courses').select('title');
   expect(error).toBeNull();
   expect(data?.map((c) => c.title)).toContain('กีตาร์พื้นฐาน');

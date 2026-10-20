@@ -24,8 +24,8 @@ test('TC-PATH-17 signup → lesson 1 unlocked → fail → lesson 2 locked → p
     await expect(signup.successMessage()).toBeVisible();
     await page.goto(await latestLinkFor(email));
     await page.getByRole('button', { name: 'ยืนยันและเข้าสู่ระบบ' }).click();
-    await expect(page).toHaveURL(/\/dashboard/);
-    await expect(page.getByRole('heading', { name: 'Dashboard' })).toBeVisible(); // session settled before hard navigation
+    await expect(page).toHaveURL((u) => u.pathname === '/dashboard');
+    await expect(page.getByRole('heading', { name: 'Dashboard' })).toBeVisible(); // the confirm URL itself carries next=/dashboard; wait for the action to land before navigating away
 
     const path = new PathPage(page);
     await path.goto();

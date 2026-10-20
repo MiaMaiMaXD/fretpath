@@ -11,7 +11,7 @@ export function ConfirmForm({ tokenHash, type, next }: { tokenHash: string; type
     return null;
   }, null);
   return (
-    <form onSubmit={keepValuesSubmit(action)} className="flex flex-col gap-4">
+    <form action={action} onSubmit={keepValuesSubmit(action)} className="flex flex-col gap-4">
       <input type="hidden" name="token_hash" value={tokenHash} />
       <input type="hidden" name="type" value={type} />
       <input type="hidden" name="next" value={next} />

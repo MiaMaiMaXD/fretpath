@@ -22,7 +22,7 @@ test('TC-AUTH-11 confirmation link works in a fresh browser context @smoke @regr
     const other = await fresh.newPage();
     await other.goto(link);
     await other.getByRole('button', { name: 'ยืนยันและเข้าสู่ระบบ' }).click();
-    await expect(other).toHaveURL(/\/dashboard/);
+    await expect(other).toHaveURL((u) => u.pathname === '/dashboard');
     await expect(other.getByRole('heading', { name: 'Dashboard' })).toBeVisible();
     expect(csp, 'CSP violations in console').toEqual([]);
   } finally {
@@ -44,17 +44,17 @@ test('TC-AUTH-13 password reset link works in a fresh browser context @regressio
     await other.goto(await latestLinkFor(member.email));
     await expect(other.getByRole('heading', { name: 'ตั้งรหัสผ่านใหม่' })).toBeVisible();
     await other.getByRole('button', { name: 'ยืนยันและเข้าสู่ระบบ' }).click();
-    await expect(other).toHaveURL(/\/reset-password/);
+    await expect(other).toHaveURL((u) => u.pathname === '/reset-password');
     await other.getByLabel('รหัสผ่านใหม่').fill('NewPassw0rd!');
     await other.getByRole('button', { name: 'ตั้งรหัสผ่านใหม่' }).click();
-    await expect(other).toHaveURL(/\/dashboard/);
+    await expect(other).toHaveURL((u) => u.pathname === '/dashboard');
 
     await other.getByRole('button', { name: 'ออกจากระบบ' }).click();
     await expect(other).toHaveURL(/\/$/);
     const login = new LoginPage(other);
     await login.goto();
     await login.login(member.email, 'NewPassw0rd!');
-    await expect(other).toHaveURL(/\/dashboard/);
+    await expect(other).toHaveURL((u) => u.pathname === '/dashboard');
     expect(csp, 'CSP violations in console').toEqual([]);
   } finally {
     await fresh.close();
@@ -92,7 +92,7 @@ test('TC-AUTH-17 opening the link alone does not consume the token @security @re
     const other = await fresh.newPage();
     await other.goto(link);
     await other.getByRole('button', { name: 'ยืนยันและเข้าสู่ระบบ' }).click();
-    await expect(other).toHaveURL(/\/dashboard/);
+    await expect(other).toHaveURL((u) => u.pathname === '/dashboard');
     await expect(other.getByRole('heading', { name: 'Dashboard' })).toBeVisible();
   } finally {
     await fresh.close();
