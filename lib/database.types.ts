@@ -305,6 +305,11 @@ isOneToOne: false
 "admin_delete_question":
 { Args: { "p_question": string }; Returns: undefined
                            },
+"admin_last_practice":
+{ Args: Record<PropertyKey, never>; Returns: {
+              "last_practiced_on": string,"user_id": string
+            }[]
+                           },
 "admin_move_question":
 { Args: { "p_direction": string,"p_question": string }; Returns: undefined
                            },

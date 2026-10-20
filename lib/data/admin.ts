@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
+import { fetchAll } from '@/lib/data/paging';
 import { bangkokWeekRange } from '@/lib/bangkok';
 import { toPathLessons } from '@/lib/path-state';
 import { averageBestScore, lessonsProgress, weeklyMinutes } from '@/lib/stats';
@@ -56,16 +57,26 @@ export async function listLearners(): Promise<Learner[]> {
   await requireAdmin();
   const supabase = await createClient();
   const week = bangkokWeekRange();
-  const [profiles, progress, logs, enrollments, lessons] = await Promise.all([
-    supabase.from('profiles').select('id, display_name, role'),
-    supabase.from('lesson_progress').select('user_id, lesson_id, status, best_score'),
-    supabase.from('practice_logs').select('user_id, practiced_on, minutes'),
-    supabase.from('enrollments').select('user_id, courses(id, sort_order)'),
+  const [profiles, progress, logs, enrollments, lessons, lastPractice] = await Promise.all([
+    fetchAll((f, t) => supabase.from('profiles').select('id, display_name, role').order('id').range(f, t)),
+    fetchAll((f, t) =>
+      supabase.from('lesson_progress').select('user_id, lesson_id, status, best_score').order('user_id').order('lesson_id').range(f, t),
+    ),
+    fetchAll((f, t) =>
+      supabase
+        .from('practice_logs')
+        .select('id, user_id, practiced_on, minutes')
+        .gte('practiced_on', week.start)
+        .lte('practiced_on', week.end)
+        .order('id')
+        .range(f, t),
+    ),
+    fetchAll((f, t) => supabase.from('enrollments').select('user_id, courses(id, sort_order)').order('user_id').order('course_id').range(f, t)),
     supabase.from('lessons').select('id, slug, title, summary, sort_order, pass_score, course_id').eq('status', 'published'),
+    fetchAll((f, t) => supabase.rpc('admin_last_practice').order('user_id').range(f, t)),
   ]);
-  for (const r of [profiles, progress, logs, enrollments, lessons]) {
-    if (r.error) throw new Error(r.error.message);
-  }
+  if (lessons.error) throw new Error(lessons.error.message);
+  const lastBy = new Map(lastPractice.map((r) => [r.user_id, r.last_practiced_on]));
 
   const lessonsByCourse = new Map<string, NonNullable<typeof lessons.data>>();
   for (const l of lessons.data ?? []) {
@@ -75,7 +86,7 @@ export async function listLearners(): Promise<Learner[]> {
   }
   // First enrolled course by sort_order, same rule as getPath.
   const firstCourse = new Map<string, { id: string; sort: number }>();
-  for (const e of enrollments.data ?? []) {
+  for (const e of enrollments) {
     const c = e.courses;
     if (!c || Array.isArray(c)) continue;
     const cur = firstCourse.get(e.user_id);
@@ -86,14 +97,13 @@ export async function listLearners(): Promise<Learner[]> {
     for (const r of rows) m.set(r.user_id, [...(m.get(r.user_id) ?? []), r]);
     return m;
   };
-  const progressBy = group(progress.data ?? []);
-  const logsBy = group(logs.data ?? []);
+  const progressBy = group(progress);
+  const logsBy = group(logs);
 
-  return (profiles.data ?? [])
+  return profiles
     .map((p): Learner => {
       const course = firstCourse.get(p.id);
       const ul = logsBy.get(p.id) ?? [];
-      const last = ul.reduce<string | null>((m, l) => (m === null || l.practiced_on > m ? l.practiced_on : m), null);
       const base = {
         id: p.id,
         displayName: p.display_name ?? '',
@@ -102,7 +112,7 @@ export async function listLearners(): Promise<Learner[]> {
           ul.map((l) => ({ practicedOn: l.practiced_on, minutes: l.minutes })),
           week,
         ),
-        lastPracticedOn: last,
+        lastPracticedOn: lastBy.get(p.id) ?? null,
       };
       if (!course) return { ...base, completed: 0, total: null, avgBestScore: null };
       const path = toPathLessons(lessonsByCourse.get(course.id) ?? [], progressBy.get(p.id) ?? []);
