@@ -1,0 +1,81 @@
+import Link from 'next/link';
+import { getAdminCourses, getAdminLessons } from '@/lib/data/admin-lessons';
+
+export const metadata = { title: 'จัดการบทเรียน' };
+
+export default async function AdminLessonsPage({ searchParams }: { searchParams: Promise<{ course?: string }> }) {
+  const { course } = await searchParams;
+  const courses = await getAdminCourses();
+  const current = courses.find((c) => c.id === course) ?? courses[0];
+  const lessons = current ? await getAdminLessons(current.id) : [];
+
+  return (
+    <main className="space-y-4">
+      <h1 className="text-2xl font-bold">จัดการบทเรียน</h1>
+      {courses.length > 1 ? (
+        <nav aria-label="เลือกคอร์ส">
+          <ul className="flex flex-wrap gap-2">
+            {courses.map((c) => (
+              <li key={c.id}>
+                <Link
+                  href={`/admin/lessons?course=${c.id}`}
+                  aria-current={c.id === current?.id ? 'page' : undefined}
+                  className={`underline-offset-4 hover:underline ${c.id === current?.id ? 'font-bold' : ''}`}
+                >
+                  {c.title}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </nav>
+      ) : null}
+      {current ? (
+        <>
+          <p>
+            คอร์ส: <span className="font-medium">{current.title}</span>
+          </p>
+          <Link
+            href={`/admin/lessons/new?course=${current.id}`}
+            className="inline-block rounded bg-neutral-900 px-4 py-2 font-medium text-white dark:bg-neutral-100 dark:text-neutral-900"
+          >
+            เพิ่มบทเรียน
+          </Link>
+          {lessons.length === 0 ? (
+            <p>ยังไม่มีบทเรียนในคอร์สนี้</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-left">
+                <thead>
+                  <tr className="border-b border-neutral-300 dark:border-neutral-700">
+                    <th scope="col" className="p-2">ลำดับ</th>
+                    <th scope="col" className="p-2">ชื่อ</th>
+                    <th scope="col" className="p-2">สถานะ</th>
+                    <th scope="col" className="p-2">เกณฑ์ผ่าน</th>
+                    <th scope="col" className="p-2">จำนวนคำถาม</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {lessons.map((l) => (
+                    <tr key={l.id} className="border-b border-neutral-200 dark:border-neutral-800">
+                      <td className="p-2">{l.sortOrder}</td>
+                      <td className="p-2">
+                        <Link href={`/admin/lessons/${l.id}`} className="underline underline-offset-4">
+                          {l.title}
+                        </Link>
+                      </td>
+                      <td className="p-2">{l.status === 'published' ? 'เผยแพร่' : 'ฉบับร่าง'}</td>
+                      <td className="p-2">{l.passScore}%</td>
+                      <td className="p-2">{l.questionCount}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </>
+      ) : (
+        <p>ยังไม่มีคอร์ส</p>
+      )}
+    </main>
+  );
+}
