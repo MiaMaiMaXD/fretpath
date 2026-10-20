@@ -1,7 +1,7 @@
 # FretPath — Test Cases
 
-เวอร์ชัน 3.0 · ชุดที่ 1 (แผนที่ 1): FR-03, FR-04, NFR-01 · ชุดที่ 2 (แผนที่ 2 — หน้าเว็บผู้เรียน): FR-01, FR-02, FR-05, FR-06, ส่วน UI ของ FR-03/FR-04 และ NFR-02 · ชุดที่ 3 (แผนที่ 3 — หลังบ้านแอดมิน): FR-07, FR-01.7, FR-01.8, FR-05.5, TC-SEC-17…25, TC-MOB-01c
-TC ของ NFR-05 … NFR-07 (ความพร้อมใช้งาน การสำรองข้อมูล ประสิทธิภาพ) จะเขียนในแผนที่ 4 พร้อม production (ดู `rtm.md`)
+เวอร์ชัน 4.0 · ชุดที่ 1 (แผนที่ 1): FR-03, FR-04, NFR-01 · ชุดที่ 2 (แผนที่ 2 — หน้าเว็บผู้เรียน): FR-01, FR-02, FR-05, FR-06, ส่วน UI ของ FR-03/FR-04 และ NFR-02 · ชุดที่ 3 (แผนที่ 3 — หลังบ้านแอดมิน): FR-07, FR-01.7, FR-01.8, FR-05.5, TC-SEC-17…25, TC-MOB-01c · ชุดที่ 4 (แผนที่ 4 — production): NFR-05 … NFR-07 (TC-OPS-01…04, TC-PRD-01…06, TC-PERF-01), TC-AUTH-17, TC-AUTH-18
+จำนวน TC ทุกตัวเลขในเอกสารนี้ตรวจด้วย `npm run qa:stats` (อ่านตารางจริงในไฟล์นี้และ `rtm.md`); ผลการรันและผล Manual อยู่ใน `test-summary.md`
 
 ## 1. รูปแบบและข้อกำหนด
 
@@ -13,12 +13,14 @@ TC ของ NFR-05 … NFR-07 (ความพร้อมใช้งาน �
 | LSN | FR-02 | ADM | FR-07 |
 | PATH | FR-03 | SEC | NFR-01 |
 | QZ | FR-04 | MOB | NFR-02 |
-| PRC | FR-05 | | |
+| PRC | FR-05 | PERF | NFR-07 |
+| | | PRD | smoke บน production (NFR-01, NFR-05, FR-01) |
+| | | OPS | NFR-05, NFR-06 |
 
 **ตัวย่อชื่อไฟล์เทสต์อัตโนมัติ** (ทุกไฟล์อยู่ใต้ `supabase/tests/` และ `e2e/api/`)
 - `003` = `supabase/tests/003_rls.test.sql` · `004` = `004_submit_quiz.test.sql` · `005` = `005_content_rules.test.sql` · `002` = `002_auth_triggers.test.sql` · `006` = `006_final_review.test.sql` · แผนที่ 3: `007` = `007_admin_rules.test.sql` · `011` = `011_admin_save_lesson.test.sql` · `012` = `012_admin_save_question.test.sql` · `017` = `017_storage.test.sql` · `018` = `018_admin_learner_stats.test.sql` · `019` = `019_avatar_url_guard.test.sql` · `020` = `020_oauth_display_name.test.sql` (กฎ `QUESTION_HAS_ANSWERS` และการคงประวัติคำตอบจาก migration 014/016 ทดสอบอยู่ใน `012`)
 - `rls.spec` = `e2e/api/rls.spec.ts` · `submit-quiz.spec` = `e2e/api/submit-quiz.spec.ts` (Playwright; อยู่ใน `e2e/api/` แล้ว — ชื่อเทสต์ใช้รหัส TC ในเอกสารนี้)
-- ไฟล์ UI E2E ของแผนที่ 2 อยู่ใต้ `e2e/specs/`: `auth.spec.ts`, `profile.spec.ts`, `path.spec.ts`, `lesson.spec.ts`, `audio.spec.ts`, `quiz.spec.ts`, `practice.spec.ts`, `dashboard.spec.ts`, `journey.spec.ts`, `mobile.spec.ts`, `a11y.spec.ts` · แผนที่ 3 เพิ่ม `admin-access.spec.ts`, `admin-lessons.spec.ts`, `admin-questions.spec.ts`, `admin-order-preview.spec.ts`, `admin-images.spec.ts`, `admin-learners.spec.ts`, `journey-admin.spec.ts`, `auth-links.spec.ts`, `extras.spec.ts`, `csp-guard.spec.ts` และ `e2e/api/headers.spec.ts` — ชื่อเทสต์ขึ้นต้นด้วยรหัส TC ในเอกสารนี้ (ป้าย `@smoke` / `@regression` / `@security`)
+- ไฟล์ UI E2E ของแผนที่ 2 อยู่ใต้ `e2e/specs/`: `auth.spec.ts`, `profile.spec.ts`, `path.spec.ts`, `lesson.spec.ts`, `audio.spec.ts`, `quiz.spec.ts`, `practice.spec.ts`, `dashboard.spec.ts`, `journey.spec.ts`, `mobile.spec.ts`, `a11y.spec.ts` · แผนที่ 3 เพิ่ม `admin-access.spec.ts`, `admin-lessons.spec.ts`, `admin-questions.spec.ts`, `admin-order-preview.spec.ts`, `admin-images.spec.ts`, `admin-learners.spec.ts`, `journey-admin.spec.ts`, `auth-links.spec.ts`, `extras.spec.ts`, `csp-guard.spec.ts` และ `e2e/api/headers.spec.ts` · แผนที่ 4 เพิ่ม `e2e/prod/smoke.spec.ts` (โปรเจกต์ `prod`, ป้าย `@prod`, อ่านอย่างเดียว) — ชื่อเทสต์ขึ้นต้นด้วยรหัส TC ในเอกสารนี้ (ป้าย `@smoke` / `@regression` / `@security`)
 - Unit test (Vitest, `npm run test:unit`) อยู่ใต้ `tests/unit/` (เช่น `validation.test.ts`, `stats.test.ts`, `timer.test.ts`, `path-state.test.ts`, `safe-next.test.ts`) — ใช้เสริมค่าขอบและตรรกะล้วน ๆ ที่ TC อ้างถึง แต่ไม่นับแทน E2E
 - ชื่อในวงเล็บคือชื่อเทสต์ pgTAP (`test_...`) ในไฟล์นั้น
 
@@ -203,8 +205,10 @@ TC ของ NFR-05 … NFR-07 (ความพร้อมใช้งาน �
 | TC-AUTH-12 | ผู้เรียนอัปโหลดและลบรูปโปรไฟล์ | FR-01.8 | ผู้เรียนล็อกอินที่ `/profile` ยังไม่มีรูป; ไฟล์ `pixel.png` | 1. เลือกไฟล์ที่ "เปลี่ยนรูปโปรไฟล์"<br>2. โหลดหน้าซ้ำ ตรวจรูปในแถบเมนู<br>3. กด "ลบรูป" แล้วโหลดซ้ำ | รูปแสดงด้วย public URL `avatars/<userId>/avatar.png` และโหลดได้จริง; หลังโหลดซ้ำรูปอยู่ในเมนูหลักด้วย; หลังลบไม่มีรูปและไม่มีไฟล์เหลือใน bucket `avatars` | Medium | Positive | State Transition (ไม่มีรูป → มีรูป → ลบ) | Automated | `e2e/specs/extras.spec.ts`; `017` (ผู้ใช้เขียน/list/ลบเฉพาะโฟลเดอร์ตนเอง); `019`; `tests/unit/avatar.test.ts` |
 | TC-AUTH-13 | ลิงก์ตั้งรหัสผ่านใหม่ใช้ได้ใน context ใหม่ | FR-01.4 | ผู้เรียนมีบัญชี; เปิดลิงก์ใน context ที่ไม่มี cookie | 1. ขอลิงก์ที่ `/forgot-password`<br>2. เปิดลิงก์จาก Mailpit ใน context ใหม่ ตั้งรหัสผ่านใหม่<br>3. ออกจากระบบแล้วเข้าสู่ระบบด้วยรหัสใหม่ | ข้อความ "ถ้ามีบัญชีนี้ เราได้ส่งลิงก์ไปแล้ว"; ลิงก์พาไป `/reset-password` แล้ว `/dashboard` หลังตั้งรหัส; เข้าสู่ระบบด้วยรหัสใหม่ได้; ไม่มี CSP violation | High | Positive | Equivalence Partitioning (อุปกรณ์เดิม/อื่น) | Automated | `e2e/specs/auth-links.spec.ts`; ส่วนข้อความไม่เปิดเผยบัญชีดู TC-AUTH-06 |
 | TC-AUTH-14 | token_hash ที่ถูกแก้/ไม่ครบพาไปหน้าเข้าสู่ระบบพร้อมข้อความภาษาไทย | FR-01.2, NFR-01 | ไม่มี session | 1. เปิด `/auth/confirm?token_hash=deadbeef&type=signup&next=/dashboard`<br>2. เปิดด้วย `type=magiclink`<br>3. เปิด `/auth/confirm` เปล่า | ทุกกรณีไปที่ `/login?error=link`; ข้อ 1 แสดง "ลิงก์ใช้ไม่ได้ หากยืนยันอีเมลแล้ว…"; ไม่เข้าสู่ระบบ | High | Security | EP (token ถูก/ผิด/ขาด), Negative | Automated | `e2e/specs/auth-links.spec.ts` (`@security`) |
-| TC-AUTH-15 | ปุ่ม Google ไม่แสดงเมื่อยังไม่ตั้งค่า | FR-01.7 | `NEXT_PUBLIC_GOOGLE_AUTH_ENABLED` ไม่เป็น `true` (ค่าเริ่มต้นของ local/CI) | 1. เปิด `/login`<br>2. เปิด `/signup` | ไม่มีปุ่ม "เข้าสู่ระบบด้วย Google" ทั้งสองหน้า. โค้ดพร้อมแล้ว แต่การเปิดใช้งานจริง (OAuth client + production) อยู่แผนที่ 4 จึงยังไม่มี TC ที่ล็อกอินด้วย Google จริง. ระดับ DB: ชื่อแสดงผลจาก OAuth (`full_name` → อีเมล) ตรวจโดย pgTAP | Medium | Negative | Decision Table (flag เปิด/ปิด — ตรวจเฉพาะ "ปิด") | Automated (เฉพาะกรณีปิด; เปิดจริงรอแผนที่ 4) | `e2e/specs/auth-links.spec.ts`; `020` (`test_oauth_full_name_used`, `test_email_local_part_fallback`, `test_display_name_still_wins`) |
+| TC-AUTH-15 | ปุ่ม Google ไม่แสดงเมื่อยังไม่ตั้งค่า | FR-01.7 | `NEXT_PUBLIC_GOOGLE_AUTH_ENABLED` ไม่เป็น `true` (ค่าเริ่มต้นของ local/CI) | 1. เปิด `/login`<br>2. เปิด `/signup` | ไม่มีปุ่ม "เข้าสู่ระบบด้วย Google" ทั้งสองหน้า. ส่วนการล็อกอินด้วย Google จริงบน production ตรวจโดย TC-AUTH-18 (Manual). ระดับ DB: ชื่อแสดงผลจาก OAuth (`full_name` → อีเมล) ตรวจโดย pgTAP | Medium | Negative | Decision Table (flag เปิด/ปิด — ตรวจเฉพาะ "ปิด") | Automated (เฉพาะกรณีปิด; กรณีเปิดจริงดู TC-AUTH-18) | `e2e/specs/auth-links.spec.ts`; `020` (`test_oauth_full_name_used`, `test_email_local_part_fallback`, `test_display_name_still_wins`) |
 | TC-AUTH-16 | รูปโปรไฟล์ชนิดไฟล์ที่ไม่รองรับถูกปฏิเสธ | FR-01.8 | ผู้เรียนล็อกอินที่ `/profile` | 1. เลือกไฟล์ `a.txt` (`text/plain`) ที่ "เปลี่ยนรูปโปรไฟล์" | แสดง "อัปโหลดรูปไม่สำเร็จ (PNG, JPG, WEBP ไม่เกิน 1 MB)" | Medium | Negative | EP (ชนิดไฟล์ที่รองรับ/ไม่รองรับ) | Automated | `e2e/specs/extras.spec.ts`; `tests/unit/avatar.test.ts`; `017` (bucket `avatars` จำกัด 1 MB) |
+| TC-AUTH-17 | เปิดลิงก์ยืนยันเฉย ๆ (สแกนเนอร์อีเมล) ไม่ใช้ token ทิ้ง | FR-01.2, NFR-01 | สมัครด้วยอีเมลใหม่; Mailpit รับอีเมล; context ใหม่ที่ไม่มี cookie | 1. ดึงลิงก์ยืนยันจาก Mailpit<br>2. ส่ง GET ธรรมดาไปที่ลิงก์ (จำลองสแกนเนอร์อีเมลที่เปิดลิงก์ล่วงหน้า ไม่รัน JS ไม่กดปุ่ม)<br>3. เปิดลิงก์เดียวกันในเบราว์เซอร์ใน context ใหม่ แล้วกด "ยืนยันและเข้าสู่ระบบ" | ข้อ 2 ตอบ 200 เป็นหน้ากลางที่มีปุ่ม "ยืนยันและเข้าสู่ระบบ" (GET ไม่ verify); ข้อ 3 ไปที่ `/dashboard` เห็นหัวข้อ Dashboard — token ยังใช้ได้ | High | Security | State Transition (token ยังไม่ใช้ → ใช้แล้ว), Negative | Automated | `e2e/specs/auth-links.spec.ts` (`@security`) |
+| TC-AUTH-18 | เข้าสู่ระบบด้วย Google บน production | FR-01.7 | production เปิด Google OAuth ตาม `docs/deploy/google.md`; `NEXT_PUBLIC_GOOGLE_AUTH_ENABLED=true` และ redeploy แล้ว; อีเมลที่ใช้อยู่ใน Test users ของ OAuth client | 1. เปิดหน้า login บน production กด "เข้าสู่ระบบด้วย Google"<br>2. เลือกบัญชี Google ที่อนุญาต<br>3. ตรวจ Dashboard และเส้นทางเรียน | ข้อ 1 แสดงปุ่มและไม่มี CSP violation; ข้อ 2 กลับเข้า `/dashboard`; ชื่อที่แสดงเป็นชื่อบัญชี Google; ข้อ 3 บท 1 ปลดล็อก | Medium | Positive | Decision Table (flag เปิด/ปิด — ตรวจกรณีเปิด) | Manual | ไม่มีเทสต์อัตโนมัติ — ต้องใช้บัญชี Google จริงและหน้า consent ของ Google (ขั้นตอนใน `docs/deploy/google.md` ขั้นที่ 5); กรณีปิดปุ่มตรวจโดย TC-AUTH-15 |
 
 ---
 
@@ -246,17 +250,41 @@ TC ของ NFR-05 … NFR-07 (ความพร้อมใช้งาน �
 
 ## 9.1 NFR-07 ประสิทธิภาพ (TC-PERF)
 
-| รหัส | ชื่อ | อ้างอิง | เงื่อนไขก่อนเริ่ม | ขั้นตอน | ผลที่คาดหวัง | ความสำคัญ | ประเภท | เทคนิค | M/A |
+| รหัส | ชื่อ | อ้างอิง | เงื่อนไขก่อนเริ่ม | ขั้นตอน | ผลที่คาดหวัง | ความสำคัญ | ประเภท | เทคนิค | M/A | ไฟล์เทสต์อัตโนมัติ |
 |---|---|---|---|---|---|---|---|---|---|---|
 | TC-PERF-01 | หน้าหลักโหลดเสร็จภายใน 3 วินาทีบน 4G (Lighthouse) | NFR-07 | production ใช้งานได้; secret `PROD_URL` ตั้งแล้ว | 1. รัน `npx lhci autorun --collect.url=<PROD_URL>/` (โปรไฟล์มือถือเริ่มต้นของ Lighthouse: Moto G Power + slow 4G) 3 รอบ<br>2. ตรวจค่ามัธยฐานตาม `lighthouserc.json` | `largest-contentful-paint` ≤ 3000 ms และ `interactive` (TTI) ≤ 3000 ms (error ถ้าเกิน); `categories:accessibility` ≥ 0.9 (warn) | High | Performance | Boundary (เกณฑ์ 3 วินาที) | Automated | nightly job `production` (`.github/workflows/nightly.yml`, `lighthouserc.json`) |
 
+## 9.2 NFR-05 / NFR-06 ความพร้อมใช้งานและการสำรองข้อมูล (TC-OPS)
+
+ผลของ TC กลุ่มนี้ได้จากการรัน workflow จริงบน production เท่านั้น (บันทึกใน `test-summary.md`); คู่มือขั้นตอนอยู่ใน `docs/deploy/`
+
+| รหัส | ชื่อ | อ้างอิง | เงื่อนไขก่อนเริ่ม | ขั้นตอน | ผลที่คาดหวัง | ความสำคัญ | ประเภท | เทคนิค | M/A | ไฟล์เทสต์อัตโนมัติ |
+|---|---|---|---|---|---|---|---|---|---|---|
+| TC-OPS-01 | keep-alive รันเขียวและเรียกฐานข้อมูลจริง | NFR-05 | production ออนไลน์; secret `PROD_URL` ตั้งแล้ว | 1. Actions > Keep-alive > Run workflow (ไม่กรอก `url`)<br>2. เปิด log ขั้น "Ping /api/health"<br>3. ตรวจว่ามีรอบตามตาราง (ทุก 2 วัน) รันเองอย่างน้อย 1 รอบ | run เขียวและ log มี `health check OK`; workflow ผ่านเฉพาะเมื่อ `/api/health` ตอบ 200 และ body `{"ok":true}` (endpoint query ตาราง `courses` จึงพิสูจน์ว่าฐานข้อมูลไม่ถูกหยุด — หน้า static ไม่ทำให้ผ่าน) | High | Operational | EP (ตอบ ok / ไม่ ok) | Automated | `.github/workflows/keep-alive.yml` |
+| TC-OPS-02 | GitHub ส่งอีเมลแจ้งเมื่อ keep-alive ล้ม | NFR-05 | TC-OPS-01 ผ่านแล้ว; เปิดแจ้งเตือน Actions ของบัญชีผู้กดรัน (GitHub Settings > Notifications > Actions) | 1. Actions > Keep-alive > Run workflow โดยกรอก input `url` เป็น URL ที่ไม่ใช่ FretPath เช่น `https://example.com`<br>2. รอ run จบ<br>3. ตรวจกล่องอีเมล | ข้อ 2 run แดง (ไม่มี `ok: true`) โดยไม่แตะ secret `PROD_URL`; ข้อ 3 ได้อีเมลแจ้ง workflow ล้มจาก GitHub; รันครั้งถัดไปโดยไม่กรอก `url` กลับมาเขียว | High | Operational | Negative (บังคับให้ล้ม) | Manual | ไม่มีเทสต์อัตโนมัติ — การส่งอีเมลเป็นของ GitHub ตรวจได้ด้วยตาเท่านั้น; input `url` ใน `.github/workflows/keep-alive.yml` มีไว้ทดสอบข้อนี้ |
+| TC-OPS-03 | backup รันเขียวและ artifact เข้ารหัส | NFR-06 | secret `SUPABASE_DB_URL` (Session Pooler) และ `BACKUP_PASSPHRASE` ตั้งแล้ว | 1. Actions > Backup > Run workflow<br>2. ดาวน์โหลด artifact `fretpath-backup`<br>3. รัน `file fretpath-backup-*.gpg`<br>4. ตรวจว่าใน artifact ไม่มีไฟล์ `.sql` หรือ `.tar.gz` ดิบ | ข้อ 1 run เขียว; ข้อ 2 ได้ไฟล์เดียว `fretpath-backup-<วันที่>.tar.gz.gpg` เก็บ 90 วัน; ข้อ 3 รายงานเป็น PGP/GPG encrypted data (ไม่ใช่ gzip/SQL); ข้อ 4 ไม่มีไฟล์ข้อความ (repo เป็น public — dump มีอีเมลและ password hash) | High | Security | Negative (ห้ามมี plaintext) | Automated | `.github/workflows/backup.yml` (ขั้น "Verify upload directory contains only encrypted data" ล้ม job ถ้าไม่ผ่าน); ตรวจ artifact ที่ดาวน์โหลดด้วยมือซ้ำ 1 ครั้ง |
+| TC-OPS-04 | กู้คืนจาก backup ได้จริง | NFR-06 | TC-OPS-03 ผ่านแล้ว; มี passphrase; Supabase local ทำงาน | 1. ดูขั้น "Restore check" ใน log ของ run backup<br>2. ดาวน์โหลด ถอดรหัส แล้วแตกไฟล์ตาม `docs/deploy/backup-restore.md`<br>3. `supabase db reset --no-seed` แล้วโหลด `data.sql` ลง Supabase local<br>4. `select count(*) from public.lessons;` และลองล็อกอินด้วยผู้ใช้ที่ restore มา | ข้อ 1 มี `public.lessons count after restore: N` โดย N >= 1 (ถ้าไม่ผ่าน job ล้มและไม่อัปโหลดอะไร); ข้อ 2 ได้ `roles.sql`, `schema.sql`, `data.sql` ที่ไม่ว่าง; ข้อ 4 นับได้ >= 1 และล็อกอินได้ | High | Operational | Negative (backup เสีย/ว่าง) | Automated (restore check ใน workflow) / Manual (กู้คืนจริงในเครื่องตามคู่มือ) | `.github/workflows/backup.yml`; `scripts/backup-check.sh` |
+
+## 9.3 Smoke บน production (TC-PRD)
+
+TC-PRD-01…04 และ 06 อ่านอย่างเดียว ไม่สร้าง/แก้/ลบข้อมูล รันด้วย `PROD_URL=<url> npx playwright test --project=prod` (และใน nightly job `production`); TC-PRD-05 ต้องสมัครบัญชีจริงจึงเป็น Manual (บัญชีนั้นเป็นข้อมูลจริงที่ทีมลบเองหลังตรวจ). TC-PRD-04 ข้ามเมื่อ `PROD_URL` เป็น localhost เพราะฐานข้อมูล local มี seed
+
+| รหัส | ชื่อ | อ้างอิง | เงื่อนไขก่อนเริ่ม | ขั้นตอน | ผลที่คาดหวัง | ความสำคัญ | ประเภท | เทคนิค | M/A | ไฟล์เทสต์อัตโนมัติ |
+|---|---|---|---|---|---|---|---|---|---|---|
+| TC-PRD-01 | /api/health ตอบว่าฐานข้อมูล production เข้าถึงได้ | NFR-05 | production ออนไลน์ | 1. GET `/api/health` | ตอบ 200 และ body เท่ากับ `{"ok":true}` | High | Smoke | EP (ok / ไม่ ok) | Automated | `e2e/prod/smoke.spec.ts` (`@prod`) |
+| TC-PRD-02 | หน้าแรกแสดงภาษาไทยและมี security headers | NFR-01 | production ออนไลน์ | 1. เปิด `/`<br>2. ตรวจ response headers | เห็นหัวข้อ "FretPath"; CSP มี `frame-ancestors 'none'`; มี `Strict-Transport-Security` (max-age) เมื่อ base URL เป็น https | High | Security | EP | Automated | `e2e/prod/smoke.spec.ts` (`@prod`) |
+| TC-PRD-03 | ผู้ไม่ล็อกอินเข้า /admin และ /dashboard ไม่ได้ | FR-01.3, FR-07.1 | ไม่มี session | 1. เปิด `/admin`<br>2. เปิด `/dashboard` | ทั้งสองไปที่ `/login?next=…` | High | Security | Role-based | Automated | `e2e/prod/smoke.spec.ts` (`@prod`) |
+| TC-PRD-04 | บัญชี seed ไม่มีบน production | NFR-01, FR-01.3 | production ไม่เคยรัน `seed.sql` | 1. เปิด `/login` ล็อกอินด้วย `member@fretpath.test` ด้วยรหัสผ่านที่รู้กันของ seed (ครั้งเดียว) | แสดง "อีเมลหรือรหัสผ่านไม่ถูกต้อง" และอยู่ที่ `/login` | High | Security | Negative | Automated | `e2e/prod/smoke.spec.ts` (`@prod`; ข้ามเมื่อเป็น localhost) |
+| TC-PRD-05 | ลิงก์ยืนยันอีเมลและรีเซ็ตรหัสผ่านบน production ใช้ได้จากอุปกรณ์อื่น | FR-01.2, FR-01.4 | production ตั้ง SMTP, Site URL, Redirect URLs และเทมเพลตอีเมลตาม `docs/deploy/supabase.md` เสร็จแล้ว; อีเมลจริงที่รับได้ | 1. สมัครบนเว็บ production<br>2. เปิดอีเมลในโทรศัพท์หรืออีกเครื่อง กดลิงก์ แล้วกด "ยืนยันและเข้าสู่ระบบ"<br>3. ออกจากระบบ ขอ "ลืมรหัสผ่าน" เปิดลิงก์จากอีกเครื่อง ตั้งรหัสใหม่แล้วเข้าสู่ระบบ | ข้อ 2 เข้า Dashboard เห็นบท 1 ปลดล็อก; ข้อ 3 เข้าสู่ระบบด้วยรหัสใหม่ได้; ลิงก์ไม่ชี้ localhost | High | Positive | EP (อุปกรณ์เดียวกัน/อื่น) | Manual | ไม่มีเทสต์อัตโนมัติ — ต้องใช้กล่องอีเมลจริงและอุปกรณ์ที่สอง (ขั้นตอนใน `docs/deploy/vercel.md`); ระดับ local ดู TC-AUTH-11, TC-AUTH-13, TC-AUTH-17 |
+| TC-PRD-06 | รายการคอร์สสาธารณะมี "กีตาร์พื้นฐาน" | NFR-05, FR-03.1 | ตั้ง `PROD_SUPABASE_URL` และ `PROD_SUPABASE_ANON_KEY` แล้ว | 1. อ่านตาราง `courses` ด้วย anon key | ไม่มี error และรายชื่อมี "กีตาร์พื้นฐาน" (ยืนยันว่า `supabase db push` ลง migration และเนื้อหาเริ่มต้นแล้ว) | Medium | Smoke | EP | Automated | `e2e/prod/smoke.spec.ts` (`@prod`) |
+
 ---
 
-## 10. สรุปจำนวน TC (แผนที่ 1–3)
+## 10. สรุปจำนวน TC (แผนที่ 1–4)
 
-| พื้นที่ | จำนวน TC | Automated แล้ว (pgTAP และ/หรือ e2e ที่ตั้งชื่อไว้) | ยังไม่ automate / รอแผนที่ 4 |
+| พื้นที่ | จำนวน TC | Automated แล้ว (pgTAP และ/หรือ e2e ที่ตั้งชื่อไว้) | ยังไม่ automate (Manual) |
 |---|---|---|---|
-| TC-AUTH (FR-01) | 16 | 16 (AUTH-01–16; AUTH-15 เฉพาะกรณีปิดปุ่ม Google — เปิดจริงรอแผนที่ 4) | 0 |
+| TC-AUTH (FR-01) | 18 | 17 (AUTH-01–17; AUTH-15 เฉพาะกรณีปิดปุ่ม Google) | 1 (AUTH-18 Manual: Google บน production) |
 | TC-LSN (FR-02) | 6 | 6 (LSN-01–06) | 0 |
 | TC-PATH (FR-03) | 19 | 19 (PATH-01–19; PATH-02 ส่วน UI ฉบับร่างดู TC-ADM-04/18) | 0 |
 | TC-QZ (FR-04) | 28 | 24 (QZ-01–07, 09, 10, 12, 14, 16, 17, 19, 21–28 และ QZ-18, QZ-20 เฉพาะระดับ API/DB) | 4 (QZ-08, 11, 13, 15) |
@@ -265,12 +293,16 @@ TC ของ NFR-05 … NFR-07 (ความพร้อมใช้งาน �
 | TC-MOB (NFR-02, NFR-03) | 5 | 4 (MOB-01, 01b, 01c, 02) | 1 (MOB-03 Manual บน iPhone จริง) |
 | TC-SEC (NFR-01, NFR-02) | 26 | 24 (SEC-01–14, 17, 18, 18b, 19–25) | 2 (SEC-15, 16 Manual) |
 | TC-ADM (FR-07) | 20 | 20 (ADM-01, 02 ระดับ DB; ADM-03–20 UI E2E + pgTAP) | 0 |
-| รวม | 135 | 127 | 8 (ไม่มีรายการใดรอแผนที่ 3 แล้ว) |
+| TC-PERF (NFR-07) | 1 | 1 (PERF-01 ใน nightly job `production`) | 0 |
+| TC-PRD (smoke production) | 6 | 5 (PRD-01–04, 06) | 1 (PRD-05 Manual: ลิงก์อีเมลข้ามอุปกรณ์) |
+| TC-OPS (NFR-05, NFR-06) | 4 | 3 (OPS-01, 03, 04 — OPS-04 ส่วน restore check ใน workflow) | 1 (OPS-02 Manual: อีเมลแจ้งล้ม) |
+| รวม | 148 | 137 | 11 |
 
 หมายเหตุ
+- ตัวเลขทั้งหมดในหัวข้อนี้ตรวจกับ `npm run qa:stats` (รวมแถวนี้ 148 TC = Automated 137 + Manual 11; ใน Automated มี 3 TC ที่ automate เฉพาะบางส่วน — QZ-18, QZ-20, OPS-04 — ส่วนที่เหลือเป็น Manual)
 - "Automated แล้ว" รวมเทสต์ pgTAP ใน `supabase/tests/`, Playwright ใน `e2e/api/` และ Playwright UI ใน `e2e/specs/`. TC-QZ-18 และ TC-QZ-20 เป็น Automated เฉพาะส่วน API/DB ส่วน UI ยังเป็น Manual
 - **การเปลี่ยนเลขจากเวอร์ชัน 1.0:** TC-PATH-14 เดิม (เผยแพร่คอร์สฟรีภายหลัง ระดับ DB) ถูกย้ายเป็น TC-PATH-19 เพราะ `e2e/specs/path.spec.ts` ใช้ TC-PATH-14 สำหรับ UI ผู้เรียนใหม่ (pgTAP ไม่ได้อ้างเลข TC)
 - **การเปลี่ยนเลขระหว่างแผนที่ 3:** TC-ADM-19 (เลื่อนคำถาม) และ TC-ADM-20 (ลบคำถาม) เดิมวางไว้เลขอื่น; TC-ADM-12/13/14 คือจัดลำดับ / ตรวจลำดับ / ตัวอย่าง; TC-AUTH-13 คือลิงก์ตั้งรหัสผ่านใหม่ใน context ใหม่ และ TC-AUTH-16 คือรูปโปรไฟล์ชนิดไฟล์ผิด
 - **TC ที่ทดแทนกัน:** TC-PATH-16 ทดแทน TC-PATH-08 (เปิดบทล็อกผ่าน URL) · TC-PATH-14 และ TC-PATH-17 ทดแทนการตรวจสถานะบนหน้า `/path` ของ TC-PATH-01 · TC-QZ-19/21/22/23 ใช้เลขเดิม (ชี้ไป `quiz.spec.ts`) · TC-QZ-25/26/27/28 เป็นเลขใหม่ · TC-SEC-19/21 ทำให้ TC-SEC-17 เป็น Automated
-- Safari บน iPhone ไม่มีโปรเจกต์อัตโนมัติ (TC-MOB-03 เป็น Manual); keep-alive (NFR-05) และ backup (NFR-06) ยังไม่มี TC — รอแผนที่ 4; Lighthouse (NFR-07) มี TC-PERF-01 (ตารางหัวข้อ 9.1 ไม่นับในตารางสรุปด้านบน)
-- ใน CI รัน `@smoke` และ `@security` บน `chromium` เท่านั้น; `firefox` และ `mobile` (Pixel 7) รันชุด `@regression` เต็มในเครื่อง และจะรันเต็มทุกโปรเจกต์ใน nightly (แผนที่ 4)
+- Safari บน iPhone ไม่มีโปรเจกต์อัตโนมัติ (TC-MOB-03 เป็น Manual). **แผนที่ 4:** NFR-05 (keep-alive) และ NFR-06 (backup) มี TC-OPS-01…04; Lighthouse (NFR-07) มี TC-PERF-01; smoke production คือ TC-PRD-01…06; เพิ่ม TC-AUTH-17 (เทสต์มีอยู่แล้วใน `auth-links.spec.ts`) และ TC-AUTH-18 (Google จริง, Manual). TC กลุ่ม OPS/PRD/AUTH-18 มีผลจริงได้หลังสร้าง production เท่านั้น — ผลอยู่ใน `test-summary.md`
+- ใน CI รัน `@smoke` และ `@security` บน `chromium` เท่านั้น; `firefox` และ `mobile` (Pixel 7) รันชุด `@regression` เต็มในเครื่อง และรันเต็มทุกโปรเจกต์ใน nightly job `full-suite`

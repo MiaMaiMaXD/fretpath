@@ -10,7 +10,8 @@
     "typecheck": "tsc --noEmit",
     "test:e2e": "playwright test",
     "db:types": "supabase gen types typescript --local > lib/database.types.ts",
-    "test:unit": "vitest run"
+    "test:unit": "vitest run",
+    "qa:stats": "node scripts/tc-stats.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",
