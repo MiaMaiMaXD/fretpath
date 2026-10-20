@@ -21,7 +21,8 @@ test('TC-AUTH-11 confirmation link works in a fresh browser context @smoke @regr
     expect(link).toContain('/auth/confirm?token_hash=');
     const other = await fresh.newPage();
     await other.goto(link);
-    await expect(other).toHaveURL(/\/dashboard/);
+    await other.getByRole('button', { name: 'ยืนยันและเข้าสู่ระบบ' }).click();
+    await expect(other).toHaveURL((u) => u.pathname === '/dashboard');
     await expect(other.getByRole('heading', { name: 'Dashboard' })).toBeVisible();
     expect(csp, 'CSP violations in console').toEqual([]);
   } finally {
@@ -41,17 +42,19 @@ test('TC-AUTH-13 password reset link works in a fresh browser context @regressio
 
     const other = await fresh.newPage();
     await other.goto(await latestLinkFor(member.email));
-    await expect(other).toHaveURL(/\/reset-password/);
+    await expect(other.getByRole('heading', { name: 'ตั้งรหัสผ่านใหม่' })).toBeVisible();
+    await other.getByRole('button', { name: 'ยืนยันและเข้าสู่ระบบ' }).click();
+    await expect(other).toHaveURL((u) => u.pathname === '/reset-password');
     await other.getByLabel('รหัสผ่านใหม่').fill('NewPassw0rd!');
     await other.getByRole('button', { name: 'ตั้งรหัสผ่านใหม่' }).click();
-    await expect(other).toHaveURL(/\/dashboard/);
+    await expect(other).toHaveURL((u) => u.pathname === '/dashboard');
 
     await other.getByRole('button', { name: 'ออกจากระบบ' }).click();
     await expect(other).toHaveURL(/\/$/);
     const login = new LoginPage(other);
     await login.goto();
     await login.login(member.email, 'NewPassw0rd!');
-    await expect(other).toHaveURL(/\/dashboard/);
+    await expect(other).toHaveURL((u) => u.pathname === '/dashboard');
     expect(csp, 'CSP violations in console').toEqual([]);
   } finally {
     await fresh.close();
@@ -60,6 +63,8 @@ test('TC-AUTH-13 password reset link works in a fresh browser context @regressio
 
 test('TC-AUTH-14 tampered token_hash goes to login with Thai message @security @regression', async ({ page }) => {
   await page.goto('/auth/confirm?token_hash=deadbeef&type=signup&next=/dashboard');
+  await expect(page.getByRole('heading', { name: 'ยืนยันอีเมล' })).toBeVisible(); // GET alone never verifies
+  await page.getByRole('button', { name: 'ยืนยันและเข้าสู่ระบบ' }).click();
   await expect(page).toHaveURL(/\/login\?error=link/);
   await expect(page.getByText('ลิงก์ใช้ไม่ได้ หากยืนยันอีเมลแล้ว')).toBeVisible();
 
@@ -67,6 +72,32 @@ test('TC-AUTH-14 tampered token_hash goes to login with Thai message @security @
   await expect(page).toHaveURL(/\/login\?error=link/);
   await page.goto('/auth/confirm');
   await expect(page).toHaveURL(/\/login\?error=link/);
+});
+
+test('TC-AUTH-17 opening the link alone does not consume the token @security @regression', async ({ page, browser }) => {
+  const email = newEmail();
+  const fresh = await browser.newContext();
+  try {
+    const signup = new SignupPage(page);
+    await signup.goto();
+    await signup.signup(email, 'Passw0rd!');
+    await expect(signup.successMessage()).toBeVisible();
+
+    const link = await latestLinkFor(email);
+    // Email scanner: plain GET, no JS, no form submit.
+    const scan = await fresh.request.get(link);
+    expect(scan.status()).toBe(200);
+    expect(await scan.text()).toContain('ยืนยันและเข้าสู่ระบบ');
+
+    const other = await fresh.newPage();
+    await other.goto(link);
+    await other.getByRole('button', { name: 'ยืนยันและเข้าสู่ระบบ' }).click();
+    await expect(other).toHaveURL((u) => u.pathname === '/dashboard');
+    await expect(other.getByRole('heading', { name: 'Dashboard' })).toBeVisible();
+  } finally {
+    await fresh.close();
+    await deleteUserByEmail(email);
+  }
 });
 
 test('TC-AUTH-15 Google button hidden when not configured @regression', async ({ page }) => {

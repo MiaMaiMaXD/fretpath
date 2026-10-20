@@ -15,6 +15,10 @@ for (const path of ['/', '/login', '/api/health']) {
     expect(csp).toMatch(new RegExp(`img-src [^;]*${origin}`));
     expect(csp).toMatch(new RegExp(`connect-src [^;]*${origin}`));
     expect(csp).not.toContain("'unsafe-eval'");
+    // HSTS is emitted by the production build only (`next start`); `next dev` omits it.
+    if (process.env.NODE_ENV !== 'development') {
+      expect(h['strict-transport-security']).toBe('max-age=63072000; includeSubDomains');
+    }
     expect(h['x-content-type-options']).toBe('nosniff');
     expect(h['referrer-policy']).toBe('strict-origin-when-cross-origin');
     expect(h['permissions-policy']).toBe('camera=(), microphone=(), geolocation=()');

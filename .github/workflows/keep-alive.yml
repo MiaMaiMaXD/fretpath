@@ -1,0 +1,39 @@
+name: Keep-alive
+
+# Pings production every 2 days so the free Supabase project is not paused (NFR-05).
+# /api/health queries the `courses` table, so a green run proves the app AND the DB are up.
+# Note: GitHub disables scheduled workflows after 60 days without repo activity.
+# To re-enable, see docs/deploy/secrets.md.
+
+on:
+  schedule:
+    - cron: "0 1 */2 * *" # 01:00 UTC = 08:00 Thailand, every 2 days
+  workflow_dispatch:
+    inputs:
+      url:
+        description: "Temporary override of PROD_URL (no trailing slash) - only for testing failure alerts (TC-OPS-02)"
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  keep-alive:
+    name: keep-alive
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      TARGET_URL: ${{ inputs.url || secrets.PROD_URL }}
+    steps:
+      - name: Ping /api/health
+        run: |
+          set -euo pipefail
+          if [ -z "${TARGET_URL:-}" ]; then
+            echo "::error::PROD_URL secret is not set (and no url input given)"
+            exit 1
+          fi
+          body="$(curl --fail --max-time 20 --retry 3 --retry-delay 30 -s -S "${TARGET_URL%/}/api/health")"
+          # Must be exactly a healthy answer, not just any 200 (e.g. a static page).
+          printf '%s' "$body" | jq -e '.ok == true' > /dev/null
+          echo "health check OK"

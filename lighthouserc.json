@@ -1,0 +1,22 @@
+{
+  "ci": {
+    "collect": {
+      "numberOfRuns": 3,
+      "settings": {
+        "onlyCategories": ["performance", "accessibility"],
+        "chromeFlags": "--no-sandbox --disable-dev-shm-usage"
+      }
+    },
+    "assert": {
+      "assertions": {
+        "largest-contentful-paint": ["error", { "maxNumericValue": 3000, "aggregationMethod": "median" }],
+        "interactive": ["error", { "maxNumericValue": 3000, "aggregationMethod": "median" }],
+        "categories:accessibility": ["warn", { "minScore": 0.9, "aggregationMethod": "median" }]
+      }
+    },
+    "upload": {
+      "target": "filesystem",
+      "outputDir": ".lighthouseci"
+    }
+  }
+}

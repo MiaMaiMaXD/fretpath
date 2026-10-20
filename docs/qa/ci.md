@@ -9,11 +9,28 @@
 
 Trigger: `pull_request` ไป `main` และ `push` ไป `main` (รันเก่าของ PR เดียวกันจะถูกยกเลิกอัตโนมัติ; รันบน `main` ไม่ถูกยกเลิก)
 
-ลำดับขั้นตอนใน job: `npm ci` → ติดตั้ง Supabase CLI (2.121.0 ตรงกับ devDependency) → `supabase start` → `supabase test db` (pgTAP ทุกไฟล์ใน `supabase/tests/`: 001–007, 011, 012, 017–020)
+ลำดับขั้นตอนใน job: `npm ci` → ติดตั้ง Supabase CLI (2.121.0 ตรงกับ devDependency) → `supabase start` → `supabase test db` (pgTAP ทุกไฟล์ใน `supabase/tests/`: 001–007, 011, 012, 017–021)
 → `npm run lint` → `npm run typecheck` → `npm run test:unit` (Vitest) → ตั้ง env จาก `supabase status -o env` → `npm run build` → ติดตั้ง Chromium
 → `playwright test --project=chromium --grep "@smoke|@security"` → อัปโหลด `playwright-report/` เป็น artifact (ทุกครั้ง เก็บ 14 วัน)
 
 หมายเหตุ: คีย์ที่ใช้เป็นคีย์ demo ของ Supabase local stack ใน runner จึงไม่ต้องตั้ง GitHub Secrets
+
+## Workflow ทั้งหมด
+
+| Workflow | ไฟล์ | Trigger | เวลา (UTC / ไทย) | ทำอะไร | Secrets ที่ต้องใช้ |
+|---|---|---|---|---|---|
+| `ci` | `ci.yml` | `pull_request` และ `push` ไป `main` | ตามการเปิด PR / push | pgTAP, lint, typecheck, Vitest, build, Playwright `@smoke\|@security` บน Chromium | ไม่มี (ใช้คีย์ demo ของ Supabase local) |
+| `nightly` | `nightly.yml` | `schedule` + `workflow_dispatch` | 19:00 UTC / 02:00 น. ทุกคืน | job `full-suite`: Playwright ทุกป้ายบน `chromium`, `firefox`, `mobile` กับ build + Supabase local; job `production`: smoke อ่านอย่างเดียว (`--project=prod`) แล้ว Lighthouse (NFR-07) | `PROD_URL`, `PROD_SUPABASE_URL`, `PROD_SUPABASE_ANON_KEY` (ใช้เฉพาะ job `production`) |
+| `keep-alive` | `keep-alive.yml` | `schedule` + `workflow_dispatch` | 01:00 UTC / 08:00 น. ทุก 2 วัน | เรียก `/api/health` บน production ไม่ให้ Supabase Free ถูกหยุด (NFR-05) | `PROD_URL` |
+| `backup` | `backup.yml` | `schedule` + `workflow_dispatch` | 20:00 UTC เสาร์ / 03:00 น. อาทิตย์ ทุกสัปดาห์ | dump ฐานข้อมูล production เข้ารหัส ตรวจกู้คืนได้ แล้วอัปโหลด artifact 90 วัน (NFR-06) | `SUPABASE_DB_URL` (Session Pooler), `BACKUP_PASSPHRASE` |
+
+## Nightly: เทสต์เต็ม, smoke production และ Lighthouse
+
+- `full-suite` ใช้ขั้นตอนเดียวกับ `ci` (Supabase CLI 2.121.0, env จาก `supabase status`, `npm run build`) แต่ติดตั้ง Chromium + Firefox และรัน `npx playwright test --project=chromium --project=firefox --project=mobile` (ทุกป้าย ไม่รวม `prod`); `timeout-minutes: 60`; รายงาน `playwright-report` เก็บ 14 วัน
+- `production` ไม่เริ่ม Supabase local; ล้มทันทีถ้า secret `PROD_URL` ว่าง; secret ของ production ถูกส่งเป็น env เฉพาะ job นี้ (`full-suite` มองไม่เห็น); รัน `--project=prod` (อ่านอย่างเดียว) ก่อน แล้ว (Lighthouse รันต่อแม้ smoke ล้ม, ยกเว้นถูกยกเลิก) `npx lhci autorun --collect.url="${PROD_URL%/}/"`; อัปโหลดรายงาน `playwright-report-production` และ `lighthouse-report` (`.lighthouseci/`, 14 วัน)
+- `lighthouserc.json`: 3 รอบ, Chrome flags `--no-sandbox --disable-dev-shm-usage` (กัน sandbox ล้มบน runner), โปรไฟล์มือถือเริ่มต้นของ Lighthouse (ไม่ตั้ง `preset`; Moto G Power + slow 4G), assert (ใช้ค่ามัธยฐานของ 3 รอบ `aggregationMethod: median`) `largest-contentful-paint` ≤ 3000 ms (error), `interactive` ≤ 3000 ms (error), `categories:accessibility` ≥ 0.9 (warn); URL ของ production ไม่อยู่ในไฟล์ (ส่งผ่าน env)
+- เกณฑ์เหล่านี้ตรวจ NFR-07 "หน้าหลักโหลดเสร็จภายใน 3 วินาทีบน 4G" (TC-PERF-01) — Lighthouse ที่ติดมากับ `@lhci/cli` คือ 12.6.1 ซึ่งยังมี audit `interactive` (TTI) อยู่ (เป็น audit น้ำหนัก 0 ที่ซ่อนในคะแนน แต่ assert ได้); ถ้าอัปเกรดแล้ว audit นี้หายไป ให้แทนด้วย `largest-contentful-paint` ≤ 3000 และ `total-blocking-time` ≤ 200
+- ค่าที่วัดในเครื่อง (build production, `localhost`, 3 รอบ): LCP 3301 / 2868 / 2934 ms, TTI 3301 / 3141 / 3166 ms, TBT 202 / 170 / 91 ms, Accessibility 1.00 — ใกล้เส้น 3 วินาที (สันนิษฐานว่าต้นเหตุหลักคือ render delay ของข้อความไทยที่รอ web font — ยังไม่ได้ยืนยัน) ค่าบน production (CDN ของ Vercel) ต้องวัดจริงตอนรัน `nightly` ครั้งแรกแล้วบันทึกใน test-summary
 
 ## ความครอบคลุมของ `--grep "@smoke|@security"` หลังแผนที่ 2 (ตรวจเมื่อ 2026-10-19)
 

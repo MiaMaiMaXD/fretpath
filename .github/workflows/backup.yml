@@ -1,0 +1,114 @@
+name: Backup
+
+# Weekly encrypted backup of the PRODUCTION Supabase database (NFR-06).
+# The repo is public: artifacts are downloadable by any GitHub user and a dump
+# contains emails and password hashes, so ONLY a GPG-encrypted archive is uploaded.
+
+on:
+  schedule:
+    - cron: "0 20 * * 6" # Saturday 20:00 UTC = Sunday 03:00 Thailand
+  workflow_dispatch:
+
+concurrency:
+  group: backup
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  backup:
+    name: backup
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+      BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+    steps:
+      - name: Check required secrets
+        run: |
+          set -euo pipefail
+          missing=0
+          if [ -z "${SUPABASE_DB_URL:-}" ]; then echo "::error::Secret SUPABASE_DB_URL is not set"; missing=1; fi
+          if [ -z "${BACKUP_PASSPHRASE:-}" ]; then echo "::error::Secret BACKUP_PASSPHRASE is not set"; missing=1; fi
+          exit "$missing"
+
+      - uses: actions/checkout@v4
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: 2.121.0
+
+      - name: Dump production database (plaintext stays in work/ only)
+        run: |
+          set -euo pipefail
+          umask 077
+          mkdir -p work out
+          supabase db dump --db-url "$SUPABASE_DB_URL" --role-only -f work/roles.sql
+          supabase db dump --db-url "$SUPABASE_DB_URL" --schema public,auth,storage -f work/schema.sql
+          supabase db dump --db-url "$SUPABASE_DB_URL" --data-only --schema public,auth,storage -f work/data.sql
+          for f in roles schema data; do
+            [ -s "work/$f.sql" ] || { echo "::error::$f.sql is empty"; exit 1; }
+          done
+          ls -l work
+
+      # NOT a `services:` container: the runner prints service container logs (public here) and
+      # Postgres logs failed statements including full row data. --log-driver none keeps them empty.
+      # Image must be >= the hosted Postgres major version (see docs/deploy/backup-restore.md).
+      - name: Start throwaway Postgres (no logs)
+        run: |
+          set -euo pipefail
+          docker run -d --name restore-pg --log-driver none \
+            -e POSTGRES_PASSWORD=postgres -p 5432:5432 postgres:17 > /dev/null
+          # Check over TCP: the image's init phase serves the unix socket only, then restarts.
+          for i in $(seq 1 30); do
+            if docker exec restore-pg pg_isready -h 127.0.0.1 -U postgres > /dev/null 2>&1; then exit 0; fi
+            sleep 2
+          done
+          echo "::error::throwaway Postgres did not become ready"
+          exit 1
+
+      - name: Restore check (must succeed or the job fails)
+        run: scripts/backup-check.sh restore work
+
+      - name: Archive and encrypt
+        run: |
+          set -euo pipefail
+          umask 077
+          name="fretpath-backup-$(date -u +%F)"
+          tar czf "work/$name.tar.gz" -C work roles.sql schema.sql data.sql
+          # Passphrase goes via stdin from the environment, never argv.
+          printf '%s' "$BACKUP_PASSPHRASE" | gpg --batch --yes --pinentry-mode loopback \
+            --symmetric --cipher-algo AES256 --passphrase-fd 0 \
+            -o "out/$name.tar.gz.gpg" "work/$name.tar.gz"
+          # Round-trip: the encrypted file must decrypt and list the expected members.
+          printf '%s' "$BACKUP_PASSPHRASE" | gpg --batch --pinentry-mode loopback \
+            --passphrase-fd 0 -d "out/$name.tar.gz.gpg" | tar tz
+          # Remove every plaintext copy.
+          rm -rf work
+
+      - name: Verify upload directory contains only encrypted data
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          bad="$(find out -type f ! -name '*.tar.gz.gpg')"
+          if [ -n "$bad" ]; then echo "::error::Non-encrypted file in out/: $bad"; exit 1; fi
+          files=(out/*.tar.gz.gpg)
+          [ "${#files[@]}" -eq 1 ] || { echo "::error::expected exactly one .gpg file"; exit 1; }
+          [ ! -e work ] || { echo "::error::work/ still exists"; exit 1; }
+          desc="$(file -b "${files[0]}")"
+          echo "file: $desc"
+          echo "$desc" | grep -Eiq 'gpg|pgp|encrypted' || { echo "::error::artifact is not reported as encrypted"; exit 1; }
+          if echo "$desc" | grep -Eiq 'gzip|SQL|ASCII text|tar archive'; then echo "::error::artifact looks unencrypted"; exit 1; fi
+
+      - name: Upload encrypted backup
+        uses: actions/upload-artifact@v4
+        with:
+          name: fretpath-backup
+          path: out/
+          retention-days: 90
+          if-no-files-found: error
+
+      - name: Remove throwaway Postgres
+        if: always()
+        run: docker rm -f restore-pg > /dev/null 2>&1 || true

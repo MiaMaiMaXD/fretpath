@@ -1,6 +1,6 @@
 # FretPath — แผนการทดสอบ (Test Plan)
 
-เวอร์ชัน 3.0 (อัปเดตหลังแผนที่ 3) · อ้างอิงสเปก `docs/superpowers/specs/2026-10-19-fretpath-design.md` (หัวข้อ 2, 6, 7)
+เวอร์ชัน 4.0 (อัปเดตหลังแผนที่ 4) · อ้างอิงสเปก `docs/superpowers/specs/2026-10-19-fretpath-design.md` (หัวข้อ 2, 6, 7)
 ผู้รับผิดชอบ: QA · เอกสารที่เกี่ยวข้อง: `test-cases.md`, `rtm.md`, `.github/ISSUE_TEMPLATE/defect.yml`
 
 ## 1. วัตถุประสงค์
@@ -115,23 +115,24 @@ Priority: P1 แก้ทันที · P2 แก้ในรอบนี้ ·
 | R8 | CI รัน Playwright เฉพาะ `chromium` + `@smoke`/`@security` | ข้อบกพร่องเฉพาะ Firefox/มือถือ (เช่น Firefox ค้างตาม 5.1) หลุดไปถึง merge | กลาง | รันชุดเต็มทั้ง 3 โปรเจกต์ก่อนปิดแผน (ทำแล้วในเครื่อง 60/60 ต่อโปรเจกต์) และเพิ่ม nightly ในแผนที่ 3 |
 
 ## 8. ตารางเวลา
-ลำดับตามแผนพัฒนา (Developer ทำ FR-01 → FR-07 และ QA ทดสอบแต่ละ FR เมื่อเสร็จ) วันที่จริงรอทีมแจ้งกำหนดส่ง
+ลำดับตามแผนพัฒนา (Developer ทำ FR-01 → FR-07 และ QA ทดสอบแต่ละ FR เมื่อเสร็จ) คอลัมน์ "เริ่ม/เสร็จ" คือวันที่ทำจริงตามประวัติ git/PR; กำหนดส่งโครงการยังไม่ยืนยัน (สเปกข้อ 1.4) จึงยังไม่มีวันส่ง
 
 | ช่วง | กิจกรรม QA | เริ่ม | เสร็จ |
 |---|---|---|---|
-| แผนที่ 1 — ฐานข้อมูลและโครงเทสต์ | Test Plan, defect template, TC ของ FR-03/FR-04/NFR-01, pgTAP, Playwright framework, API/security tests | รอกำหนดส่ง | รอกำหนดส่ง |
-| แผนที่ 2 — หน้าเว็บผู้เรียน | TC FR-01, FR-02, FR-05, FR-06 และส่วน UI ของ FR-03/FR-04, NFR-02 (เขียนแล้ว 101 TC รวมแผนที่ 1); E2E `@smoke`/`@regression` (ทำแล้ว) | รอกำหนดส่ง | รอกำหนดส่ง |
-| แผนที่ 3 — หลังบ้านแอดมิน | TC FR-07, FR-01.7, FR-01.8, FR-05.5, SEC-17…25 (รวม CSP), MOB-01c เขียนครบ 135 TC รวมทุกแผน; เส้นทางหลักที่ 3 (TC-ADM-18) | รอกำหนดส่ง | รอกำหนดส่ง |
-| แผนที่ 4 — production | NFR-05/06/07 (keep-alive, backup, Lighthouse), เปิด Google OAuth จริง (FR-01.7), nightly รันครบทุก project, Test Summary Report | รอกำหนดส่ง | รอกำหนดส่ง |
-| ปิดโครงการ | Regression เต็ม, Test Summary Report, ตรวจ exit criteria | รอกำหนดส่ง | รอกำหนดส่ง |
+| แผนที่ 1 — ฐานข้อมูลและโครงเทสต์ | Test Plan, defect template, TC ของ FR-03/FR-04/NFR-01, pgTAP, Playwright framework, API/security tests | 2026-10-19 | 2026-10-19 (PR #1) |
+| แผนที่ 2 — หน้าเว็บผู้เรียน | TC FR-01, FR-02, FR-05, FR-06 และส่วน UI ของ FR-03/FR-04, NFR-02 (เขียนแล้ว 101 TC รวมแผนที่ 1); E2E `@smoke`/`@regression` (ทำแล้ว) | 2026-10-19 | 2026-10-20 (PR #4) |
+| แผนที่ 3 — หลังบ้านแอดมิน | TC FR-07, FR-01.7, FR-01.8, FR-05.5, SEC-17…25 (รวม CSP), MOB-01c เขียนครบ 135 TC รวมทุกแผน; เส้นทางหลักที่ 3 (TC-ADM-18) | 2026-10-20 | 2026-10-20 (PR #5) |
+| แผนที่ 4 — production | NFR-05/06/07 (keep-alive, backup, Lighthouse) เขียน TC-OPS-01…04, TC-PRD-01…06, TC-PERF-01, TC-AUTH-17/18 ครบ 148 TC รวมทุกแผน; รอบในเครื่อง 2026-10-20 (pgTAP 212, Vitest 69, Playwright chromium 97 ผ่านทั้งหมด); เปิด Google OAuth จริง (FR-01.7) และ nightly/Manual TC บน production รอทีมสร้าง production ตาม `docs/deploy/`; Test Summary Report เขียนแล้ว (`test-summary.md`) | 2026-10-20 | <!-- รอผล: วันที่ทีมทดสอบ production ครบ (Task 9 Step 6) — ได้จากวันที่ในช่อง "ผลลัพธ์" ของ test-summary.md --> |
+| ปิดโครงการ | Regression เต็ม, Test Summary Report, ตรวจ exit criteria | <!-- รอผล: วันที่เริ่ม regression เต็มก่อนปิด --> | <!-- รอผล: วันที่ตรวจเกณฑ์จบการทดสอบครบ 3 ข้อใน test-summary.md ข้อ 8 --> |
 
 ## 9. ผลงานที่ส่งมอบ
 | ผลงาน | ที่เก็บ | สถานะ |
 |---|---|---|
 | Test Plan | `docs/qa/test-plan.md` | เอกสารนี้ |
-| Test Cases | `docs/qa/test-cases.md` | 135 TC: FR-01 … FR-07, NFR-01 … NFR-04 ครบ; NFR-05 … NFR-07 ต่อในแผนที่ 4 |
-| RTM | `docs/qa/rtm.md` | ครบทุกแถว; 45/48 ข้อมี TC, ที่เหลือ 3 ข้อ (NFR-05/06/07) รอแผนที่ 4 |
+| Test Cases | `docs/qa/test-cases.md` | 148 TC ครบทุก requirement (FR-01 … FR-07, NFR-01 … NFR-07) ตรวจด้วย `npm run qa:stats` |
+| RTM | `docs/qa/rtm.md` | ปิดแล้ว: 48/48 ข้อมี TC (M 42/42), requirement ระดับ M ที่ไม่มี TC = 0 |
 | เทมเพลต Defect Report | `.github/ISSUE_TEMPLATE/defect.yml` | พร้อมใช้ |
-| ชุดเทสต์อัตโนมัติ | `supabase/tests/`, `tests/unit/`, `e2e/` | pgTAP 001–007, 011, 012, 017–020, Vitest, Playwright `e2e/api` และ `e2e/specs` (แผนที่ 2–3) มีแล้ว |
+| ชุดเทสต์อัตโนมัติ | `supabase/tests/`, `tests/unit/`, `e2e/` | pgTAP 001–007, 011, 012, 017–021, Vitest, Playwright `e2e/api`, `e2e/specs` (แผนที่ 2–3) และ `e2e/prod` (แผนที่ 4) มีแล้ว |
 | รายงานการรันเทสต์ | HTML report ของ Playwright (CI artifact) | ตามการรันจริง |
-| Test Summary Report | `docs/qa/test-summary.md` | ปิดโครงการ |
+| Test Summary Report | `docs/qa/test-summary.md` | เขียนแล้ว; ช่องผลบน production รอทีม (`<!-- รอผล -->`) |
+| สคริปต์เดโม | `docs/demo.md` | เขียนแล้ว (10 นาที เส้นทางหลัก 1–3) |
