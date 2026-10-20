@@ -28,4 +28,12 @@ describe('errors', () => {
     expect(errorCodeFrom({ message: 'boom' })).toBe('UNKNOWN');
     expect(errorCodeFrom(null)).toBe('UNKNOWN');
   });
+  it('maps admin error codes', () => {
+    expect(thaiError('LESSON_PUBLISHED_INCOMPLETE')).toBe('บทนี้เผยแพร่อยู่ การแก้ไขนี้จะทำให้บทไม่สมบูรณ์ — เปลี่ยนเป็นฉบับร่างก่อนแก้');
+    expect(thaiError('LAST_ADMIN')).toBe('ต้องมีผู้ดูแลระบบอย่างน้อย 1 คน');
+    expect(thaiError('USER_NOT_FOUND')).toBe('ไม่พบผู้ใช้นี้');
+    expect(thaiError('INVALID_ORDER')).toBe('ลำดับบทไม่ถูกต้อง กรุณาโหลดหน้าใหม่');
+    expect(errorCodeFrom({ message: 'LAST_ADMIN', code: 'P0001' })).toBe('LAST_ADMIN');
+    expect(errorCodeFrom({ message: 'INVALID_ORDER', code: 'P0001' })).toBe('INVALID_ORDER');
+  });
 });

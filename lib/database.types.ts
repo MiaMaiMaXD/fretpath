@@ -311,6 +311,15 @@ isOneToOne: false
 "is_lesson_unlocked":
 { Args: { "p_lesson": string }; Returns: boolean
                            },
+"lesson_publish_problems":
+{ Args: { "p_lesson": string }; Returns: (string)[]
+                           },
+"lesson_publish_problems_internal":
+{ Args: { "p_lesson": string }; Returns: (string)[]
+                           },
+"reorder_lessons":
+{ Args: { "p_course": string,"p_lesson_ids": (string)[] }; Returns: undefined
+                           },
 "set_user_role":
 { Args: { "p_role": Database["public"]['Enums']["user_role"],"p_user": string }; Returns: undefined
                            },

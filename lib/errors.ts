@@ -6,6 +6,10 @@ export type ErrorCode =
   | 'LESSON_HAS_LEARNERS'
   | 'FUTURE_DATE'
   | 'NOT_ADMIN'
+  | 'LESSON_PUBLISHED_INCOMPLETE'
+  | 'LAST_ADMIN'
+  | 'USER_NOT_FOUND'
+  | 'INVALID_ORDER'
   | 'INVALID_CREDENTIALS'
   | 'EMAIL_NOT_CONFIRMED'
   | 'NETWORK'
@@ -22,6 +26,10 @@ const MESSAGES: Record<ErrorCode, string> = {
   LESSON_HAS_LEARNERS: 'ลบบทนี้ไม่ได้เพราะมีผู้เรียนแล้ว',
   FUTURE_DATE: 'วันที่ต้องไม่เป็นวันในอนาคต',
   NOT_ADMIN: 'เฉพาะผู้ดูแลระบบเท่านั้น',
+  LESSON_PUBLISHED_INCOMPLETE: 'บทนี้เผยแพร่อยู่ การแก้ไขนี้จะทำให้บทไม่สมบูรณ์ — เปลี่ยนเป็นฉบับร่างก่อนแก้',
+  LAST_ADMIN: 'ต้องมีผู้ดูแลระบบอย่างน้อย 1 คน',
+  USER_NOT_FOUND: 'ไม่พบผู้ใช้นี้',
+  INVALID_ORDER: 'ลำดับบทไม่ถูกต้อง กรุณาโหลดหน้าใหม่',
   INVALID_CREDENTIALS: 'อีเมลหรือรหัสผ่านไม่ถูกต้อง',
   EMAIL_NOT_CONFIRMED: 'กรุณายืนยันอีเมลก่อนเข้าสู่ระบบ',
   NETWORK: 'เชื่อมต่อไม่สำเร็จ กรุณาลองใหม่',
