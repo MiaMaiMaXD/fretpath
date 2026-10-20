@@ -1,5 +1,8 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
+import { bangkokWeekRange } from '@/lib/bangkok';
+import { toPathLessons } from '@/lib/path-state';
+import { averageBestScore, lessonsProgress, weeklyMinutes } from '@/lib/stats';
 
 /** Server-side admin check for every admin page/action (defence in depth behind proxy.ts and RLS). */
 export async function requireAdmin(): Promise<{ userId: string }> {
@@ -34,4 +37,77 @@ export async function getAdminOverview(): Promise<AdminOverview> {
     }),
     learnerCount: learners.count ?? 0,
   };
+}
+
+export type Learner = {
+  id: string;
+  displayName: string;
+  role: 'member' | 'admin';
+  completed: number;
+  /** null when the learner is not enrolled in any course. */
+  total: number | null;
+  avgBestScore: number | null;
+  weekMinutes: number;
+  lastPracticedOn: string | null;
+};
+
+/** All profiles with progress, aggregated in memory from a few admin-RLS queries (no N+1). */
+export async function listLearners(): Promise<Learner[]> {
+  await requireAdmin();
+  const supabase = await createClient();
+  const week = bangkokWeekRange();
+  const [profiles, progress, logs, enrollments, lessons] = await Promise.all([
+    supabase.from('profiles').select('id, display_name, role'),
+    supabase.from('lesson_progress').select('user_id, lesson_id, status, best_score'),
+    supabase.from('practice_logs').select('user_id, practiced_on, minutes'),
+    supabase.from('enrollments').select('user_id, courses(id, sort_order)'),
+    supabase.from('lessons').select('id, slug, title, summary, sort_order, pass_score, course_id').eq('status', 'published'),
+  ]);
+  for (const r of [profiles, progress, logs, enrollments, lessons]) {
+    if (r.error) throw new Error(r.error.message);
+  }
+
+  const lessonsByCourse = new Map<string, NonNullable<typeof lessons.data>>();
+  for (const l of lessons.data ?? []) {
+    const list = lessonsByCourse.get(l.course_id) ?? [];
+    list.push(l);
+    lessonsByCourse.set(l.course_id, list);
+  }
+  // First enrolled course by sort_order, same rule as getPath.
+  const firstCourse = new Map<string, { id: string; sort: number }>();
+  for (const e of enrollments.data ?? []) {
+    const c = e.courses;
+    if (!c || Array.isArray(c)) continue;
+    const cur = firstCourse.get(e.user_id);
+    if (!cur || c.sort_order < cur.sort) firstCourse.set(e.user_id, { id: c.id, sort: c.sort_order });
+  }
+  const group = <T extends { user_id: string }>(rows: T[]) => {
+    const m = new Map<string, T[]>();
+    for (const r of rows) m.set(r.user_id, [...(m.get(r.user_id) ?? []), r]);
+    return m;
+  };
+  const progressBy = group(progress.data ?? []);
+  const logsBy = group(logs.data ?? []);
+
+  return (profiles.data ?? [])
+    .map((p): Learner => {
+      const course = firstCourse.get(p.id);
+      const ul = logsBy.get(p.id) ?? [];
+      const last = ul.reduce<string | null>((m, l) => (m === null || l.practiced_on > m ? l.practiced_on : m), null);
+      const base = {
+        id: p.id,
+        displayName: p.display_name ?? '',
+        role: p.role,
+        weekMinutes: weeklyMinutes(
+          ul.map((l) => ({ practicedOn: l.practiced_on, minutes: l.minutes })),
+          week,
+        ),
+        lastPracticedOn: last,
+      };
+      if (!course) return { ...base, completed: 0, total: null, avgBestScore: null };
+      const path = toPathLessons(lessonsByCourse.get(course.id) ?? [], progressBy.get(p.id) ?? []);
+      const { completed, total } = lessonsProgress(path);
+      return { ...base, completed, total, avgBestScore: averageBestScore(path) };
+    })
+    .sort((a, b) => a.displayName.localeCompare(b.displayName, 'th'));
 }
