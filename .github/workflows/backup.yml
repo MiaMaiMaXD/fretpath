@@ -21,20 +21,6 @@ jobs:
     name: backup
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    services:
-      # Throwaway server for the restore check. Must be >= the hosted Postgres major version
-      # (Supabase prod: see docs/deploy/backup-restore.md to change).
-      postgres:
-        image: postgres:17
-        env:
-          POSTGRES_PASSWORD: postgres
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd "pg_isready -U postgres"
-          --health-interval 5s
-          --health-timeout 5s
-          --health-retries 10
     env:
       SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
       BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
@@ -65,6 +51,20 @@ jobs:
             [ -s "work/$f.sql" ] || { echo "::error::$f.sql is empty"; exit 1; }
           done
           ls -l work
+
+      # NOT a `services:` container: the runner prints service container logs (public here) and
+      # Postgres logs failed statements including full row data. --log-driver none keeps them empty.
+      # Image must be >= the hosted Postgres major version (see docs/deploy/backup-restore.md).
+      - name: Start throwaway Postgres (no logs)
+        run: |
+          set -euo pipefail
+          docker run -d --name restore-pg --log-driver none             -e POSTGRES_PASSWORD=postgres -p 5432:5432 postgres:17 > /dev/null
+          for i in $(seq 1 30); do
+            if docker exec restore-pg pg_isready -U postgres > /dev/null 2>&1; then exit 0; fi
+            sleep 2
+          done
+          echo "::error::throwaway Postgres did not become ready"
+          exit 1
 
       - name: Restore check (must succeed or the job fails)
         run: scripts/backup-check.sh restore work
@@ -106,3 +106,7 @@ jobs:
           path: out/
           retention-days: 90
           if-no-files-found: error
+
+      - name: Remove throwaway Postgres
+        if: always()
+        run: docker rm -f restore-pg > /dev/null 2>&1 || true
