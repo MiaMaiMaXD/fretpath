@@ -2,6 +2,8 @@
 
 รายการที่ต้องตั้งค่าบน Supabase (hosted) และ Vercel ก่อนเปิดใช้งานจริง ค่าที่ใช้ในเครื่อง (`supabase/config.toml`) ไม่ถูกนำไปใช้บนระบบ hosted โดยอัตโนมัติ
 
+คู่มือทีละขั้น: [supabase.md](supabase.md), [vercel.md](vercel.md), [google.md](google.md), [secrets.md](secrets.md), [backup-restore.md](backup-restore.md)
+
 ## Supabase (hosted)
 
 - [ ] **เทมเพลตอีเมล** (Confirm signup และ Reset password): คัดลอกจาก `supabase/templates` ลิงก์ต้องใช้ `{{ .TokenHash }}` ชี้ไปที่ `/auth/confirm` (ไม่ใช่ `{{ .ConfirmationURL }}`) จนกว่าจะตั้งค่านี้ `emailRedirectTo` / `redirectTo` ในโค้ดเป็นเพียงค่าสำรอง
