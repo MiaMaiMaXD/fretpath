@@ -1,5 +1,7 @@
 # เปิดการเข้าสู่ระบบด้วย Google (FR-01.7)
 
+Google login ส่งผู้ใช้กลับผ่าน `/auth/callback` ดังนั้นต้องตั้ง Redirect URLs ใน [supabase.md](supabase.md) ขั้นที่ 5 (รวม `https://<domain>/**`) ให้เสร็จก่อน
+
 ทำหลังจาก production ใช้งานได้แล้ว ([supabase.md](supabase.md) และ [vercel.md](vercel.md)) ฟรี 0 บาท กรอกช่อง "ผลลัพธ์" ทุกข้อที่มี [ทีม]
 
 ห้ามแปะ Client Secret ลงใน repo, issue หรือแชต เก็บใน password manager และกรอกลง Supabase เท่านั้น ใช้ตัวแทน เช่น `<project-ref>` ในเอกสาร

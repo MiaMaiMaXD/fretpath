@@ -76,6 +76,7 @@ npx supabase db push
 1. ไปที่ **Authentication** > **URL Configuration**
 2. **Site URL**: `https://<domain>`
 3. **Redirect URLs** กด Add URL ทีละบรรทัด
+   - `https://<domain>/**` (**จำเป็น** แอปส่งลิงก์ที่มี query เช่น `/auth/callback?next=/dashboard` และ `?next=/reset-password` ถ้ามีเฉพาะรายการที่ไม่มี query อาจไม่ตรงกัน แล้ว Supabase จะถอยไปใช้ Site URL แทน ตรงกับ `additional_redirect_urls` ใน `supabase/config.toml`)
    - `https://<domain>/auth/callback`
    - `https://<domain>/auth/confirm`
 4. กด **Save**
@@ -156,7 +157,7 @@ backup (`.github/workflows/backup.yml`) ต้องใช้ connection string 
 2. เลือกแบบ **Session pooler** ใช้พอร์ต **5432** เท่านั้น
    - ห้ามใช้ Direct connection เพราะเป็น IPv6 อย่างเดียว และ GitHub runner ไม่มี IPv6
    - ห้ามใช้ Transaction pooler (พอร์ต 6543)
-3. รูปแบบ (ตัวอย่าง ค่าจริงดูจาก dashboard): `postgresql://postgres.<project-ref>:<รหัสผ่าน>@<pooler-host>:5432/postgres`
+3. รูปแบบ (ตัวอย่าง ค่าจริงดูจาก dashboard): `postgresql://postgres.<project-ref>:[YOUR-PASSWORD]@<pooler-host>:5432/postgres`
 4. แทน `[YOUR-PASSWORD]` ด้วย Database Password จากขั้นที่ 1 ถ้ารหัสผ่านมีอักขระพิเศษต้อง percent-encode (เช่น `@` เป็น `%40`)
 5. นำไปตั้งเป็น GitHub secret `SUPABASE_DB_URL` ตาม [secrets.md](secrets.md) (ห้ามวางลงแชตหรือ repo)
 
