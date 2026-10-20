@@ -32,7 +32,8 @@ export default defineConfig({
     { name: 'firefox', testIgnore: /e2e[\/]prod[\/]/, dependencies: ['setup'], use: { ...devices['Desktop Firefox'] } },
     { name: 'mobile', testIgnore: /e2e[\/]prod[\/]/, dependencies: ['setup'], use: { ...devices['Pixel 7'] } },
     // Read-only smoke tests against a deployed URL (PROD_URL). No dependencies, no writes.
-    { name: 'prod', testMatch: /e2e[\/]prod[\/].*\.spec\.ts/, use: { ...devices['Desktop Chrome'], baseURL: prodUrl } },
+    // trace/screenshot/video off: the nightly artifact is public and must not contain production page content.
+    { name: 'prod', testMatch: /e2e[\/]prod[\/].*\.spec\.ts/, use: { ...devices['Desktop Chrome'], baseURL: prodUrl, trace: 'off', screenshot: 'off', video: 'off' } },
   ],
   // Playwright starts webServer for any run, even `--project=prod`, so skip it when PROD_URL is set.
   // Consequence: with PROD_URL set the other projects need their server started manually.

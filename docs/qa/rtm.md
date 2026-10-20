@@ -59,7 +59,7 @@
 | NFR-04 | M | TC-AUTH-02, TC-AUTH-04, TC-AUTH-06, TC-LSN-03, TC-PATH-16, TC-PRC-03, TC-PRC-05, TC-QZ-19, TC-QZ-23 | มี TC (บางส่วนยังไม่ automate): ตรวจข้อความ Thai/error ที่ระบุในเทสต์แล้ว แต่ยังไม่มี TC ตรวจ copy ทั้งระบบ → ตรวจด้วยมือก่อนปิดโครงการ |
 | NFR-05 | M | TC-OPS-01, TC-OPS-02, TC-PRD-01, TC-PRD-06 | มี TC (บางส่วนยังไม่ automate): TC-OPS-01 และ TC-PRD-01/06 อัตโนมัติ (keep-alive.yml, nightly job `production`); TC-OPS-02 (อีเมลแจ้งเมื่อล้ม) เป็น Manual เพราะอีเมลเป็นของ GitHub |
 | NFR-06 | M | TC-OPS-03, TC-OPS-04 | มี TC (บางส่วนยังไม่ automate): TC-OPS-03 เข้ารหัสและ TC-OPS-04 restore check อัตโนมัติใน backup.yml; การกู้คืนจริงในเครื่องตาม `docs/deploy/backup-restore.md` เป็น Manual |
-| NFR-07 | M | TC-PERF-01 | ทำแล้ว (อัตโนมัติ) ใน nightly job `production` (`lighthouserc.json`); ค่าบน production วัดในรอบ nightly แรก — ดู `test-summary.md` |
+| NFR-07 | M | TC-PERF-01 | ทำแล้ว (อัตโนมัติ) ใน nightly job `production` (`lighthouserc.json`); ค่าบน production วัดในรอบ nightly แรก — ดู `test-summary.md`; TTI ในเครื่องเกินเกณฑ์ (3166 ms) — รอผล production |
 
 ## สรุปความครอบคลุม
 
