@@ -33,7 +33,7 @@ jobs:
             echo "::error::PROD_URL secret is not set (and no url input given)"
             exit 1
           fi
-          body="$(curl --fail --retry 3 --retry-delay 30 -s -S "${TARGET_URL%/}/api/health")"
+          body="$(curl --fail --max-time 20 --retry 3 --retry-delay 30 -s -S "${TARGET_URL%/}/api/health")"
           # Must be exactly a healthy answer, not just any 200 (e.g. a static page).
           printf '%s' "$body" | jq -e '.ok == true' > /dev/null
           echo "health check OK"

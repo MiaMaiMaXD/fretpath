@@ -8,11 +8,11 @@
 
 | ชื่อ | ค่า | ใช้โดย |
 | --- | --- | --- |
-| `PROD_URL` | URL ของ production ไม่มี `/` ท้าย เช่น `https://<โดเมนของเรา>` | `keep-alive.yml`, `nightly.yml` (job production) |
+| `PROD_URL` | URL ที่เป็น canonical แบบ `https://` ไม่มี `/` ท้าย เช่น `https://<โดเมนของเรา>` (ต้องไม่ถูก redirect เพราะ keep-alive ไม่ตาม redirect) | `keep-alive.yml`, `nightly.yml` (job production) |
 | `PROD_SUPABASE_URL` | `https://<project-ref>.supabase.co` | `nightly.yml` (job `production`), TC-PRD-06 |
 | `PROD_SUPABASE_ANON_KEY` | anon / public key ของโปรเจกต์ production | `nightly.yml` (job `production`), TC-PRD-06 |
 | `SUPABASE_DB_URL` | connection string แบบ **Session Pooler พอร์ต 5432 เท่านั้น** (GitHub runner ไม่มี IPv6 จึงใช้ direct connection ไม่ได้ และห้ามใช้ transaction pooler 6543) รหัสผ่านต้อง percent-encode | `backup.yml` |
-| `BACKUP_PASSPHRASE` | รหัสผ่านสุ่มยาวสำหรับเข้ารหัส backup เก็บสำเนาใน password manager นอก GitHub (หายแล้ว backup เก่าเปิดไม่ได้) | `backup.yml` |
+| `BACKUP_PASSPHRASE` | รหัสผ่านสุ่มสำหรับเข้ารหัส backup สร้างด้วย `openssl rand -base64 32` (Windows PowerShell: `$b = New-Object byte[] 32; [Security.Cryptography.RandomNumberGenerator]::Create().GetBytes($b); [Convert]::ToBase64String($b)`) เก็บใน password manager ของทีมก่อนตั้งใน GitHub: ถ้าทำหาย backup ทั้งหมดกู้คืนไม่ได้ | `backup.yml` |
 | `SUPABASE_ACCESS_TOKEN` | token ของ Supabase CLI | **ยังไม่ต้องตั้ง** ไม่มี workflow ใน `.github/workflows` ใช้ (ตรวจแล้ว) ตั้งเฉพาะเมื่อมีการเรียก CLI (เช่น `supabase db push`) ใน Actions |
 
 หมายเหตุ
@@ -51,3 +51,5 @@ GitHub จะปิด scheduled workflow (เช่น `keep-alive.yml`) เม
 - CLI: `gh workflow enable keep-alive.yml`
 
 จากนั้นกด Run workflow หนึ่งครั้งเพื่อตรวจว่าผ่าน
+
+ทำไมสำคัญ: ถ้า keep-alive ถูกปิดแล้วไม่มีใคร ping ฐานข้อมูล Supabase Free จะ pause โปรเจกต์หลังไม่มีการใช้งานราว 7 วัน (เว็บจะใช้งานไม่ได้จนกว่าจะกด restore)
