@@ -98,8 +98,16 @@ jobs:
       - name: Production smoke (read-only)
         run: npx playwright test --project=prod
 
+      # Runs even if the smoke step failed, so performance is measured every night.
+      # The PROD_URL guard above fails the job first, so this never runs with an empty URL.
       - name: Lighthouse (NFR-07)
-        run: npx lhci autorun --collect.url="${PROD_URL%/}/"
+        if: ${{ !cancelled() }}
+        run: |
+          if [ -z "${PROD_URL:-}" ]; then
+            echo "::error::PROD_URL secret is not set"
+            exit 1
+          fi
+          npx lhci autorun --collect.url="${PROD_URL%/}/"
 
       - name: Upload Playwright report
         if: always()

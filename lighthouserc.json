@@ -3,14 +3,15 @@
     "collect": {
       "numberOfRuns": 3,
       "settings": {
-        "onlyCategories": ["performance", "accessibility"]
+        "onlyCategories": ["performance", "accessibility"],
+        "chromeFlags": "--no-sandbox --disable-dev-shm-usage"
       }
     },
     "assert": {
       "assertions": {
-        "largest-contentful-paint": ["error", { "maxNumericValue": 3000 }],
-        "interactive": ["error", { "maxNumericValue": 3000 }],
-        "categories:accessibility": ["warn", { "minScore": 0.9 }]
+        "largest-contentful-paint": ["error", { "maxNumericValue": 3000, "aggregationMethod": "median" }],
+        "interactive": ["error", { "maxNumericValue": 3000, "aggregationMethod": "median" }],
+        "categories:accessibility": ["warn", { "minScore": 0.9, "aggregationMethod": "median" }]
       }
     },
     "upload": {
