@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation';
 import { CONFLICT_MESSAGE, uniqueViolationKind, validateLessonInput, type LessonInput } from '@/lib/admin/lesson-form';
 import type { ActionState } from '@/lib/action-state';
 import { requireAdmin } from '@/lib/data/admin';
+import { getAdminLessons } from '@/lib/data/admin-lessons';
 import { errorCodeFrom, thaiError } from '@/lib/errors';
 import { createClient } from '@/lib/supabase/server';
 
@@ -133,4 +134,35 @@ export async function deleteLesson(id: string): Promise<LessonActionResult> {
   }
   refresh();
   return { ok: true };
+}
+
+export async function reorderLessons(courseId: string, _prev: ActionState, fd: FormData): Promise<ActionState> {
+  await requireAdmin();
+  const current = await getAdminLessons(courseId);
+  const values: Record<string, string> = {};
+  const nums: number[] = [];
+  let invalid = false;
+  for (const l of current) {
+    const raw = str(fd, `order-${l.id}`).trim();
+    values[`order-${l.id}`] = raw;
+    if (/^[1-9]\d{0,8}$/.test(raw)) nums.push(Number(raw));
+    else {
+      invalid = true;
+      nums.push(0);
+    }
+  }
+  if (invalid) return { ok: false, message: 'ลำดับต้องเป็นจำนวนเต็มบวก', values };
+
+  // Ties keep the current order (getAdminLessons is sorted by sort_order).
+  const ids = current
+    .map((l, i) => ({ id: l.id, n: nums[i], i }))
+    .sort((a, b) => a.n - b.n || a.i - b.i)
+    .map((x) => x.id);
+
+  const supabase = await createClient();
+  const { error } = await supabase.rpc('reorder_lessons', { p_course: courseId, p_lesson_ids: ids });
+  if (error) return { ok: false, message: thaiError(errorCodeFrom(error)), values };
+
+  refresh();
+  return { ok: true, message: 'บันทึกลำดับแล้ว' };
 }

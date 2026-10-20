@@ -120,3 +120,12 @@ export async function getAdminQuestions(lessonId: string): Promise<AdminQuestion
     };
   });
 }
+
+/** The lesson's position in its course (drives which learner tools the preview mirrors). */
+export async function getAdminLessonSortOrder(id: string): Promise<number> {
+  await requireAdmin();
+  const supabase = await createClient();
+  const { data, error } = await supabase.from('lessons').select('sort_order').eq('id', id).maybeSingle();
+  if (error) throw new Error(error.message);
+  return data?.sort_order ?? 0;
+}

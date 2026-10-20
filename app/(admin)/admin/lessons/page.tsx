@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { ReorderList } from '@/components/admin/ReorderList';
 import { getAdminCourses, getAdminLessons } from '@/lib/data/admin-lessons';
 
 export const metadata = { title: 'จัดการบทเรียน' };
@@ -43,34 +44,7 @@ export default async function AdminLessonsPage({ searchParams }: { searchParams:
           {lessons.length === 0 ? (
             <p>ยังไม่มีบทเรียนในคอร์สนี้</p>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left">
-                <thead>
-                  <tr className="border-b border-neutral-300 dark:border-neutral-700">
-                    <th scope="col" className="p-2">ลำดับ</th>
-                    <th scope="col" className="p-2">ชื่อ</th>
-                    <th scope="col" className="p-2">สถานะ</th>
-                    <th scope="col" className="p-2">เกณฑ์ผ่าน</th>
-                    <th scope="col" className="p-2">จำนวนคำถาม</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {lessons.map((l) => (
-                    <tr key={l.id} className="border-b border-neutral-200 dark:border-neutral-800">
-                      <td className="p-2">{l.sortOrder}</td>
-                      <td className="p-2">
-                        <Link href={`/admin/lessons/${l.id}`} className="underline underline-offset-4">
-                          {l.title}
-                        </Link>
-                      </td>
-                      <td className="p-2">{l.status === 'published' ? 'เผยแพร่' : 'ฉบับร่าง'}</td>
-                      <td className="p-2">{l.passScore}%</td>
-                      <td className="p-2">{l.questionCount}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <ReorderList courseId={current.id} lessons={lessons} />
           )}
         </>
       ) : (

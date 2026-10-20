@@ -21,6 +21,9 @@ export default async function EditLessonPage({ params }: { params: Promise<{ id:
         กลับไปรายการบทเรียน
       </Link>
       <h1 className="text-2xl font-bold">แก้ไขบทเรียน</h1>
+      <Link href={`/admin/lessons/${lesson.id}/preview`} className="inline-block underline underline-offset-4">
+        ดูตัวอย่าง
+      </Link>
       <PublishPanel
         lessonId={lesson.id}
         courseId={lesson.courseId}

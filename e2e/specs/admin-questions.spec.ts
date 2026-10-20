@@ -133,7 +133,7 @@ test('TC-ADM-11 editing a published lesson into an incomplete state is refused @
   }
 });
 
-test('TC-ADM-12 move question up and down swaps the order @regression', async ({ adminPage }) => {
+test('TC-ADM-19 move question up and down swaps the order @regression', async ({ adminPage }) => {
   const courseId = await createCourse();
   try {
     const lessonId = await createCompleteLesson(courseId, 'mv', 'บทเรียงข้อ', false);
@@ -161,7 +161,7 @@ test('TC-ADM-12 move question up and down swaps the order @regression', async ({
   }
 });
 
-test('TC-ADM-13 delete asks first and an answered question cannot be deleted @regression', async ({
+test('TC-ADM-20 delete asks first and an answered question cannot be deleted @regression', async ({
   adminPage,
   adminDb,
   member,

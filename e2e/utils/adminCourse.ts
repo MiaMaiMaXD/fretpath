@@ -33,11 +33,11 @@ export async function deleteCourse(courseId: string) {
 }
 
 /** A complete lesson (1 question, 2 choices, key) created straight in the DB. */
-export async function createCompleteLesson(courseId: string, slug: string, title: string, publish: boolean) {
+export async function createCompleteLesson(courseId: string, slug: string, title: string, publish: boolean, sortOrder = 1) {
   const db = adminClient();
   const l = await db
     .from('lessons')
-    .insert({ course_id: courseId, slug, title, sort_order: 1, status: 'draft' })
+    .insert({ course_id: courseId, slug, title, sort_order: sortOrder, status: 'draft' })
     .select('id')
     .single();
   if (l.error) throw new Error(l.error.message);
