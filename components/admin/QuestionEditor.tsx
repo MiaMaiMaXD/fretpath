@@ -250,7 +250,8 @@ export function QuestionsSection({ lessonId, questions }: { lessonId: string; qu
       {questions.length === 0 && !adding ? <p>ยังไม่มีคำถาม</p> : null}
       {questions.map((q, i) => (
         <QuestionEditor
-          key={q.id}
+          // remount when stored choice ids change (e.g. after a save adds a choice) so state never holds stale ids
+          key={`${q.id}:${q.choiceIds.join(',')}`}
           lessonId={lessonId}
           question={q}
           number={i + 1}

@@ -1,6 +1,6 @@
 begin;
 \ir helpers/auth.psql
-select plan(21);
+select plan(24);
 
 with c as (insert into courses (slug, title, status, is_free) values ('t12-c', 'T12', 'published', false) returning id)
   select id as c1 from c \gset
@@ -53,6 +53,11 @@ select lives_ok(format('select admin_save_question(%L, %L, %L, %L::text[], %L::u
 select is((select text from quiz_choices where id = :'hq_choice'), 'q2', 'test_answer_still_points_to_same_choice');
 select throws_ok(format('select admin_save_question(%L, %L, %L, %L::text[], %L::uuid[], 0, null)', :'draft', :'hq', 'h',
   '{r3,new}', format('{%s,null}', :'hq_third')), 'P0001', 'QUESTION_HAS_ANSWERS', 'test_removing_answered_choice_refused');
+select throws_ok(format('delete from quiz_choices where id = %L', :'hq_choice'), 'P0001', 'QUESTION_HAS_ANSWERS', 'test_raw_delete_answered_choice_refused');
+select throws_ok(format('delete from quiz_questions where id = %L', :'hq'), 'P0001', 'QUESTION_HAS_ANSWERS', 'test_raw_delete_answered_question_refused');
+select tests.clear_auth();
+select is((select count(*)::int from quiz_attempt_answers where question_id = :'hq' and choice_id = :'hq_choice'), 1, 'test_attempt_answer_survives_edits_and_refused_deletes');
+select tests.authenticate_as(:'adm');
 select throws_ok(format('select admin_delete_question(%L)', :'hq'), 'P0001', 'QUESTION_HAS_ANSWERS', 'test_deleting_answered_question_refused');
 select lives_ok(format('select admin_delete_question(%L)', :'nq'), 'test_delete_unanswered_question');
 
