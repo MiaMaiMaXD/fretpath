@@ -1,4 +1,4 @@
-import { test as base, expect, type Page } from '@playwright/test';
+import { test as base, expect, type BrowserContext, type Page } from '@playwright/test';
 import { LoginPage } from '../pages/LoginPage';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '@/lib/database.types';
@@ -11,6 +11,7 @@ type Db = SupabaseClient<Database>;
 export const MEMBER_STATE = 'e2e/.auth/member.json';
 
 type Fixtures = {
+  cspGuard: boolean;
   member: TestUser;
   memberPage: Page;
   adminPage: Page;
@@ -44,21 +45,31 @@ async function safeDelete(id: string): Promise<void> {
   }
 }
 
+/**
+ * Collects Content-Security-Policy violations for every page of a context (current and future).
+ * Use it for contexts a test creates itself, then assert the returned array is empty.
+ */
+export function watchCsp(context: BrowserContext): string[] {
+  const violations: string[] = [];
+  context.on('console', (msg) => {
+    if (msg.text().includes('Content Security Policy')) violations.push(msg.text());
+  });
+  void context.addInitScript(() => {
+    document.addEventListener('securitypolicyviolation', (e) => {
+      console.error(`Content Security Policy violation: ${e.violatedDirective} ${e.blockedURI}`);
+    });
+  });
+  return violations;
+}
+
 // Fixtures are lazy: a user is only created when a test requests it.
 export const test = base.extend<Fixtures>({
+  cspGuard: [true, { option: true }],
   // Wrap `page` (lazy, so API-only tests never create one): fail on CSP violations.
-  page: async ({ page }, use) => {
-    const violations: string[] = [];
-    page.on('console', (msg) => {
-      if (msg.text().includes('Content Security Policy')) violations.push(msg.text());
-    });
-    await page.addInitScript(() => {
-      document.addEventListener('securitypolicyviolation', (e) => {
-        console.error(`Content Security Policy violation: ${e.violatedDirective} ${e.blockedURI}`);
-      });
-    });
+  page: async ({ page, cspGuard }, use) => {
+    const violations = watchCsp(page.context());
     await use(page);
-    expect(violations, 'CSP violations in console').toEqual([]);
+    if (cspGuard) expect(violations, 'CSP violations in console').toEqual([]);
   },
   member: async ({}, use) => {
     const user = await createTestUser({ role: 'member' });

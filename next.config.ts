@@ -1,7 +1,11 @@
 import type { NextConfig } from "next";
 
 // Read at build time. Origin only, so the CSP source is a clean host source.
-const supabaseOrigin = new URL(process.env.NEXT_PUBLIC_SUPABASE_URL ?? 'http://127.0.0.1:54321').origin;
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+if (!supabaseUrl && process.env.NODE_ENV === 'production') {
+  throw new Error('NEXT_PUBLIC_SUPABASE_URL is required to build the Content-Security-Policy');
+}
+const supabaseOrigin = new URL(supabaseUrl ?? 'http://127.0.0.1:54321').origin;
 const isDev = process.env.NODE_ENV === 'development';
 
 const csp = [

@@ -1,4 +1,4 @@
-import { test, expect, MEMBER_STATE } from '../fixtures';
+import { test, expect, MEMBER_STATE, watchCsp } from '../fixtures';
 
 test.use({ viewport: { width: 375, height: 812 } });
 
@@ -17,6 +17,7 @@ const noHorizontalScroll = () =>
 
 test('TC-MOB-01 no horizontal scroll on every learner page @regression', async ({ browser }) => {
   const ctx = await browser.newContext({ storageState: MEMBER_STATE, viewport: { width: 375, height: 812 } });
+  const csp = watchCsp(ctx);
   try {
     const page = await ctx.newPage();
     for (const url of ['/', ...LEARNER_PAGES]) {
@@ -24,6 +25,7 @@ test('TC-MOB-01 no horizontal scroll on every learner page @regression', async (
       await page.waitForLoadState('networkidle');
       expect(await page.evaluate(noHorizontalScroll), `horizontal overflow on ${url}`).toBe(true);
     }
+    expect(csp, 'CSP violations in console').toEqual([]);
   } finally {
     await ctx.close();
   }

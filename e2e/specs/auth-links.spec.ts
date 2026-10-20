@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import { test, expect } from '../fixtures';
+import { test, expect, watchCsp } from '../fixtures';
 import { LoginPage } from '../pages/LoginPage';
 import { SignupPage } from '../pages/SignupPage';
 import { latestLinkFor } from '../utils/mailpit';
@@ -10,6 +10,7 @@ const newEmail = () => `qa+${randomUUID()}@fretpath.test`;
 test('TC-AUTH-11 confirmation link works in a fresh browser context @smoke @regression', async ({ page, browser }) => {
   const email = newEmail();
   const fresh = await browser.newContext(); // no cookies: simulates opening the mail on another device
+  const csp = watchCsp(fresh);
   try {
     const signup = new SignupPage(page);
     await signup.goto();
@@ -22,6 +23,7 @@ test('TC-AUTH-11 confirmation link works in a fresh browser context @smoke @regr
     await other.goto(link);
     await expect(other).toHaveURL(/\/dashboard/);
     await expect(other.getByRole('heading', { name: 'Dashboard' })).toBeVisible();
+    expect(csp, 'CSP violations in console').toEqual([]);
   } finally {
     await fresh.close();
     await deleteUserByEmail(email);
@@ -30,6 +32,7 @@ test('TC-AUTH-11 confirmation link works in a fresh browser context @smoke @regr
 
 test('TC-AUTH-13 password reset link works in a fresh browser context @regression', async ({ page, browser, member }) => {
   const fresh = await browser.newContext();
+  const csp = watchCsp(fresh);
   try {
     await page.goto('/forgot-password');
     await page.getByLabel('อีเมล').fill(member.email);
@@ -49,6 +52,7 @@ test('TC-AUTH-13 password reset link works in a fresh browser context @regressio
     await login.goto();
     await login.login(member.email, 'NewPassw0rd!');
     await expect(other).toHaveURL(/\/dashboard/);
+    expect(csp, 'CSP violations in console').toEqual([]);
   } finally {
     await fresh.close();
   }
