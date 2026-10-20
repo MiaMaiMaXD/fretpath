@@ -24,11 +24,11 @@ UI `@security` ที่เพิ่ม (2 เทสต์): TC-AUTH-07, TC-PRC-
 (TC-QZ-22, TC-QZ-23, TC-PRC-04, TC-PRC-07, TC-AUTH-08 เป็น Review Focus ที่ติด `@smoke` เพื่อให้ CI คุมได้)
 (ที่เหลือใน `e2e/specs/` เป็น `@regression` ล้วน — รันในเครื่องบน `chromium`, `firefox`, `mobile` ไม่รันใน CI ตามการออกแบบ)
 
-### เวลารันและ timeout (ประมาณการ ยังไม่ใช่ค่าจริง)
+### เวลารันและ timeout
 
-- ยังไม่มีผลรัน CI จริงของ branch แผนที่ 2 (ยังไม่ push) ค่าอ้างอิงเดียวที่วัดจริงคือ PR #1 (แผนที่ 1) = 4 นาที 42 วินาที ซึ่งมีเทสต์ Playwright เพียง `e2e/api` 13 เทสต์
-- แผนที่ 2 เพิ่ม: Vitest (วินาที), `next build` ที่ใหญ่ขึ้น และ UI E2E 13 เทสต์ ที่ใช้เวลาต่อเทสต์หลักวินาทีถึงสิบกว่าวินาที (บางเทสต์สมัครสมาชิกผ่าน Mailpit); จากการรันในเครื่อง (`--project=chromium` ทั้ง `e2e/` 60 เทสต์ผ่าน) ประมาณการว่าเพิ่มราว 2–4 นาที → รวมคาดว่า **ราว 7–10 นาที** ซึ่งต่ำกว่า `timeout-minutes: 30` มาก จึงยังไม่แยก step หรือเพิ่ม `--workers`
-- **งานติดตาม:** ตรวจเวลาจริงของ check `ci` บน PR แผนที่ 2 และบันทึกตัวเลขที่นี่; ถ้าเกิน ~20 นาที ให้แยก UI smoke เป็น step ของตัวเอง หรือปรับ `workers` (ปัจจุบัน `workers` ใน `playwright.config.ts` — 4 ในเครื่อง, ค่าเริ่มต้นของ Playwright ใน CI, override ด้วย `PW_WORKERS`, retry ใน CI = 1 ครั้ง)
+- ค่าจริงจาก PR #4 (แผนที่ 2): check `ci` **เขียว** ใช้เวลา **3 นาที 50 วินาที** — [รัน Actions 39352770279](https://github.com/MiaMaiMaXD/fretpath/actions/runs/39352770279) (Vitest + pgTAP + build + Playwright `@smoke|@security` บน Chromium)
+- ต่ำกว่า `timeout-minutes: 30` มาก จึงยังไม่แยก step หรือปรับ `--workers` (`workers` ใน `playwright.config.ts`: 4 ในเครื่อง, ค่าเริ่มต้นของ Playwright ใน CI, override ด้วย `PW_WORKERS`; retry ใน CI = 1 ครั้ง)
+- ตรวจซ้ำเมื่อชุด `@smoke` โตขึ้นในแผนที่ 3; ถ้าเกิน ~20 นาที ให้แยก UI smoke เป็น step ของตัวเอง
 - ความเสี่ยง: เทสต์ที่ผูกกับ Mailpit/Supabase local ต้องการให้ `supabase start` เปิด Mailpit (พอร์ต 54324) ซึ่งเป็นค่าเริ่มต้นของ CLI 2.121.0 — ยืนยันซ้ำเมื่อเห็นรันจริงครั้งแรก
 
 ## ผลการตรวจสอบ CI
