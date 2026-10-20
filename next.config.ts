@@ -7,6 +7,10 @@ if (!supabaseUrl && process.env.NODE_ENV === 'production') {
 }
 const supabaseOrigin = new URL(supabaseUrl ?? 'http://127.0.0.1:54321').origin;
 const isDev = process.env.NODE_ENV === 'development';
+const isProd = process.env.NODE_ENV === 'production';
+// Google sign-in redirects the browser through the Supabase origin to accounts.google.com;
+// form-action must allow both or the post-login redirect chain is blocked.
+const googleAuth = process.env.NEXT_PUBLIC_GOOGLE_AUTH_ENABLED === 'true';
 
 const csp = [
   "default-src 'self'",
@@ -18,7 +22,7 @@ const csp = [
   'frame-src https://www.youtube-nocookie.com',
   "frame-ancestors 'none'",
   "base-uri 'self'",
-  "form-action 'self'",
+  `form-action 'self'${googleAuth ? ` ${supabaseOrigin} https://accounts.google.com` : ''}`,
 ].join('; ');
 
 const securityHeaders = [
@@ -26,6 +30,7 @@ const securityHeaders = [
   { key: 'X-Content-Type-Options', value: 'nosniff' },
   { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
   { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
+  ...(isProd ? [{ key: 'Strict-Transport-Security', value: 'max-age=63072000; includeSubDomains' }] : []),
 ];
 
 const nextConfig: NextConfig = {

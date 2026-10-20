@@ -16,6 +16,7 @@ test('TC-AUTH-01 signup, confirm email, land on dashboard with lesson 1 unlocked
     await expect(signup.successMessage()).toBeVisible();
 
     await page.goto(await latestLinkFor(email));
+    await page.getByRole('button', { name: 'ยืนยันและเข้าสู่ระบบ' }).click();
     await expect(page).toHaveURL(/\/dashboard/);
     await expect(page.getByRole('heading', { name: 'Dashboard' })).toBeVisible();
 
@@ -110,6 +111,7 @@ test('TC-AUTH-06 forgot password always shows same message and reset works @regr
   await ask(member.email);
 
   await page.goto(await latestLinkFor(member.email));
+  await page.getByRole('button', { name: 'ยืนยันและเข้าสู่ระบบ' }).click();
   await expect(page).toHaveURL(/\/reset-password/);
   await page.getByLabel('รหัสผ่านใหม่').fill('NewPassw0rd!');
   await page.getByRole('button', { name: 'ตั้งรหัสผ่านใหม่' }).click();
