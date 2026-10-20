@@ -2,6 +2,7 @@
 
 import { useActionState } from 'react';
 import { createLesson, updateLesson } from '@/app/(admin)/admin/lessons/actions';
+import { ImageUpload } from '@/components/admin/ImageUpload';
 import { Field } from '@/components/Field';
 import { FormMessage } from '@/components/FormMessage';
 import { SubmitButton } from '@/components/SubmitButton';
@@ -37,6 +38,7 @@ export function LessonForm({ mode, initial }: Props) {
       <Field name="slug" label="slug" defaultValue={v.slug} error={e.slug} />
       <Field name="summary" label="สรุป" as="textarea" maxCount={300} required={false} defaultValue={v.summary} error={e.summary} resetKey={fieldsKey} />
       <Field name="contentMd" label="เนื้อหา (Markdown)" as="textarea" maxCount={100000} required={false} defaultValue={v.contentMd} resetKey={fieldsKey} />
+      {mode.kind === 'edit' ? <ImageUpload lessonId={mode.lessonId} textareaId="contentMd" /> : null}
       <Field name="videoUrl" label="ลิงก์วิดีโอ YouTube" type="url" required={false} defaultValue={v.videoUrl} error={e.videoUrl} />
       <Field name="passScore" label="เกณฑ์ผ่าน (%)" inputMode="numeric" defaultValue={v.passScore} error={e.passScore} />
       <FormMessage state={state} />
