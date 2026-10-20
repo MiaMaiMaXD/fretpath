@@ -59,7 +59,7 @@
 | NFR-04 | M | TC-AUTH-02, TC-AUTH-04, TC-AUTH-06, TC-LSN-03, TC-PATH-16, TC-PRC-03, TC-PRC-05, TC-QZ-19, TC-QZ-23 | มี TC (บางส่วนยังไม่ automate): ตรวจข้อความ Thai/error ที่ระบุในเทสต์แล้ว แต่ยังไม่มี TC ตรวจ copy ทั้งระบบ → ตรวจด้วยมือก่อนปิดโครงการ |
 | NFR-05 | M | — | รอแผนที่ 4 |
 | NFR-06 | M | — | รอแผนที่ 4 |
-| NFR-07 | M | — | รอแผนที่ 4 (Lighthouse; ยังไม่มี TC) |
+| NFR-07 | M | TC-PERF-01 | ทำแล้ว (อัตโนมัติ) ใน nightly job `production`; รอรันจริงครั้งแรกหลังมี `PROD_URL` |
 
 ## สรุปความครอบคลุม
 

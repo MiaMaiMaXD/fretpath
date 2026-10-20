@@ -244,6 +244,12 @@ TC ของ NFR-05 … NFR-07 (ความพร้อมใช้งาน �
 | TC-MOB-02 | เมนูหลักเข้าถึงได้ครบที่ 375px | NFR-02 | viewport 375 x 812; ผู้เรียนล็อกอิน | 1. คลิกลิงก์ Dashboard, เส้นทางเรียน, บันทึกการฝึก, โปรไฟล์ ใน `navigation` "เมนูหลัก" ทีละลิงก์ | ทุกลิงก์มองเห็นและพาไปหน้าที่ถูกต้อง (ไม่มีเมนูซ่อน) | High | Positive | Equivalence Partitioning | Automated | `e2e/specs/mobile.spec.ts` |
 | TC-MOB-03 | ใช้งานเส้นทางหลักบน Safari จริงของ iPhone (รวมเสียงดีดสาย) | NFR-03, NFR-02, FR-02.3 | iPhone จริง (iOS Safari เวอร์ชันล่าสุด); เว็บบน Local/Preview ที่เข้าถึงได้ | 1. สมัคร/เข้าสู่ระบบ<br>2. เปิดบท 1 กดปุ่มสายเปล่าทั้ง 6 สาย (ตรวจว่ามีเสียง)<br>3. ทำแบบทดสอบ ส่งผล ดูเฉลย<br>4. บันทึกการฝึกด้วยตัวจับเวลา<br>5. ตรวจ Dashboard<br>6. หมุนจอแนวนอน/แนวตั้ง | ทุกขั้นตอนใช้งานได้ ไม่มีส่วนที่ล้นจอ; มีเสียงเมื่อกดปุ่มสาย (หลังการแตะครั้งแรกตามข้อจำกัดของ iOS); ข้อความไทยแสดงถูกต้อง | High | Compatibility | Equivalence Partitioning (เบราว์เซอร์) | Manual | ไม่มีเทสต์อัตโนมัติ — สเปก 6.3 กำหนดโปรเจกต์ Playwright เป็น Chromium, Firefox และ Pixel 7 เท่านั้น (ไม่มี WebKit) จึงต้องทดสอบด้วยมือบน iPhone จริง; Chrome/Firefox/Pixel 7 ครอบคลุมโดยการรัน spec เดียวกันในโปรเจกต์ `chromium`, `firefox`, `mobile` |
 
+## 9.1 NFR-07 ประสิทธิภาพ (TC-PERF)
+
+| รหัส | ชื่อ | อ้างอิง | เงื่อนไขก่อนเริ่ม | ขั้นตอน | ผลที่คาดหวัง | ความสำคัญ | ประเภท | เทคนิค | M/A |
+|---|---|---|---|---|---|---|---|---|---|---|
+| TC-PERF-01 | หน้าหลักโหลดเสร็จภายใน 3 วินาทีบน 4G (Lighthouse) | NFR-07 | production ใช้งานได้; secret `PROD_URL` ตั้งแล้ว | 1. รัน `npx lhci autorun --collect.url=<PROD_URL>/` (โปรไฟล์มือถือเริ่มต้นของ Lighthouse: Moto G Power + slow 4G) 3 รอบ<br>2. ตรวจค่ามัธยฐานตาม `lighthouserc.json` | `largest-contentful-paint` ≤ 3000 ms และ `interactive` (TTI) ≤ 3000 ms (error ถ้าเกิน); `categories:accessibility` ≥ 0.9 (warn) | High | Performance | Boundary (เกณฑ์ 3 วินาที) | Automated | nightly job `production` (`.github/workflows/nightly.yml`, `lighthouserc.json`) |
+
 ---
 
 ## 10. สรุปจำนวน TC (แผนที่ 1–3)
@@ -266,5 +272,5 @@ TC ของ NFR-05 … NFR-07 (ความพร้อมใช้งาน �
 - **การเปลี่ยนเลขจากเวอร์ชัน 1.0:** TC-PATH-14 เดิม (เผยแพร่คอร์สฟรีภายหลัง ระดับ DB) ถูกย้ายเป็น TC-PATH-19 เพราะ `e2e/specs/path.spec.ts` ใช้ TC-PATH-14 สำหรับ UI ผู้เรียนใหม่ (pgTAP ไม่ได้อ้างเลข TC)
 - **การเปลี่ยนเลขระหว่างแผนที่ 3:** TC-ADM-19 (เลื่อนคำถาม) และ TC-ADM-20 (ลบคำถาม) เดิมวางไว้เลขอื่น; TC-ADM-12/13/14 คือจัดลำดับ / ตรวจลำดับ / ตัวอย่าง; TC-AUTH-13 คือลิงก์ตั้งรหัสผ่านใหม่ใน context ใหม่ และ TC-AUTH-16 คือรูปโปรไฟล์ชนิดไฟล์ผิด
 - **TC ที่ทดแทนกัน:** TC-PATH-16 ทดแทน TC-PATH-08 (เปิดบทล็อกผ่าน URL) · TC-PATH-14 และ TC-PATH-17 ทดแทนการตรวจสถานะบนหน้า `/path` ของ TC-PATH-01 · TC-QZ-19/21/22/23 ใช้เลขเดิม (ชี้ไป `quiz.spec.ts`) · TC-QZ-25/26/27/28 เป็นเลขใหม่ · TC-SEC-19/21 ทำให้ TC-SEC-17 เป็น Automated
-- Safari บน iPhone ไม่มีโปรเจกต์อัตโนมัติ (TC-MOB-03 เป็น Manual); Lighthouse (NFR-07), keep-alive (NFR-05) และ backup (NFR-06) ยังไม่มี TC — รอแผนที่ 4
+- Safari บน iPhone ไม่มีโปรเจกต์อัตโนมัติ (TC-MOB-03 เป็น Manual); keep-alive (NFR-05) และ backup (NFR-06) ยังไม่มี TC — รอแผนที่ 4; Lighthouse (NFR-07) มี TC-PERF-01 (ตารางหัวข้อ 9.1 ไม่นับในตารางสรุปด้านบน)
 - ใน CI รัน `@smoke` และ `@security` บน `chromium` เท่านั้น; `firefox` และ `mobile` (Pixel 7) รันชุด `@regression` เต็มในเครื่อง และจะรันเต็มทุกโปรเจกต์ใน nightly (แผนที่ 4)

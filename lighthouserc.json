@@ -1,0 +1,21 @@
+{
+  "ci": {
+    "collect": {
+      "numberOfRuns": 3,
+      "settings": {
+        "onlyCategories": ["performance", "accessibility"]
+      }
+    },
+    "assert": {
+      "assertions": {
+        "largest-contentful-paint": ["error", { "maxNumericValue": 3000 }],
+        "interactive": ["error", { "maxNumericValue": 3000 }],
+        "categories:accessibility": ["warn", { "minScore": 0.9 }]
+      }
+    },
+    "upload": {
+      "target": "filesystem",
+      "outputDir": ".lighthouseci"
+    }
+  }
+}
