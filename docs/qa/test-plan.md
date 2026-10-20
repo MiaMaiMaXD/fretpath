@@ -1,6 +1,6 @@
 # FretPath — แผนการทดสอบ (Test Plan)
 
-เวอร์ชัน 2.0 (อัปเดตหลังแผนที่ 2) · อ้างอิงสเปก `docs/superpowers/specs/2026-10-19-fretpath-design.md` (หัวข้อ 2, 6, 7)
+เวอร์ชัน 3.0 (อัปเดตหลังแผนที่ 3) · อ้างอิงสเปก `docs/superpowers/specs/2026-10-19-fretpath-design.md` (หัวข้อ 2, 6, 7)
 ผู้รับผิดชอบ: QA · เอกสารที่เกี่ยวข้อง: `test-cases.md`, `rtm.md`, `.github/ISSUE_TEMPLATE/defect.yml`
 
 ## 1. วัตถุประสงค์
@@ -14,6 +14,7 @@
 - ความต้องการเชิงฟังก์ชัน FR-01 … FR-07 (ระบบสมาชิก, บทเรียน, เส้นทางการเรียน, แบบทดสอบ, บันทึกการฝึก, Dashboard, ระบบแอดมิน)
 - ความต้องการที่ไม่ใช่ฟังก์ชัน NFR-01 … NFR-07 (ความปลอดภัย, มือถือ 375px, เบราว์เซอร์, ภาษาไทย, ความพร้อมใช้งาน, สำรองข้อมูล, ประสิทธิภาพ)
 - ชั้นฐานข้อมูล: นโยบาย RLS, ฟังก์ชัน `submit_quiz`, ทริกเกอร์ `handle_new_user` / `unlock_after_publish`, กฎเนื้อหา (เผยแพร่/ลบบท)
+- แผนที่ 3: หลังบ้านแอดมิน (จัดการบท/คำถาม จัดลำดับ ตัวอย่าง รายชื่อผู้เรียน การตั้งสิทธิ์), Storage buckets `lesson-images` / `avatars` และรูปโปรไฟล์, guard ของ `avatar_url`, ลิงก์อีเมลแบบ `token_hash`, ปุ่ม Google (ซ่อนเมื่อยังไม่เปิด), Content-Security-Policy และ security headers ทุกหน้า
 - งานอัตโนมัติ: CI, nightly, keep-alive, backup (ตรวจว่าทำงานตามที่กำหนด)
 
 ### 2.2 นอกขอบเขต (สเปกข้อ 2.3 — รอบนี้)
@@ -27,10 +28,10 @@
 ## 3. แนวทางการทดสอบ (ระดับเทสต์ตามสเปกข้อ 6)
 | ระดับ | เครื่องมือ | ผู้รับผิดชอบ | ครอบคลุม |
 |---|---|---|---|
-| ฐานข้อมูล | pgTAP (`supabase/tests/001–006`) | Developer | `submit_quiz` ทุกกรณีใน decision table, RLS, ทริกเกอร์, กฎเนื้อหา |
+| ฐานข้อมูล | pgTAP (`supabase/tests/001–007, 011, 012, 017–020`; เลขที่ข้ามเป็นของ migration ที่ไม่มีไฟล์เทสต์แยก) | Developer | `submit_quiz` ทุกกรณีใน decision table, RLS, ทริกเกอร์, กฎเนื้อหา; แผนที่ 3: กฎแอดมิน (`lesson_publish_problems`, `reorder_lessons`, `LAST_ADMIN`/`USER_NOT_FOUND`, บทที่เผยแพร่ห้ามไม่สมบูรณ์), `admin_*_lesson`/`admin_*_question`, `QUESTION_HAS_ANSWERS`, Storage policies, สถิติผู้เรียน, `INVALID_AVATAR`, ชื่อจาก OAuth |
 | Unit (ฝั่งเว็บ) | Vitest (`npm run test:unit`, ไฟล์ใน `tests/unit/`) | Developer | ตรรกะล้วน: validation (รหัสผ่าน 7/8, นาที, เป้าหมาย), `safeNextPath`, วันที่ Bangkok, สถิติ Dashboard/ขอบสัปดาห์, ตัวจับเวลา, สถานะเส้นทาง, ตัวแยก YouTube — รันใน CI ก่อน build |
 | API / Security | Playwright request context (`e2e/api/`, ป้าย `@security`) | QA | RLS และ RPC ผ่าน Supabase REST ด้วยบทบาท anon / member / admin |
-| UI E2E | Playwright (`e2e/specs/`, ป้าย `@smoke`, `@regression`, `@security`) บน Chromium, Firefox, Mobile (Pixel 7) | QA | เส้นทางหลัก 3 เส้นทางของสเปกข้อ 6.3 (เส้นทางที่ 1–2 ทำแล้วในแผนที่ 2: TC-PATH-17, TC-DSH-05; เส้นทางที่ 3 รอแผนที่ 3) และเทสต์ตาม FR |
+| UI E2E | Playwright (`e2e/specs/`, ป้าย `@smoke`, `@regression`, `@security`) บน Chromium, Firefox, Mobile (Pixel 7) | QA | เส้นทางหลัก 3 เส้นทางของสเปกข้อ 6.3 (เส้นทางที่ 1–2 ทำแล้วในแผนที่ 2: TC-PATH-17, TC-DSH-05; เส้นทางที่ 3 ทำแล้วในแผนที่ 3: TC-ADM-18) และเทสต์ตาม FR |
 | Manual / Exploratory | ตาม Test Case และ session-based | QA | UI ที่ยังไม่ automate (TC-DSH-06), Safari บน iPhone จริง (TC-MOB-03), เสียงจริงของ Web Audio |
 | Non-functional | Lighthouse (NFR-07), ตรวจ bundle (NFR-01), ตรวจ workflow (NFR-05/06) | QA | ประสิทธิภาพ ความปลอดภัยของ secret ความพร้อมใช้งาน |
 
@@ -53,8 +54,11 @@ Priority: P1 แก้ทันที · P2 แก้ในรอบนี้ ·
 | Equivalence Partitioning | อีเมลถูก/ผิดรูปแบบ/ไม่มีในระบบ; วันที่ อดีต/วันนี้/อนาคต; `next` ภายใน/ภายนอกเว็บ | TC-AUTH-01, TC-AUTH-04, TC-AUTH-07, TC-PRC-04, TC-PRC-05 |
 | State Transition | บทเรียน ล็อก → เรียนได้ → จบแล้ว; draft ↔ published; ยังไม่ยืนยันอีเมล → ยืนยัน | TC-PATH-10, TC-PATH-13, TC-PATH-14, TC-PATH-17, TC-PATH-19, TC-AUTH-03 |
 | Decision Table | ปลดล็อก: (ผ่าน/ไม่ผ่าน) × (มีบทถัดไป/บทสุดท้าย) × (สอบครั้งแรก/สอบซ้ำ) = 8 กรณี | TC-QZ-01, 02, 05–11 (ตารางใน `test-cases.md`) |
-| Role-based / Security | anon / member / admin; ผู้เรียน A เข้าถึงข้อมูลผู้เรียน B | TC-SEC-01 … TC-SEC-17 |
-| Non-functional (accessibility) | axe-core สแกนหน้าหลัก | TC-SEC-18 |
+| Role-based / Security | anon / member / admin; ผู้เรียน A เข้าถึงข้อมูลผู้เรียน B; แอดมินเทียบกับผู้เรียนในหลังบ้านและ Storage | TC-SEC-01 … TC-SEC-17, TC-SEC-19 … TC-SEC-23, TC-ADM-03, TC-ADM-17 |
+| Boundary (แผนที่ 3) | เกณฑ์ผ่าน 0/1/100/101; ตัวเลือกต่อคำถาม 1/2/6/7; ลำดับบท 0/ทศนิยม; BPM เกินช่วง; ความกว้าง 375px ในหน้าแอดมิน | TC-ADM-08, TC-ADM-10, TC-ADM-13, TC-PRC-09, TC-MOB-01c |
+| State Transition (แผนที่ 3) | ฉบับร่าง ↔ เผยแพร่; ห้ามแก้บทที่เผยแพร่ให้ไม่สมบูรณ์; member ↔ admin; ไม่มีรูป → มีรูป → ลบ | TC-ADM-04, TC-ADM-06, TC-ADM-09, TC-ADM-11, TC-ADM-17, TC-ADM-18, TC-AUTH-12 |
+| Decision Table (แผนที่ 3) | ประเภทสิ่งที่ขาดเมื่อเผยแพร่ (ไม่มีคำถาม / ไม่มีข้อถูก / ตัวเลือกผิดจำนวน); มีแอดมินคนอื่นหรือไม่เมื่อลดสิทธิ์ | TC-ADM-01, TC-ADM-05, TC-ADM-17 |
+| Non-functional (accessibility) | axe-core สแกนหน้าหลักและหน้าแก้ไขบทของแอดมิน | TC-SEC-18, TC-SEC-18b |
 
 ## 5. สภาพแวดล้อมการทดสอบ (สเปกข้อ 6.5)
 | สภาพแวดล้อม | ใช้ทำอะไร | ฐานข้อมูล | ข้อจำกัด |
@@ -73,7 +77,13 @@ Priority: P1 แก้ทันที · P2 แก้ในรอบนี้ ·
 - **Mailpit** (อีเมล local/CI ของ Supabase CLI): เปิดที่ `http://127.0.0.1:54324` ใช้ดึงลิงก์ยืนยันอีเมลและตั้งรหัสผ่านใหม่ (helper `e2e/utils/mailpit.ts`); ไม่มีอีเมลจริงถูกส่งออก — ต่างจากข้อ "อีเมลแจ้งเตือนผู้เรียน" ที่อยู่นอกขอบเขต
 - **Playwright setup/teardown projects + storageState:** โปรเจกต์ `setup` (`e2e/auth.setup.ts`) สร้างผู้เรียนกลางและบันทึก session ที่ `e2e/.auth/member.json` (อ่านผ่านค่าคงที่ `MEMBER_STATE`); โปรเจกต์ `teardown` ลบผู้ใช้นั้นหลังจบ. ใช้เฉพาะเทสต์ที่ **อ่านอย่างเดียว** (เช่น `/path`, `/lessons/*`); เทสต์ที่เขียนข้อมูลใช้ fixture `member`/`memberPage` ที่สร้างผู้ใช้ใหม่ต่อเทสต์และล้างหลังจบ (ข้อมูลไม่ปนกัน)
 - **จำนวน worker = 4 (local)** (`workers` ใน `playwright.config.ts`: 4 ในเครื่อง, ค่าเริ่มต้นใน CI, override ด้วย `PW_WORKERS`): Firefox headless บน Windows ค้าง (หน่วง 30 วินาทีขึ้นไปแบบสุ่ม) เมื่อใช้ค่าเริ่มต้น (cores/2); ลดเป็น 4 แล้วผ่านครบ 3 โปรเจกต์ซ้ำหลายรอบ — บันทึกไว้เป็นข้อจำกัดของเครื่องทดสอบ ไม่ใช่ข้อบกพร่องของแอป
-- **ข้อจำกัดของตัวเทสต์:** `TC-LSN-04` ตรวจว่าปุ่มดีดสายทำงานโดยไม่ error แต่ไม่ได้ตรวจเสียงจริง
+- **ข้อจำกัดของตัวเทสต์:** `TC-LSN-04` ตรวจว่าปุ่มดีดสายทำงานโดยไม่ error แต่ไม่ได้ตรวจเสียงจริง (เช่นเดียวกับเมโทรนอม `TC-PRC-09`)
+
+### 5.2 เครื่องมือเพิ่มในแผนที่ 3
+- **CSP guard fixture** (`cspGuard` และ `watchCsp` ใน `e2e/fixtures/index.ts`): fixture `page` เปิดตัวดักข้อความ CSP violation ใน console ของทุกเทสต์ UI และทำให้เทสต์ล้มเมื่อพบ; context ที่สร้างเองใช้ `watchCsp(context)`; `TC-SEC-25` พิสูจน์ว่า guard จับ violation ได้จริง (ไม่ผ่านเปล่า)
+- **Helper คอร์สทดสอบแยกต่อเทสต์** (`e2e/utils/adminCourse.ts`: `createCourse`, `createCompleteLesson`, `deleteCourse`): แต่ละเทสต์แอดมินสร้างคอร์สของตนเอง (ไม่ใช่คอร์ส seed, `sort_order` ≥ 1000) และลบหลังจบ ทำให้รันขนานได้โดยข้อมูลไม่ปนกัน
+- **Page objects ของหลังบ้าน** (`e2e/pages/admin/`) และ fixture `admin`/`adminPage`/`adminDb`/`otherMember`
+- **Storage:** เทสต์อัปโหลดใช้ไฟล์ `e2e/fixtures/files/pixel.png` และล้างไฟล์ใน bucket หลังจบ
 
 ## 6. เกณฑ์เริ่มและเกณฑ์จบการทดสอบ (สเปกข้อ 6.1)
 ### 6.1 เกณฑ์เริ่ม (Entry criteria)
@@ -101,6 +111,7 @@ Priority: P1 แก้ทันที · P2 แก้ในรอบนี้ ·
 | R5 | เทสต์เขียนข้อมูลลง production ผ่าน Preview | ข้อมูลจริงปนเปื้อน | ต่ำ | Preview ใช้แบบอ่านอย่างเดียว, เทสต์ที่เขียนข้อมูลรันเฉพาะ Local/CI |
 | R6 | กำหนดส่งยังไม่ยืนยัน (สเปกข้อ 1.4) | ลำดับงานทดสอบอาจต้องปรับ | กลาง | จัดลำดับตามความสำคัญ (ความปลอดภัยและเส้นทางหลักก่อน), ทบทวนแผนเมื่อทราบกำหนดส่ง |
 | R7 | เขตเวลา (บันทึกการฝึกใกล้เที่ยงคืน Asia/Bangkok) | วันที่บันทึกผิด | กลาง | pgTAP `test_practice_date_uses_bangkok_today`, TC-PRC-04 (เบราว์เซอร์เขตเวลา `America/Los_Angeles`) และ `tests/unit/bangkok.test.ts` |
+| R9 | หลายแผนแก้ migration ด้วยเลขซ้อนกัน (ชื่อไฟล์ migration/เทสต์ชนกันเมื่อรวม branch) | `supabase db reset` ล้มหรือเทสต์ pgTAP อ้างลำดับผิด | กลาง | ใช้เลขถัดไปเสมอ (ตรวจ `supabase/migrations/` ก่อนสร้างไฟล์ใหม่); รัน `supabase test db` หลัง rebase ทุกครั้ง |
 | R8 | CI รัน Playwright เฉพาะ `chromium` + `@smoke`/`@security` | ข้อบกพร่องเฉพาะ Firefox/มือถือ (เช่น Firefox ค้างตาม 5.1) หลุดไปถึง merge | กลาง | รันชุดเต็มทั้ง 3 โปรเจกต์ก่อนปิดแผน (ทำแล้วในเครื่อง 60/60 ต่อโปรเจกต์) และเพิ่ม nightly ในแผนที่ 3 |
 
 ## 8. ตารางเวลา
@@ -110,16 +121,17 @@ Priority: P1 แก้ทันที · P2 แก้ในรอบนี้ ·
 |---|---|---|---|
 | แผนที่ 1 — ฐานข้อมูลและโครงเทสต์ | Test Plan, defect template, TC ของ FR-03/FR-04/NFR-01, pgTAP, Playwright framework, API/security tests | รอกำหนดส่ง | รอกำหนดส่ง |
 | แผนที่ 2 — หน้าเว็บผู้เรียน | TC FR-01, FR-02, FR-05, FR-06 และส่วน UI ของ FR-03/FR-04, NFR-02 (เขียนแล้ว 101 TC รวมแผนที่ 1); E2E `@smoke`/`@regression` (ทำแล้ว) | รอกำหนดส่ง | รอกำหนดส่ง |
-| แผนที่ 3 — หลังบ้านแอดมิน | TC FR-07, FR-01.7, FR-01.8, FR-05.5, NFR-05/06/07 (Lighthouse); regression ทุก project; เส้นทางหลักที่ 3 | รอกำหนดส่ง | รอกำหนดส่ง |
+| แผนที่ 3 — หลังบ้านแอดมิน | TC FR-07, FR-01.7, FR-01.8, FR-05.5, SEC-17…25 (รวม CSP), MOB-01c เขียนครบ 135 TC รวมทุกแผน; เส้นทางหลักที่ 3 (TC-ADM-18) | รอกำหนดส่ง | รอกำหนดส่ง |
+| แผนที่ 4 — production | NFR-05/06/07 (keep-alive, backup, Lighthouse), เปิด Google OAuth จริง (FR-01.7), nightly รันครบทุก project, Test Summary Report | รอกำหนดส่ง | รอกำหนดส่ง |
 | ปิดโครงการ | Regression เต็ม, Test Summary Report, ตรวจ exit criteria | รอกำหนดส่ง | รอกำหนดส่ง |
 
 ## 9. ผลงานที่ส่งมอบ
 | ผลงาน | ที่เก็บ | สถานะ |
 |---|---|---|
 | Test Plan | `docs/qa/test-plan.md` | เอกสารนี้ |
-| Test Cases | `docs/qa/test-cases.md` | 101 TC: FR-01 … FR-06, NFR-01 … NFR-04 ครบ; FR-07 (UI), FR-01.7/01.8/05.5, NFR-05 … NFR-07 ต่อในแผนที่ 3 |
-| RTM | `docs/qa/rtm.md` | ครบทุกแถว; 37/48 ข้อมี TC, ที่เหลือ 11 ข้อรอแผนที่ 3 |
+| Test Cases | `docs/qa/test-cases.md` | 135 TC: FR-01 … FR-07, NFR-01 … NFR-04 ครบ; NFR-05 … NFR-07 ต่อในแผนที่ 4 |
+| RTM | `docs/qa/rtm.md` | ครบทุกแถว; 45/48 ข้อมี TC, ที่เหลือ 3 ข้อ (NFR-05/06/07) รอแผนที่ 4 |
 | เทมเพลต Defect Report | `.github/ISSUE_TEMPLATE/defect.yml` | พร้อมใช้ |
-| ชุดเทสต์อัตโนมัติ | `supabase/tests/`, `tests/unit/`, `e2e/` | pgTAP 001–006, Vitest, Playwright `e2e/api` และ `e2e/specs` (แผนที่ 2) มีแล้ว |
+| ชุดเทสต์อัตโนมัติ | `supabase/tests/`, `tests/unit/`, `e2e/` | pgTAP 001–007, 011, 012, 017–020, Vitest, Playwright `e2e/api` และ `e2e/specs` (แผนที่ 2–3) มีแล้ว |
 | รายงานการรันเทสต์ | HTML report ของ Playwright (CI artifact) | ตามการรันจริง |
 | Test Summary Report | `docs/qa/test-summary.md` | ปิดโครงการ |

@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { signOut } from '../(auth)/actions';
+import { createClient } from '@/lib/supabase/server';
 
 const links = [
   { href: '/dashboard', label: 'Dashboard' },
@@ -8,7 +9,14 @@ const links = [
   { href: '/profile', label: 'โปรไฟล์' },
 ];
 
-export default function LearnerLayout({ children }: { children: React.ReactNode }) {
+export default async function LearnerLayout({ children }: { children: React.ReactNode }) {
+  const supabase = await createClient();
+  const { data: isAdmin } = await supabase.rpc('is_admin');
+  const { data: auth } = await supabase.auth.getUser();
+  const { data: prof } = auth.user
+    ? await supabase.from('profiles').select('avatar_url').eq('id', auth.user.id).maybeSingle()
+    : { data: null };
+  const avatarUrl = prof?.avatar_url ?? null;
   return (
     <>
       <header className="border-b border-neutral-300 dark:border-neutral-700">
@@ -18,7 +26,16 @@ export default function LearnerLayout({ children }: { children: React.ReactNode 
               {l.label}
             </Link>
           ))}
-          <form action={signOut} className="ml-auto">
+          {isAdmin ? (
+            <Link href="/admin" className="underline-offset-4 hover:underline">
+              หลังบ้าน
+            </Link>
+          ) : null}
+          {avatarUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={avatarUrl} alt="รูปโปรไฟล์" width={32} height={32} className="ml-auto h-8 w-8 rounded-full object-cover" />
+          ) : null}
+          <form action={signOut} className={avatarUrl ? '' : 'ml-auto'}>
             <button type="submit" className="underline-offset-4 hover:underline">
               ออกจากระบบ
             </button>

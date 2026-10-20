@@ -1,3 +1,4 @@
+import { Metronome } from '@/components/Metronome';
 import { PracticeForm } from '@/components/PracticeForm';
 import { PracticeList } from '@/components/PracticeList';
 import { bangkokToday } from '@/lib/bangkok';
@@ -11,6 +12,7 @@ export default async function PracticePage() {
   return (
     <div className="flex flex-col gap-6">
       <h1 className="text-2xl font-semibold">บันทึกการฝึก</h1>
+      <Metronome />
       <PracticeForm today={today} lessons={lessons} />
       <section aria-labelledby="history" className="flex flex-col gap-3">
         <h2 id="history" className="text-xl font-semibold">

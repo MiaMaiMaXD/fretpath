@@ -109,7 +109,7 @@ test('TC-AUTH-06 forgot password always shows same message and reset works @regr
   await ask(newEmail());
   await ask(member.email);
 
-  await page.goto(await latestLinkFor(member.email, { contains: '/auth/v1/verify' }));
+  await page.goto(await latestLinkFor(member.email));
   await expect(page).toHaveURL(/\/reset-password/);
   await page.getByLabel('รหัสผ่านใหม่').fill('NewPassw0rd!');
   await page.getByRole('button', { name: 'ตั้งรหัสผ่านใหม่' }).click();

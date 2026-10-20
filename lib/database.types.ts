@@ -299,7 +299,27 @@ isOneToOne: false
             [_ in never]: never
           }
           Functions: {
-            "bangkok_date":
+            "admin_create_lesson":
+{ Args: { "p_content_md": string,"p_course": string,"p_pass_score": number,"p_slug": string,"p_summary": string,"p_title": string,"p_video_url": string }; Returns: string
+                           },
+"admin_delete_question":
+{ Args: { "p_question": string }; Returns: undefined
+                           },
+"admin_last_practice":
+{ Args: Record<PropertyKey, never>; Returns: {
+              "last_practiced_on": string,"user_id": string
+            }[]
+                           },
+"admin_move_question":
+{ Args: { "p_direction": string,"p_question": string }; Returns: undefined
+                           },
+"admin_save_question":
+{ Args: { "p_choice_ids": (string)[],"p_choices": (string)[],"p_correct": number,"p_explanation": string,"p_lesson": string,"p_prompt": string,"p_question": string }; Returns: string
+                           },
+"admin_update_lesson":
+{ Args: { "p_content_md": string,"p_id": string,"p_pass_score": number,"p_slug": string,"p_summary": string,"p_title": string,"p_video_url": string }; Returns: undefined
+                           },
+"bangkok_date":
 { Args: { "p_ts": string }; Returns: string
                            },
 "is_admin":
@@ -310,6 +330,18 @@ isOneToOne: false
                            },
 "is_lesson_unlocked":
 { Args: { "p_lesson": string }; Returns: boolean
+                           },
+"lesson_publish_problems":
+{ Args: { "p_lesson": string }; Returns: (string)[]
+                           },
+"lesson_publish_problems_internal":
+{ Args: { "p_lesson": string }; Returns: (string)[]
+                           },
+"reorder_lessons":
+{ Args: { "p_course": string,"p_lesson_ids": (string)[] }; Returns: undefined
+                           },
+"resync_course_unlocks":
+{ Args: { "p_course": string }; Returns: undefined
                            },
 "set_user_role":
 { Args: { "p_role": Database["public"]['Enums']["user_role"],"p_user": string }; Returns: undefined

@@ -8,7 +8,7 @@ export async function latestLinkFor(
   email: string,
   opts: { contains?: string; timeoutMs?: number } = {},
 ): Promise<string> {
-  const contains = opts.contains ?? '/auth/v1/verify';
+  const contains = opts.contains ?? '/auth/confirm';
   const deadline = Date.now() + (opts.timeoutMs ?? 15_000);
   const base = mailpitUrl();
   while (Date.now() < deadline) {

@@ -1,4 +1,6 @@
-import { test, expect, MEMBER_STATE } from '../fixtures';
+import { test, expect, MEMBER_STATE, watchCsp } from '../fixtures';
+import { LoginPage } from '../pages/LoginPage';
+import { createCompleteLesson, createCourse, deleteCourse } from '../utils/adminCourse';
 
 test.use({ viewport: { width: 375, height: 812 } });
 
@@ -17,6 +19,7 @@ const noHorizontalScroll = () =>
 
 test('TC-MOB-01 no horizontal scroll on every learner page @regression', async ({ browser }) => {
   const ctx = await browser.newContext({ storageState: MEMBER_STATE, viewport: { width: 375, height: 812 } });
+  const csp = watchCsp(ctx);
   try {
     const page = await ctx.newPage();
     for (const url of ['/', ...LEARNER_PAGES]) {
@@ -24,8 +27,32 @@ test('TC-MOB-01 no horizontal scroll on every learner page @regression', async (
       await page.waitForLoadState('networkidle');
       expect(await page.evaluate(noHorizontalScroll), `horizontal overflow on ${url}`).toBe(true);
     }
+    expect(csp, 'CSP violations in console').toEqual([]);
   } finally {
     await ctx.close();
+  }
+});
+
+test('TC-MOB-01c no horizontal scroll on admin pages @regression', async ({ browser, admin }) => {
+  const courseId = await createCourse();
+  const ctx = await browser.newContext({ viewport: { width: 375, height: 812 } });
+  const csp = watchCsp(ctx);
+  try {
+    const lessonId = await createCompleteLesson(courseId, 'mob', 'บทมือถือ', false);
+    const page = await ctx.newPage();
+    const login = new LoginPage(page);
+    await login.goto();
+    await login.login(admin.email, admin.password);
+    await page.waitForURL(/\/dashboard/);
+    for (const url of ['/admin', '/admin/lessons', `/admin/lessons/${lessonId}`, '/admin/learners']) {
+      await page.goto(url);
+      await page.waitForLoadState('networkidle');
+      expect(await page.evaluate(noHorizontalScroll), `horizontal overflow on ${url}`).toBe(true);
+    }
+    expect(csp, 'CSP violations in console').toEqual([]);
+  } finally {
+    await ctx.close();
+    await deleteCourse(courseId);
   }
 });
 

@@ -24,6 +24,7 @@ export async function signUp(_prev: ActionState, formData: FormData): Promise<Ac
   const { error } = await supabase.auth.signUp({
     email,
     password,
+    // Production fallback until the hosted email templates link to /auth/confirm with {{ .TokenHash }}.
     options: { emailRedirectTo: `${siteUrl()}/auth/callback?next=/dashboard` },
   });
   if (error) return { ok: false, message: thaiError(errorCodeFrom(error)), values: { email } };
@@ -98,4 +99,14 @@ export async function updatePassword(_prev: ActionState, formData: FormData): Pr
   const { error } = await supabase.auth.updateUser({ password });
   if (error) return { ok: false, message: thaiError(errorCodeFrom(error)) };
   redirect('/dashboard');
+}
+
+export async function signInWithGoogle(): Promise<void> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider: 'google',
+    options: { redirectTo: `${siteUrl()}/auth/callback?next=/dashboard` },
+  });
+  if (error || !data.url) redirect('/login?error=link');
+  redirect(data.url);
 }

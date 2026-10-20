@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 
-export type MyProfile = { id: string; displayName: string; weeklyGoalMinutes: number; email: string };
+export type MyProfile = { id: string; displayName: string; weeklyGoalMinutes: number; email: string; avatarUrl: string | null };
 
 export async function getMyProfile(): Promise<MyProfile> {
   const supabase = await createClient();
@@ -10,7 +10,7 @@ export async function getMyProfile(): Promise<MyProfile> {
 
   const { data, error } = await supabase
     .from('profiles')
-    .select('id, display_name, weekly_goal_minutes')
+    .select('id, display_name, weekly_goal_minutes, avatar_url')
     .eq('id', auth.user.id)
     .single();
   if (error || !data) throw new Error('PROFILE_NOT_FOUND');
@@ -19,6 +19,7 @@ export async function getMyProfile(): Promise<MyProfile> {
     id: data.id,
     displayName: data.display_name ?? '',
     weeklyGoalMinutes: data.weekly_goal_minutes,
+    avatarUrl: data.avatar_url,
     email: auth.user.email ?? '',
   };
 }

@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { GoogleButton } from '@/components/GoogleButton';
 import { LoginForm } from '../forms';
 
 export default async function LoginPage({
@@ -16,6 +17,7 @@ export default async function LoginPage({
         </p>
       ) : null}
       <LoginForm next={next ?? ''} />
+      <GoogleButton />
       <p className="text-sm">
         <Link href="/forgot-password" className="underline">
           ลืมรหัสผ่าน?

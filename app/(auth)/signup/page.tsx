@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { GoogleButton } from '@/components/GoogleButton';
 import { SignupForm } from '../forms';
 
 export default function SignupPage() {
@@ -6,6 +7,7 @@ export default function SignupPage() {
     <main className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-center gap-4 p-4">
       <h1 className="text-2xl font-semibold">สมัครสมาชิก</h1>
       <SignupForm />
+      <GoogleButton />
       <p className="text-sm">
         มีบัญชีแล้ว?{' '}
         <Link href="/login" className="underline">
