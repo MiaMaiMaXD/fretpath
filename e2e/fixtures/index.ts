@@ -1,4 +1,5 @@
-import { test as base, expect } from '@playwright/test';
+import { test as base, expect, type Page } from '@playwright/test';
+import { LoginPage } from '../pages/LoginPage';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '@/lib/database.types';
 import { env } from '../utils/env';
@@ -6,8 +7,12 @@ import { createTestUser, deleteTestUser, type TestUser } from '../utils/supabase
 
 type Db = SupabaseClient<Database>;
 
+/** Storage state of the shared read-only member created by auth.setup.ts. */
+export const MEMBER_STATE = 'e2e/.auth/member.json';
+
 type Fixtures = {
   member: TestUser;
+  memberPage: Page;
   otherMember: TestUser;
   admin: TestUser;
   memberDb: Db;
@@ -47,6 +52,13 @@ export const test = base.extend<Fixtures>({
     } finally {
       await safeDelete(user.id);
     }
+  },
+  memberPage: async ({ member, page }, use) => {
+    const login = new LoginPage(page);
+    await login.goto();
+    await login.login(member.email, member.password);
+    await page.waitForURL(/\/dashboard/);
+    await use(page);
   },
   otherMember: async ({}, use) => {
     const user = await createTestUser({ role: 'member' });

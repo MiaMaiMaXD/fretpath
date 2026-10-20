@@ -10,10 +10,26 @@
 Trigger: `pull_request` ไป `main` และ `push` ไป `main` (รันเก่าของ PR เดียวกันจะถูกยกเลิกอัตโนมัติ; รันบน `main` ไม่ถูกยกเลิก)
 
 ลำดับขั้นตอนใน job: `npm ci` → ติดตั้ง Supabase CLI (2.121.0 ตรงกับ devDependency) → `supabase start` → `supabase test db` (pgTAP 001–006)
-→ `npm run lint` → `npm run typecheck` → ตั้ง env จาก `supabase status -o env` → `npm run build` → ติดตั้ง Chromium
+→ `npm run lint` → `npm run typecheck` → `npm run test:unit` (Vitest) → ตั้ง env จาก `supabase status -o env` → `npm run build` → ติดตั้ง Chromium
 → `playwright test --project=chromium --grep "@smoke|@security"` → อัปโหลด `playwright-report/` เป็น artifact (ทุกครั้ง เก็บ 14 วัน)
 
 หมายเหตุ: คีย์ที่ใช้เป็นคีย์ demo ของ Supabase local stack ใน runner จึงไม่ต้องตั้ง GitHub Secrets
+
+## ความครอบคลุมของ `--grep "@smoke|@security"` หลังแผนที่ 2 (ตรวจเมื่อ 2026-10-19)
+
+ตรวจด้วย `npx playwright test --project=chromium --grep "@smoke|@security" --list` — `ci.yml` **ไม่ต้องแก้**: ค่า grep เดิมครอบคลุม UI `@smoke` ใหม่ทั้งหมดแล้ว และโปรเจกต์ `setup`/`teardown` ถูกดึงมารันเป็น dependency ตามปกติ (จึงมี `e2e/.auth/member.json` ให้เทสต์ที่ใช้ `MEMBER_STATE`) รวม 33 รายการ = setup 1 + teardown 1 + `e2e/api` 13 + UI 18
+
+UI `@smoke` ที่เพิ่ม (16 เทสต์): TC-AUTH-01, TC-AUTH-04, TC-AUTH-08, TC-AUTH-09 · TC-PATH-14, TC-PATH-16, TC-PATH-17 · TC-QZ-21, TC-QZ-22, TC-QZ-23, TC-QZ-25 · TC-PRC-02, TC-PRC-04, TC-PRC-07 · TC-DSH-02, TC-DSH-05
+UI `@security` ที่เพิ่ม (2 เทสต์): TC-AUTH-07, TC-PRC-05
+(TC-QZ-22, TC-QZ-23, TC-PRC-04, TC-PRC-07, TC-AUTH-08 เป็น Review Focus ที่ติด `@smoke` เพื่อให้ CI คุมได้)
+(ที่เหลือใน `e2e/specs/` เป็น `@regression` ล้วน — รันในเครื่องบน `chromium`, `firefox`, `mobile` ไม่รันใน CI ตามการออกแบบ)
+
+### เวลารันและ timeout
+
+- ค่าจริงจาก PR #4 (แผนที่ 2): check `ci` **เขียว** ใช้เวลา **3 นาที 50 วินาที** — [รัน Actions 39352770279](https://github.com/MiaMaiMaXD/fretpath/actions/runs/39352770279) (Vitest + pgTAP + build + Playwright `@smoke|@security` บน Chromium)
+- ต่ำกว่า `timeout-minutes: 30` มาก จึงยังไม่แยก step หรือปรับ `--workers` (`workers` ใน `playwright.config.ts`: 4 ในเครื่อง, ค่าเริ่มต้นของ Playwright ใน CI, override ด้วย `PW_WORKERS`; retry ใน CI = 1 ครั้ง)
+- ตรวจซ้ำเมื่อชุด `@smoke` โตขึ้นในแผนที่ 3; ถ้าเกิน ~20 นาที ให้แยก UI smoke เป็น step ของตัวเอง
+- ความเสี่ยง: เทสต์ที่ผูกกับ Mailpit/Supabase local ต้องการให้ `supabase start` เปิด Mailpit (พอร์ต 54324) ซึ่งเป็นค่าเริ่มต้นของ CLI 2.121.0 — ยืนยันซ้ำเมื่อเห็นรันจริงครั้งแรก
 
 ## ผลการตรวจสอบ CI
 

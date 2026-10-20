@@ -11,6 +11,9 @@ export default defineConfig({
   testDir: 'e2e',
   fullyParallel: true,
   retries: process.env.CI ? 1 : 0,
+  // Headless Firefox on Windows stalls (30s+ hangs in random tests) with the default
+  // cores/2 workers, so cap local runs at 4. CI keeps Playwright's default; PW_WORKERS overrides both.
+  workers: process.env.PW_WORKERS ? Number(process.env.PW_WORKERS) : process.env.CI ? undefined : 4,
   reporter: [['html', { open: 'never' }], ['list']],
   use: {
     baseURL,
@@ -19,9 +22,11 @@ export default defineConfig({
     screenshot: 'only-on-failure',
   },
   projects: [
-    { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
-    { name: 'firefox', use: { ...devices['Desktop Firefox'] } },
-    { name: 'mobile', use: { ...devices['Pixel 7'] } },
+    { name: 'setup', testMatch: /auth\.setup\.ts/, teardown: 'teardown' },
+    { name: 'teardown', testMatch: /auth\.teardown\.ts/ },
+    { name: 'chromium', dependencies: ['setup'], use: { ...devices['Desktop Chrome'] } },
+    { name: 'firefox', dependencies: ['setup'], use: { ...devices['Desktop Firefox'] } },
+    { name: 'mobile', dependencies: ['setup'], use: { ...devices['Pixel 7'] } },
   ],
   webServer: {
     command: 'npm run start',
