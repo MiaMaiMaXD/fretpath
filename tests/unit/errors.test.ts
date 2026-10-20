@@ -29,6 +29,9 @@ describe('errors', () => {
     expect(errorCodeFrom(null)).toBe('UNKNOWN');
   });
   it('maps admin error codes', () => {
+    expect(thaiError('QUESTION_HAS_ANSWERS')).toContain('มีผู้เรียนตอบข้อนี้แล้ว');
+    expect(thaiError('QUESTION_NOT_FOUND')).toBe('ไม่พบคำถามนี้ กรุณาโหลดหน้าใหม่');
+    expect(thaiError('LESSON_NOT_FOUND')).toBe('ไม่พบบทเรียนนี้ กรุณาโหลดหน้าใหม่');
     expect(thaiError('LESSON_PUBLISHED_INCOMPLETE')).toBe('บทนี้เผยแพร่อยู่ การแก้ไขนี้จะทำให้บทไม่สมบูรณ์ — เปลี่ยนเป็นฉบับร่างก่อนแก้');
     expect(thaiError('LAST_ADMIN')).toBe('ต้องมีผู้ดูแลระบบอย่างน้อย 1 คน');
     expect(thaiError('USER_NOT_FOUND')).toBe('ไม่พบผู้ใช้นี้');

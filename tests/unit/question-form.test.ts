@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { validateQuestionInput } from '@/lib/admin/question-form';
+import { compactChoices, validateQuestionInput } from '@/lib/admin/question-form';
 
 const ok = { prompt: 'คำถาม?', choices: ['ก', 'ข', 'ค'], correctIndex: '0', explanation: '' };
 const n = (k: number) => Array.from({ length: k }, (_, i) => `ตัวเลือก ${i + 1}`);
@@ -11,7 +11,7 @@ describe('validateQuestionInput', () => {
   it('prompt 1-500', () => {
     expect(validateQuestionInput({ ...ok, prompt: '' }).prompt).toBe('กรุณาใส่คำถาม');
     expect(validateQuestionInput({ ...ok, prompt: 'ก'.repeat(500) }).prompt).toBeUndefined();
-    expect(validateQuestionInput({ ...ok, prompt: 'ก'.repeat(501) }).prompt).toBe('กรุณาใส่คำถาม');
+    expect(validateQuestionInput({ ...ok, prompt: 'ก'.repeat(501) }).prompt).toBe('คำถามต้องไม่เกิน 500 ตัวอักษร');
   });
   it('choice count boundaries 1/2/6/7', () => {
     expect(validateQuestionInput({ ...ok, choices: n(1) }).choices).toBe('ต้องมีตัวเลือก 2–6 ข้อ');
@@ -35,5 +35,15 @@ describe('validateQuestionInput', () => {
   it('explanation 1000/1001', () => {
     expect(validateQuestionInput({ ...ok, explanation: 'ก'.repeat(1000) }).explanation).toBeUndefined();
     expect(validateQuestionInput({ ...ok, explanation: 'ก'.repeat(1001) }).explanation).toBe('คำอธิบายต้องไม่เกิน 1000 ตัวอักษร');
+  });
+});
+
+describe('compactChoices', () => {
+  it('drops blanks, keeps ids aligned and re-maps the correct index', () => {
+    expect(compactChoices(['a', ' ', 'c'], ['i1', 'i2', ''], 2)).toEqual({
+      choices: ['a', 'c'],
+      ids: ['i1', null],
+      correct: 1,
+    });
   });
 });

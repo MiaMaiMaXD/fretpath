@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import type { Page } from '@playwright/test';
 import { test, expect } from '../fixtures';
+import { buildAnswers } from '../utils/quiz';
 import { createCompleteLesson, createCourse, deleteCourse } from '../utils/adminCourse';
 import { adminClient } from '../utils/supabaseAdmin';
 
@@ -103,7 +104,10 @@ test('TC-ADM-11 editing a published lesson into an incomplete state is refused @
 
     // The last question of a published lesson cannot be deleted.
     await group(adminPage, 'ข้อ 1').getByRole('button', { name: 'ลบคำถาม' }).click();
-    await expect(group(adminPage, 'ข้อ 1').getByRole('alert')).toContainText('บทนี้เผยแพร่อยู่');
+    const dialog = adminPage.getByRole('dialog');
+    await dialog.getByRole('button', { name: 'ลบ', exact: true }).click();
+    await expect(dialog.getByRole('alert')).toContainText('บทนี้เผยแพร่อยู่');
+    await dialog.getByRole('button', { name: 'ยกเลิก' }).click();
     await adminPage.reload();
     await expect(group(adminPage, 'ข้อ 1')).toBeVisible();
     await expect(group(adminPage, 'ข้อ 1').getByLabel('ตัวเลือก 2', { exact: true })).toHaveValue('ผิด');
@@ -115,6 +119,7 @@ test('TC-ADM-11 editing a published lesson into an incomplete state is refused @
       p_question: q.data!.id,
       p_prompt: 'เปลี่ยนแล้ว',
       p_choices: ['เหลือข้อเดียว'],
+      p_choice_ids: [null as unknown as string],
       p_correct: 0,
       p_explanation: '',
     });
@@ -156,21 +161,99 @@ test('TC-ADM-12 move question up and down swaps the order @regression', async ({
   }
 });
 
+test('TC-ADM-13 delete asks first and an answered question cannot be deleted @regression', async ({
+  adminPage,
+  adminDb,
+  member,
+  memberDb,
+}) => {
+  const courseId = await createCourse();
+  try {
+    const enrol = await adminClient()
+      .from('enrollments')
+      .insert({ user_id: member.id, course_id: courseId, source: 'purchase' });
+    expect(enrol.error).toBeNull();
+    const lessonId = await createCompleteLesson(courseId, 'ans', 'บทที่มีผู้ตอบ', true);
+    const res = await memberDb.rpc('submit_quiz', {
+      p_lesson_id: lessonId,
+      p_answers: await buildAnswers(adminDb, lessonId, 1),
+    });
+    expect(res.error).toBeNull();
+
+    await adminPage.goto(`/admin/lessons/${lessonId}`);
+    await group(adminPage, 'ข้อ 1').getByRole('button', { name: 'ลบคำถาม' }).click();
+    const dialog = adminPage.getByRole('dialog');
+    await expect(dialog.getByRole('heading', { name: 'ลบคำถามนี้?' })).toBeVisible();
+    await expect(dialog.getByRole('button', { name: 'ยกเลิก' })).toBeFocused();
+    await dialog.getByRole('button', { name: 'ลบ', exact: true }).click();
+    await expect(dialog.getByRole('alert')).toContainText('มีผู้เรียนตอบข้อนี้แล้ว');
+    await dialog.getByRole('button', { name: 'ยกเลิก' }).click();
+
+    // Reordering/removing a choice that learners answered is refused; history is untouched.
+    const q = await adminClient().from('quiz_questions').select('id').eq('lesson_id', lessonId).single();
+    const answers = await adminClient().from('quiz_attempt_answers').select('choice_id').eq('question_id', q.data!.id);
+    expect(answers.data).toHaveLength(1);
+    const drop = await adminDb.rpc('admin_save_question', {
+      p_lesson: lessonId,
+      p_question: q.data!.id,
+      p_prompt: 'x',
+      p_choices: ['ใหม่1', 'ใหม่2'],
+      p_choice_ids: [null as unknown as string, null as unknown as string],
+      p_correct: 0,
+      p_explanation: '',
+    });
+    expect(drop.error?.message).toContain('QUESTION_HAS_ANSWERS');
+    const still = await adminClient().from('quiz_attempt_answers').select('choice_id').eq('question_id', q.data!.id);
+    expect(still.data).toEqual(answers.data);
+  } finally {
+    await deleteCourse(courseId);
+  }
+});
+
 test('TC-SEC-20 member calling admin question action directly is refused @security', async ({ memberDb }) => {
-  const id = randomUUID();
+  const courseId = await createCourse();
+  try {
+    const lessonId = await createCompleteLesson(courseId, 'sec', 'บทความปลอดภัย', false);
+    const q = await adminClient().from('quiz_questions').select('id').eq('lesson_id', lessonId).single();
+    const k = await adminClient().from('quiz_answer_keys').select('correct_choice_id').eq('question_id', q.data!.id).single();
+    await memberSecurityChecks(memberDb, lessonId, q.data!.id, k.data!.correct_choice_id);
+  } finally {
+    await deleteCourse(courseId);
+  }
+});
+
+async function memberSecurityChecks(
+  memberDb: Parameters<Parameters<typeof test>[2]>[0]['memberDb'],
+  lessonId: string,
+  questionId: string,
+  choiceId: string,
+) {
+  const id = questionId;
   const save = await memberDb.rpc('admin_save_question', {
-    p_lesson: id,
+    p_lesson: lessonId,
     p_question: null as unknown as string,
     p_prompt: 'x',
     p_choices: ['a', 'b'],
+    p_choice_ids: [null as unknown as string, null as unknown as string],
     p_correct: 0,
     p_explanation: '',
   });
   expect(save.error?.message).toContain('NOT_ADMIN');
   const move = await memberDb.rpc('admin_move_question', { p_question: id, p_direction: 'up' });
   expect(move.error?.message).toContain('NOT_ADMIN');
+  const del = await memberDb.rpc('admin_delete_question', { p_question: id });
+  expect(del.error?.message).toContain('NOT_ADMIN');
+  // RLS refusal on a real row: the question exists and has a key, yet a member cannot write it.
   const key = await memberDb
     .from('quiz_answer_keys')
-    .insert({ question_id: id, correct_choice_id: randomUUID(), explanation: 'x' });
-  expect(key.error).not.toBeNull();
-});
+    .update({ correct_choice_id: choiceId, explanation: 'hacked' })
+    .eq('question_id', id)
+    .select();
+  expect(key.data ?? []).toEqual([]);
+  const ins = await memberDb
+    .from('quiz_answer_keys')
+    .insert({ question_id: id, correct_choice_id: choiceId, explanation: 'x' });
+  expect(ins.error).not.toBeNull();
+  const after = await adminClient().from('quiz_answer_keys').select('explanation').eq('question_id', id).single();
+  expect(after.data?.explanation).not.toBe('hacked');
+}

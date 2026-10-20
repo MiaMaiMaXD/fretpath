@@ -10,6 +10,9 @@ export type ErrorCode =
   | 'LAST_ADMIN'
   | 'USER_NOT_FOUND'
   | 'INVALID_ORDER'
+  | 'QUESTION_HAS_ANSWERS'
+  | 'QUESTION_NOT_FOUND'
+  | 'LESSON_NOT_FOUND'
   | 'INVALID_CREDENTIALS'
   | 'EMAIL_NOT_CONFIRMED'
   | 'NETWORK'
@@ -30,6 +33,9 @@ const MESSAGES: Record<ErrorCode, string> = {
   LAST_ADMIN: 'ต้องมีผู้ดูแลระบบอย่างน้อย 1 คน',
   USER_NOT_FOUND: 'ไม่พบผู้ใช้นี้',
   INVALID_ORDER: 'ลำดับบทไม่ถูกต้อง กรุณาโหลดหน้าใหม่',
+  QUESTION_HAS_ANSWERS: 'มีผู้เรียนตอบข้อนี้แล้ว ลบไม่ได้ — แก้ข้อความแทน หรือเปลี่ยนบทเป็นฉบับร่างแล้วเพิ่มคำถามใหม่',
+  QUESTION_NOT_FOUND: 'ไม่พบคำถามนี้ กรุณาโหลดหน้าใหม่',
+  LESSON_NOT_FOUND: 'ไม่พบบทเรียนนี้ กรุณาโหลดหน้าใหม่',
   INVALID_CREDENTIALS: 'อีเมลหรือรหัสผ่านไม่ถูกต้อง',
   EMAIL_NOT_CONFIRMED: 'กรุณายืนยันอีเมลก่อนเข้าสู่ระบบ',
   NETWORK: 'เชื่อมต่อไม่สำเร็จ กรุณาลองใหม่',

@@ -86,6 +86,8 @@ export type AdminQuestion = {
   id: string;
   prompt: string;
   choices: string[];
+  /** Choice ids aligned with `choices`. */
+  choiceIds: string[];
   /** Index into `choices` of the correct one, or null when the key is missing. */
   correctIndex: number | null;
   explanation: string;
@@ -112,6 +114,7 @@ export async function getAdminQuestions(lessonId: string): Promise<AdminQuestion
       id: q.id,
       prompt: q.prompt,
       choices: choices.map((c) => c.text),
+      choiceIds: choices.map((c) => c.id),
       correctIndex: idx >= 0 ? idx : null,
       explanation: key?.explanation ?? '',
     };

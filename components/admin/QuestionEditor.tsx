@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useActionState, useEffect, useId, useState, useTransition } from 'react';
+import { useActionState, useEffect, useId, useRef, useState, useTransition } from 'react';
 import { deleteQuestion, moveQuestion, saveQuestion } from '@/app/(admin)/admin/lessons/[id]/questions/actions';
 import { ChoiceList, type ChoiceItem } from '@/components/admin/ChoiceList';
 import { FormMessage } from '@/components/FormMessage';
@@ -16,6 +16,79 @@ const EMPTY: ActionState = { ok: false };
 
 let choiceCounter = 0;
 const newKey = () => `n${choiceCounter++}`;
+
+function DeleteQuestionDialog({
+  lessonId,
+  questionId,
+  label,
+  onClose,
+}: {
+  lessonId: string;
+  questionId: string;
+  label: string;
+  onClose: () => void;
+}) {
+  const router = useRouter();
+  const [pending, start] = useTransition();
+  const [error, setError] = useState<string | null>(null);
+  const dialogRef = useRef<HTMLDialogElement>(null);
+  const cancelRef = useRef<HTMLButtonElement>(null);
+  const titleId = `delete-q-${questionId}`;
+
+  // Native modal: focus trap, Escape and inert background come from showModal().
+  useEffect(() => {
+    const d = dialogRef.current;
+    if (d && !d.open) {
+      d.showModal();
+      cancelRef.current?.focus();
+    }
+  }, []);
+
+  return (
+    <dialog
+      ref={dialogRef}
+      aria-labelledby={titleId}
+      onClose={onClose}
+      onCancel={(e) => {
+        if (pending) e.preventDefault();
+      }}
+      className="m-auto w-full max-w-sm rounded bg-white p-4 text-neutral-900 backdrop:bg-black/50 dark:bg-neutral-900 dark:text-neutral-100"
+    >
+      <div className="flex flex-col gap-3">
+        <h2 id={titleId} className="text-lg font-semibold">
+          ลบคำถามนี้?
+        </h2>
+        <p>{label}</p>
+        {error ? (
+          <p role="alert" className="text-red-600">
+            {error}
+          </p>
+        ) : null}
+        <div className="flex gap-2">
+          <button
+            type="button"
+            disabled={pending}
+            className="rounded bg-red-700 px-4 py-2 font-medium text-white disabled:opacity-60"
+            onClick={() =>
+              start(async () => {
+                const r = await deleteQuestion(lessonId, questionId);
+                if (r.ok) {
+                  dialogRef.current?.close();
+                  router.refresh();
+                } else setError(r.message ?? null);
+              })
+            }
+          >
+            ลบ
+          </button>
+          <button ref={cancelRef} type="button" disabled={pending} className={BTN} onClick={() => dialogRef.current?.close()}>
+            ยกเลิก
+          </button>
+        </div>
+      </div>
+    </dialog>
+  );
+}
 
 type EditorProps = {
   lessonId: string;
@@ -32,8 +105,12 @@ function QuestionEditor({ lessonId, question, number, isFirst, isLast, onSaved }
   const router = useRouter();
   const uid = useId();
   const [choices, setChoices] = useState<ChoiceItem[]>(() =>
-    (question?.choices ?? ['', '']).map((text) => ({ key: newKey(), text })),
+    question
+      ? question.choices.map((text, i) => ({ key: newKey(), id: question.choiceIds[i] ?? null, text }))
+      : ['', ''].map((text) => ({ key: newKey(), id: null, text })),
   );
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const deleteBtnRef = useRef<HTMLButtonElement>(null);
   const [correct, setCorrect] = useState<number | null>(question?.correctIndex ?? null);
   const [prompt, setPrompt] = useState(question?.prompt ?? '');
   const [explanation, setExplanation] = useState(question?.explanation ?? '');
@@ -137,9 +214,10 @@ function QuestionEditor({ lessonId, question, number, isFirst, isLast, onSaved }
               </button>
               <button
                 type="button"
+                ref={deleteBtnRef}
                 disabled={rowPending}
                 className={BTN}
-                onClick={() => run(() => deleteQuestion(lessonId, question.id))}
+                onClick={() => setConfirmingDelete(true)}
               >
                 ลบคำถาม
               </button>
@@ -147,6 +225,17 @@ function QuestionEditor({ lessonId, question, number, isFirst, isLast, onSaved }
           ) : null}
         </div>
       </form>
+      {question && confirmingDelete ? (
+        <DeleteQuestionDialog
+          lessonId={lessonId}
+          questionId={question.id}
+          label={`ข้อ ${number}`}
+          onClose={() => {
+            setConfirmingDelete(false);
+            deleteBtnRef.current?.focus();
+          }}
+        />
+      ) : null}
     </fieldset>
   );
 }

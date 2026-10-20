@@ -2,7 +2,8 @@
 
 import { MAX_CHOICES, MIN_CHOICES } from '@/lib/admin/question-form';
 
-export type ChoiceItem = { key: string; text: string };
+/** `id` is the stored choice id (null for a choice not saved yet); history depends on it staying stable. */
+export type ChoiceItem = { key: string; id: string | null; text: string };
 
 type Props = {
   idPrefix: string;
@@ -37,6 +38,7 @@ export function ChoiceList({ idPrefix, choices, correct, error, correctError, on
             ตัวเลือก {i + 1}
           </label>
           <div className="flex flex-wrap gap-2">
+            <input type="hidden" name="choiceId" value={c.id ?? ''} />
             <input
               id={`${idPrefix}choice-${c.key}`}
               name="choice"
@@ -58,7 +60,7 @@ export function ChoiceList({ idPrefix, choices, correct, error, correctError, on
           <button
             type="button"
             className={BTN}
-            onClick={() => onChange([...choices, { key: newKey(), text: '' }], correct)}
+            onClick={() => onChange([...choices, { key: newKey(), id: null, text: '' }], correct)}
           >
             เพิ่มตัวเลือก
           </button>
