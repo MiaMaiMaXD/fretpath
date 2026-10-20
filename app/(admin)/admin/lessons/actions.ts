@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
-import { validateLessonInput, type LessonInput } from '@/lib/admin/lesson-form';
+import { CONFLICT_MESSAGE, uniqueViolationKind, validateLessonInput, type LessonInput } from '@/lib/admin/lesson-form';
 import type { ActionState } from '@/lib/action-state';
 import { requireAdmin } from '@/lib/data/admin';
 import { errorCodeFrom, thaiError } from '@/lib/errors';
@@ -35,12 +35,12 @@ function refresh(id?: string) {
   revalidatePath('/dashboard');
 }
 
-type DbError = { message?: string; code?: string };
+type DbError = { message?: string; code?: string; details?: string };
 
 function failure(error: DbError, values: Record<string, string>): ActionState {
-  if (error.code === '23505') {
-    return { ok: false, fieldErrors: { slug: 'slug นี้ถูกใช้แล้ว' }, values };
-  }
+  const unique = uniqueViolationKind(error);
+  if (unique === 'slug') return { ok: false, fieldErrors: { slug: 'slug นี้ถูกใช้แล้ว' }, values };
+  if (unique === 'sort_order') return { ok: false, message: CONFLICT_MESSAGE, values };
   if (error.code === '23514' && error.message?.includes('video_url')) {
     return { ok: false, fieldErrors: { videoUrl: 'ต้องเป็นลิงก์ YouTube' }, values };
   }
@@ -53,44 +53,21 @@ export async function createLesson(courseId: string, _prev: ActionState, fd: For
   const fieldErrors = validateLessonInput(input);
   if (Object.keys(fieldErrors).length > 0) return { ok: false, fieldErrors, values };
 
+  // One RPC = one transaction: lesson (always draft) + contents, sort_order = max+1 under a course lock.
   const supabase = await createClient();
-  const last = await supabase
-    .from('lessons')
-    .select('sort_order')
-    .eq('course_id', courseId)
-    .order('sort_order', { ascending: false })
-    .limit(1)
-    .maybeSingle();
-  if (last.error) return failure(last.error, values);
-
-  const { data, error } = await supabase
-    .from('lessons')
-    .insert({
-      course_id: courseId,
-      slug: input.slug,
-      title: input.title,
-      summary: input.summary === '' ? null : input.summary,
-      pass_score: Number(input.passScore),
-      sort_order: (last.data?.sort_order ?? 0) + 1,
-      status: 'draft',
-    })
-    .select('id')
-    .single();
+  const { data, error } = await supabase.rpc('admin_create_lesson', {
+    p_course: courseId,
+    p_slug: input.slug,
+    p_title: input.title,
+    p_summary: input.summary,
+    p_pass_score: Number(input.passScore),
+    p_content_md: input.contentMd,
+    p_video_url: input.videoUrl,
+  });
   if (error) return failure(error, values);
 
-  const content = await supabase.from('lesson_contents').insert({
-    lesson_id: data.id,
-    content_md: input.contentMd,
-    video_url: input.videoUrl === '' ? null : input.videoUrl,
-  });
-  if (content.error) {
-    // Do not leave a lesson without its content row.
-    await supabase.from('lessons').delete().eq('id', data.id);
-    return failure(content.error, values);
-  }
-
-  refresh(data.id);
-  redirect(`/admin/lessons/${data.id}`);
+  refresh(data);
+  redirect(`/admin/lessons/${data}`);
 }
 
 export async function updateLesson(id: string, _prev: ActionState, fd: FormData): Promise<ActionState> {
@@ -100,23 +77,16 @@ export async function updateLesson(id: string, _prev: ActionState, fd: FormData)
   if (Object.keys(fieldErrors).length > 0) return { ok: false, fieldErrors, values };
 
   const supabase = await createClient();
-  const { error } = await supabase
-    .from('lessons')
-    .update({
-      slug: input.slug,
-      title: input.title,
-      summary: input.summary === '' ? null : input.summary,
-      pass_score: Number(input.passScore),
-    })
-    .eq('id', id);
-  if (error) return failure(error, values);
-
-  const content = await supabase.from('lesson_contents').upsert({
-    lesson_id: id,
-    content_md: input.contentMd,
-    video_url: input.videoUrl === '' ? null : input.videoUrl,
+  const { error } = await supabase.rpc('admin_update_lesson', {
+    p_id: id,
+    p_slug: input.slug,
+    p_title: input.title,
+    p_summary: input.summary,
+    p_pass_score: Number(input.passScore),
+    p_content_md: input.contentMd,
+    p_video_url: input.videoUrl,
   });
-  if (content.error) return failure(content.error, values);
+  if (error) return failure(error, values);
 
   refresh(id);
   return { ok: true, message: 'บันทึกแล้ว' };

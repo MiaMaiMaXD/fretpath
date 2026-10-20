@@ -1,4 +1,4 @@
-import { youtubeEmbedUrl } from '@/lib/youtube';
+import { isStoredYouTubeUrl } from '@/lib/youtube';
 import type { FieldErrors } from '@/lib/validation';
 
 const len = (s: string) => [...s].length;
@@ -23,7 +23,7 @@ export function validateLessonInput(input: LessonInput): FieldErrors {
   if (!/^\d+$/.test(input.passScore) || !Number.isSafeInteger(n) || n < 1 || n > 100) {
     errors.passScore = 'เกณฑ์ผ่านต้องเป็นจำนวนเต็ม 1–100';
   }
-  if (input.videoUrl !== '' && youtubeEmbedUrl(input.videoUrl) === null) errors.videoUrl = 'ต้องเป็นลิงก์ YouTube';
+  if (input.videoUrl !== '' && !isStoredYouTubeUrl(input.videoUrl)) errors.videoUrl = 'ต้องเป็นลิงก์ YouTube';
   return errors;
 }
 
@@ -36,4 +36,14 @@ export function publishProblemsThai(codes: string[], questionLabel: (id: string)
     }
     return c;
   });
+}
+
+export const CONFLICT_MESSAGE = 'มีการแก้ไขพร้อมกัน กรุณาลองอีกครั้ง';
+
+/** Which unique constraint a Postgres 23505 error is about (by constraint name in message/details). */
+export function uniqueViolationKind(error: { code?: string; message?: string; details?: string }): 'slug' | 'sort_order' | null {
+  if (error.code !== '23505') return null;
+  const text = `${error.message ?? ''} ${error.details ?? ''}`;
+  if (text.includes('lessons_course_id_sort_order_key') || text.includes('(course_id, sort_order)')) return 'sort_order';
+  return 'slug';
 }

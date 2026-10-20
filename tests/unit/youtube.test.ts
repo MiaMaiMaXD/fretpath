@@ -13,3 +13,16 @@ describe('youtubeEmbedUrl', () => {
     expect(youtubeEmbedUrl(null)).toBeNull();
   });
 });
+
+describe('isStoredYouTubeUrl', () => {
+  it('accepts only what the DB check accepts', async () => {
+    const { isStoredYouTubeUrl } = await import('@/lib/youtube');
+    expect(isStoredYouTubeUrl('https://www.youtube.com/watch?v=dQw4w9WgXcQ')).toBe(true);
+    expect(isStoredYouTubeUrl('https://youtube.com/watch?v=dQw4w9WgXcQ')).toBe(true);
+    expect(isStoredYouTubeUrl('https://youtu.be/dQw4w9WgXcQ')).toBe(true);
+    expect(isStoredYouTubeUrl('http://youtu.be/dQw4w9WgXcQ')).toBe(false);
+    expect(isStoredYouTubeUrl('https://m.youtube.com/watch?v=dQw4w9WgXcQ')).toBe(false);
+    expect(isStoredYouTubeUrl('https://www.youtube.com/watch?x=1&v=dQw4w9WgXcQ')).toBe(false);
+    expect(isStoredYouTubeUrl('https://vimeo.com/1')).toBe(false);
+  });
+});

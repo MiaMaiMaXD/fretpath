@@ -299,7 +299,13 @@ isOneToOne: false
             [_ in never]: never
           }
           Functions: {
-            "bangkok_date":
+            "admin_create_lesson":
+{ Args: { "p_content_md": string,"p_course": string,"p_pass_score": number,"p_slug": string,"p_summary": string,"p_title": string,"p_video_url": string }; Returns: string
+                           },
+"admin_update_lesson":
+{ Args: { "p_content_md": string,"p_id": string,"p_pass_score": number,"p_slug": string,"p_summary": string,"p_title": string,"p_video_url": string }; Returns: undefined
+                           },
+"bangkok_date":
 { Args: { "p_ts": string }; Returns: string
                            },
 "is_admin":

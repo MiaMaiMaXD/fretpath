@@ -44,3 +44,13 @@ describe('publishProblemsThai', () => {
     ).toEqual(['ยังไม่มีคำถาม', 'ข้อ 1 ยังไม่กำหนดข้อที่ถูก', 'ข้อ 2 ต้องมีตัวเลือก 2–6 ข้อ']);
   });
 });
+
+describe('uniqueViolationKind', () => {
+  it('tells slug and sort_order conflicts apart', async () => {
+    const { uniqueViolationKind } = await import('@/lib/admin/lesson-form');
+    expect(uniqueViolationKind({ code: '23505', message: 'duplicate key value violates unique constraint "lessons_course_id_slug_key"' })).toBe('slug');
+    expect(uniqueViolationKind({ code: '23505', message: 'duplicate key value violates unique constraint "lessons_course_id_sort_order_key"' })).toBe('sort_order');
+    expect(uniqueViolationKind({ code: '23505', details: 'Key (course_id, sort_order)=(a, 1) already exists.' })).toBe('sort_order');
+    expect(uniqueViolationKind({ code: '23514' })).toBeNull();
+  });
+});

@@ -73,10 +73,20 @@ async function createCompleteLesson(courseId: string, slug: string, title: strin
 
 test('TC-ADM-04 create lesson starts as draft and members cannot see it @smoke', async ({
   adminPage,
+  member,
   memberDb,
 }) => {
   const courseId = await createCourse();
   try {
+    // The member IS enrolled and can see a published control lesson, so an empty result for the
+    // draft proves the draft is hidden (not merely that the member has no access to the course).
+    const enrol = await adminClient()
+      .from('enrollments')
+      .insert({ user_id: member.id, course_id: courseId, source: 'purchase' });
+    expect(enrol.error).toBeNull();
+    const controlSlug = `control-${randomUUID().slice(0, 8)}`;
+    await createCompleteLesson(courseId, controlSlug, 'บทควบคุม', true);
+
     const slug = `qa-${randomUUID().slice(0, 8)}`;
     const title = `บททดสอบ QA ${randomUUID()}`;
     const edit = new AdminLessonEditPage(adminPage);
@@ -94,7 +104,10 @@ test('TC-ADM-04 create lesson starts as draft and members cannot see it @smoke',
     await expect(row).toContainText('ฉบับร่าง');
     await expect(row).toContainText('70');
 
-    const seen = await memberDb.from('lessons').select('id').eq('slug', slug);
+    const control = await memberDb.from('lessons').select('slug').eq('course_id', courseId).eq('slug', controlSlug);
+    expect(control.error).toBeNull();
+    expect(control.data).toEqual([{ slug: controlSlug }]);
+    const seen = await memberDb.from('lessons').select('id').eq('course_id', courseId).eq('slug', slug);
     expect(seen.error).toBeNull();
     expect(seen.data).toEqual([]);
   } finally {
