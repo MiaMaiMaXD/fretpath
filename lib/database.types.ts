@@ -340,6 +340,9 @@ isOneToOne: false
 "reorder_lessons":
 { Args: { "p_course": string,"p_lesson_ids": (string)[] }; Returns: undefined
                            },
+"resync_course_unlocks":
+{ Args: { "p_course": string }; Returns: undefined
+                           },
 "set_user_role":
 { Args: { "p_role": Database["public"]['Enums']["user_role"],"p_user": string }; Returns: undefined
                            },
