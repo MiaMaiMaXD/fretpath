@@ -2,7 +2,8 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { LessonForm } from '@/components/admin/LessonForm';
 import { PublishPanel } from '@/components/admin/PublishPanel';
-import { getAdminLesson } from '@/lib/data/admin-lessons';
+import { QuestionsSection } from '@/components/admin/QuestionEditor';
+import { getAdminLesson, getAdminQuestions } from '@/lib/data/admin-lessons';
 
 export const metadata = { title: 'แก้ไขบทเรียน' };
 
@@ -13,6 +14,7 @@ export default async function EditLessonPage({ params }: { params: Promise<{ id:
   if (!UUID_RE.test(id)) notFound();
   const lesson = await getAdminLesson(id);
   if (!lesson) notFound();
+  const questions = await getAdminQuestions(id);
   return (
     <main className="space-y-6">
       <Link href={`/admin/lessons?course=${lesson.courseId}`} className="underline underline-offset-4">
@@ -36,6 +38,7 @@ export default async function EditLessonPage({ params }: { params: Promise<{ id:
           passScore: String(lesson.passScore),
         }}
       />
+      <QuestionsSection lessonId={lesson.id} questions={questions} />
     </main>
   );
 }

@@ -81,3 +81,39 @@ export async function getAdminLesson(id: string): Promise<AdminLessonDetail | nu
     questionIds: (questions.data ?? []).map((q) => q.id),
   };
 }
+
+export type AdminQuestion = {
+  id: string;
+  prompt: string;
+  choices: string[];
+  /** Index into `choices` of the correct one, or null when the key is missing. */
+  correctIndex: number | null;
+  explanation: string;
+};
+
+/** Questions of a lesson in display order, with their choices, answer key and explanation. */
+export async function getAdminQuestions(lessonId: string): Promise<AdminQuestion[]> {
+  await requireAdmin();
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from('quiz_questions')
+    .select('id, prompt, quiz_choices(id, text, sort_order, created_at), quiz_answer_keys(correct_choice_id, explanation)')
+    .eq('lesson_id', lessonId)
+    .order('sort_order')
+    .order('created_at');
+  if (error) throw new Error(error.message);
+  return (data ?? []).map((q) => {
+    const choices = [...q.quiz_choices].sort(
+      (a, b) => a.sort_order - b.sort_order || a.created_at.localeCompare(b.created_at) || a.id.localeCompare(b.id),
+    );
+    const key = Array.isArray(q.quiz_answer_keys) ? q.quiz_answer_keys[0] : q.quiz_answer_keys;
+    const idx = key ? choices.findIndex((c) => c.id === key.correct_choice_id) : -1;
+    return {
+      id: q.id,
+      prompt: q.prompt,
+      choices: choices.map((c) => c.text),
+      correctIndex: idx >= 0 ? idx : null,
+      explanation: key?.explanation ?? '',
+    };
+  });
+}

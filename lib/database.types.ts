@@ -302,6 +302,12 @@ isOneToOne: false
             "admin_create_lesson":
 { Args: { "p_content_md": string,"p_course": string,"p_pass_score": number,"p_slug": string,"p_summary": string,"p_title": string,"p_video_url": string }; Returns: string
                            },
+"admin_move_question":
+{ Args: { "p_direction": string,"p_question": string }; Returns: undefined
+                           },
+"admin_save_question":
+{ Args: { "p_choices": (string)[],"p_correct": number,"p_explanation": string,"p_lesson": string,"p_prompt": string,"p_question": string }; Returns: string
+                           },
 "admin_update_lesson":
 { Args: { "p_content_md": string,"p_id": string,"p_pass_score": number,"p_slug": string,"p_summary": string,"p_title": string,"p_video_url": string }; Returns: undefined
                            },
