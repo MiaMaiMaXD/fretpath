@@ -41,7 +41,7 @@ test('TC-AUTH-12 member uploads and removes avatar @regression', async ({ member
   }
 });
 
-test('TC-AUTH-13 avatar rejects wrong file type @regression', async ({ memberPage, member }) => {
+test('TC-AUTH-16 avatar rejects wrong file type @regression', async ({ memberPage, member }) => {
   try {
     await memberPage.goto('/profile');
     await memberPage.waitForLoadState('networkidle');

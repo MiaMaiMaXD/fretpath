@@ -99,3 +99,13 @@ export async function updatePassword(_prev: ActionState, formData: FormData): Pr
   if (error) return { ok: false, message: thaiError(errorCodeFrom(error)) };
   redirect('/dashboard');
 }
+
+export async function signInWithGoogle(): Promise<void> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider: 'google',
+    options: { redirectTo: `${siteUrl()}/auth/callback?next=/dashboard` },
+  });
+  if (error || !data.url) redirect('/login?error=link');
+  redirect(data.url);
+}
