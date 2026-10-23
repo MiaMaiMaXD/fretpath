@@ -62,6 +62,10 @@ Google login ส่งผู้ใช้กลับผ่าน `/auth/callback
 
 ถ้าเจอ `redirect_uri_mismatch`: ตรวจ Authorized redirect URI ในขั้นที่ 2 ว่าตรงกับ `https://<project-ref>.supabase.co/auth/v1/callback` ทุกตัวอักษร
 
+ถ้าเลือกบัญชีแล้วเด้งไปหน้าแรกเป็น `https://<domain>/?code=...` (ไม่เข้า Dashboard): Supabase ไม่ยอมรับ `redirectTo` จึงถอยไปใช้ Site URL ตรวจ (1) `NEXT_PUBLIC_SITE_URL` ใน Vercel ต้องเป็น `https://<domain>` (ถ้าว่าง แอปจะใช้ `http://localhost:3000`) แล้ว Redeploy และ (2) Supabase > Authentication > URL Configuration > Redirect URLs มี `https://<domain>/**`
+
+ใน Vercel ตัวแปร `NEXT_PUBLIC_*` ต้องเป็นประเภท **Config** ไม่ใช่ Secret/Sensitive (ถ้าเป็น Secret จะ Save ไม่ได้และขึ้น "Remove the public framework prefix…") ห้ามลบ prefix `NEXT_PUBLIC_` เพราะโค้ดอ่านชื่อนี้
+
 ผลลัพธ์: ____ วันที่: ____ ผู้ทำ: ____
 
 ---
