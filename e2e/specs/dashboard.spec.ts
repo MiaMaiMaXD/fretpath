@@ -42,6 +42,8 @@ test('TC-DSH-03 passing a quiz updates lessons count and average @regression', a
   await expect(dash.stat('lessons')).toContainText('1 / 5 บท');
   await expect(dash.stat('avg-score')).toContainText('80%');
   await expect(memberPage.getByRole('link', { name: 'ไปบทถัดไป' })).toHaveAttribute('href', '/lessons/first-chords');
+  // lessons not attempted read as "ยังไม่สอบ", not as a 0% score
+  await expect(memberPage.getByRole('img', { name: /^คะแนนสูงสุดรายบท: บท 1 80 %, บท 2 ยังไม่สอบ/ })).toBeVisible();
 });
 
 test('TC-DSH-04 recent history shows latest five logs @regression', async ({ memberPage, member, memberDb }) => {

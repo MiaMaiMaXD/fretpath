@@ -29,7 +29,7 @@ export default async function DashboardPage() {
   const weekText = goal > 0 ? `${week} / ${goal} นาที` : `${week} นาที (ยังไม่ตั้งเป้าหมาย)`;
   const next = nextLesson(lessons);
   const days = dailyMinutes(weekLogs, bangkokLastDays(7)).map((d) => ({ label: thaiShort(d.date), value: d.minutes }));
-  const scores = lessons.map((x) => ({ label: `บท ${x.sortOrder}`, value: x.bestScore ?? 0 }));
+  const scores = lessons.map((x) => ({ label: `บท ${x.sortOrder}`, value: x.bestScore }));
 
   return (
     <div className="space-y-6">
@@ -41,7 +41,7 @@ export default async function DashboardPage() {
       </div>
       <div className="grid gap-3 sm:grid-cols-2">
         <BarChart title="นาทีฝึก 7 วันล่าสุด" bars={days} unit="นาที" />
-        <BarChart title="คะแนนสูงสุดรายบท" bars={scores} unit="%" max={100} />
+        <BarChart title="คะแนนสูงสุดรายบท" bars={scores} unit="%" max={100} emptyLabel="ยังไม่สอบ" />
       </div>
       <div>
         {next ? (
