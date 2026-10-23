@@ -51,6 +51,8 @@ psql postgresql://postgres:postgres@127.0.0.1:54322/postgres -f restore/data.sql
 ```
 
 ถ้าไม่มี `psql` ให้ใช้ `docker exec -i supabase_db_fretpath psql -U postgres < restore/data.sql`
+
+ผลที่คาดหวัง: error 1 ข้อ `duplicate key value violates unique constraint "buckets_pkey"` ซึ่งไม่เป็นอันตราย เพราะ migration `20261021000017_storage.sql` สร้าง storage bucket ไว้แล้ว (แถวอื่นโหลดครบ) จากนั้นตรวจ `select count(*) from public.lessons;` ≥ 1 เมื่อเสร็จให้รัน `npx supabase db reset` เพื่อลบข้อมูลผู้ใช้จริงออกจากเครื่อง
 ถ้าต้องการทดสอบแบบเดียวกับ CI (Postgres เปล่า): `RESTORE_ADMIN_URL=postgresql://postgres:postgres@localhost:5432/postgres scripts/backup-check.sh restore restore` (สคริปต์จะ drop/สร้าง database `restore_check` ใน server นั้น อย่าชี้ไปที่ DB จริง)
 
 ## กู้คืนลงโปรเจกต์ Supabase ใหม่
@@ -91,10 +93,10 @@ workflow ใช้ service `postgres:17` ถ้าโปรเจกต์ produ
 
 ## สิ่งที่ทีมต้องทำ (TODO)
 
-- [ ] ตั้ง secret `SUPABASE_DB_URL` (connection string ของ production แบบ Session Pooler พอร์ต 5432 เท่านั้น: direct connection เป็น IPv6 อย่างเดียวและ GitHub runner ไม่มี IPv6, และห้ามใช้ transaction pooler 6543; รหัสผ่านต้อง percent-encode)
-- [ ] ตั้ง secret `BACKUP_PASSPHRASE` สร้างด้วย `openssl rand -base64 32` (Windows PowerShell: `$b = New-Object byte[] 32; [Security.Cryptography.RandomNumberGenerator]::Create().GetBytes($b); [Convert]::ToBase64String($b)`) เก็บใน password manager ของทีมก่อนตั้งใน GitHub: ถ้าทำหาย backup ทั้งหมดกู้คืนไม่ได้
-- [ ] Actions > Backup > Run workflow ครั้งแรก
-- [ ] TC-OPS-03: ดาวน์โหลด artifact แล้ว `file fretpath-backup-*.gpg` ต้องบอกว่าเป็น PGP/GPG encrypted data และไม่มีไฟล์ `.sql` ใน artifact
-- [ ] TC-OPS-04: log ขั้น "Restore check" แสดง `restore schema: 0 error(s)`, `restore data: 0 error(s)`, `public.lessons count after restore: N` (N >= 1), `auth.users` >= 1 และ `public.profiles` เท่ากับ `auth.users` (ถ้ามี error ที่ไม่เป็นอันตราย ดูหัวข้อ allow-list)
-- [ ] ลองกู้คืนจริง 1 ครั้งตามคู่มือนี้ในเครื่อง และบันทึกผล
+- [x] ตั้ง secret `SUPABASE_DB_URL` (connection string ของ production แบบ Session Pooler พอร์ต 5432 เท่านั้น: direct connection เป็น IPv6 อย่างเดียวและ GitHub runner ไม่มี IPv6, และห้ามใช้ transaction pooler 6543; รหัสผ่านต้อง percent-encode)
+- [x] ตั้ง secret `BACKUP_PASSPHRASE` สร้างด้วย `openssl rand -base64 32` (Windows PowerShell: `$b = New-Object byte[] 32; [Security.Cryptography.RandomNumberGenerator]::Create().GetBytes($b); [Convert]::ToBase64String($b)`) เก็บใน password manager ของทีมก่อนตั้งใน GitHub: ถ้าทำหาย backup ทั้งหมดกู้คืนไม่ได้
+- [x] Actions > Backup > Run workflow ครั้งแรก
+- [x] TC-OPS-03: ดาวน์โหลด artifact แล้ว `file fretpath-backup-*.gpg` ต้องบอกว่าเป็น PGP/GPG encrypted data และไม่มีไฟล์ `.sql` ใน artifact
+- [x] TC-OPS-04: log ขั้น "Restore check" แสดง `restore schema: 0 error(s)`, `restore data: 0 error(s)`, `public.lessons count after restore: N` (N >= 1), `auth.users` >= 1 และ `public.profiles` เท่ากับ `auth.users` (ถ้ามี error ที่ไม่เป็นอันตราย ดูหัวข้อ allow-list)
+- [x] ลองกู้คืนจริง 1 ครั้งตามคู่มือนี้ในเครื่อง และบันทึกผล
 - [ ] ยืนยันเวอร์ชัน Postgres ของ production ตรงกับ `postgres:17` ใน workflow
