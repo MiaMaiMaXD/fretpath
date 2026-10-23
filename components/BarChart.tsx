@@ -1,18 +1,35 @@
-export type Bar = { label: string; value: number };
+import { type Bar, chartScale, chartSummary } from '@/lib/chart';
 
-/** Inline-SVG column chart. `max` fixes the scale (e.g. 100); otherwise scales to the largest value. */
-export function BarChart({ title, bars, unit, max }: { title: string; bars: Bar[]; unit: string; max?: number }) {
-  const scale = max ?? Math.max(...bars.map((b) => b.value), 0);
+export type { Bar };
+
+/**
+ * Inline-SVG column chart. `max` fixes the scale (e.g. 100); otherwise scales to the largest value.
+ * A bar with `value: null` draws nothing and is read as `emptyLabel`.
+ */
+export function BarChart({
+  title,
+  bars,
+  unit,
+  max,
+  emptyLabel,
+}: {
+  title: string;
+  bars: Bar[];
+  unit: string;
+  max?: number;
+  emptyLabel?: string;
+}) {
+  const scale = chartScale(bars, max);
   const H = 100;
   const W = 100 / Math.max(bars.length, 1);
-  const summary = `${title}: ${bars.map((b) => `${b.label} ${b.value} ${unit}`).join(', ')}`;
+  const summary = chartSummary(title, bars, unit, emptyLabel);
   return (
     <figure className="rounded border border-neutral-300 p-3 dark:border-neutral-700">
       <figcaption className="mb-2 font-medium">{title}</figcaption>
       <svg role="img" aria-label={summary} viewBox={`0 0 100 ${H}`} preserveAspectRatio="none" className="h-32 w-full">
         <line x1="0" y1={H} x2="100" y2={H} className="stroke-neutral-400" strokeWidth="0.5" />
         {bars.map((b, i) => {
-          const h = scale > 0 ? (b.value / scale) * (H - 2) : 0;
+          const h = scale > 0 && b.value !== null ? (b.value / scale) * (H - 2) : 0;
           return (
             <rect
               key={i}
