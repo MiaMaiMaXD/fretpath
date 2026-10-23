@@ -75,11 +75,11 @@ Google login ส่งผู้ใช้กลับผ่าน `/auth/callback
 หลังเปิด Google แล้ว Dev รัน smoke test ซ้ำ:
 
 ```bash
-PROD_URL=<url> npx playwright test --project=prod
+PROD_URL=<url> PROD_SUPABASE_URL=https://<project-ref>.supabase.co PROD_SUPABASE_ANON_KEY=<anon key> npx playwright test --project=prod
 ```
 
 ผลที่คาดหวัง: ผ่านทั้งหมดและไม่มี CSP violation บนหน้า login (รายละเอียด test ดู [vercel.md](vercel.md))
 
-ผลลัพธ์ (Dev): ____ วันที่: ____ ผู้ตรวจ: ____
+ผลลัพธ์ (Dev): ผ่าน 5/5 (ต้องตั้ง `PROD_SUPABASE_URL` และ `PROD_SUPABASE_ANON_KEY` ด้วย ไม่งั้น TC-PRD-06 ล้มทันที) วันที่: 2026-10-23 ผู้ตรวจ: ทีม
 
 เอกสารที่เกี่ยวข้อง: [secrets.md](secrets.md), [production-checklist.md](production-checklist.md)
