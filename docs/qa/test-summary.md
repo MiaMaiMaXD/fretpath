@@ -96,13 +96,13 @@ TC เหล่านี้ไม่มีเทสต์อัตโนมั�
 
 | TC | ทดสอบอะไร | ทำที่ไหน | วันที่ | ผู้ทดสอบ | ผล | หลักฐาน |
 |---|---|---|---|---|---|---|
-| TC-SEC-15 | ผู้เรียนอ่านความคืบหน้า ผลสอบ และ enrollments ของผู้อื่นไม่ได้ | Local/Preview | <!-- รอผล: วันที่ --> | <!-- รอผล: ชื่อ --> | <!-- รอผล: ผ่าน/ไม่ผ่าน --> | <!-- รอผล: ภาพหน้าจอ/ลิงก์ --> |
-| TC-SEC-16 | ไม่มี service role key ในโค้ดฝั่งเบราว์เซอร์ | Local/Preview | <!-- รอผล --> | <!-- รอผล --> | <!-- รอผล --> | <!-- รอผล --> |
-| TC-QZ-08 | สอบผ่านซ้ำที่บทสุดท้าย | Local/Preview | <!-- รอผล --> | <!-- รอผล --> | <!-- รอผล --> | <!-- รอผล --> |
-| TC-QZ-11 | สอบไม่ผ่านซ้ำที่บทสุดท้าย | Local/Preview | <!-- รอผล --> | <!-- รอผล --> | <!-- รอผล --> | <!-- รอผล --> |
-| TC-QZ-13 | คะแนน 59% ที่ `pass_score` 60 ไม่ผ่าน | Local/Preview | <!-- รอผล --> | <!-- รอผล --> | <!-- รอผล --> | <!-- รอผล --> |
-| TC-QZ-15 | การปัดแบบ half-up: 1/8 = 12.5 → 13 | Local/Preview | <!-- รอผล --> | <!-- รอผล --> | <!-- รอผล --> | <!-- รอผล --> |
-| TC-DSH-06 | กราฟคะแนนสูงสุดรายบทแสดงค่าตรงกับผลสอบ (FR-06.3) | Local/Preview | <!-- รอผล --> | <!-- รอผล --> | <!-- รอผล --> | <!-- รอผล --> |
+| TC-SEC-15 | ผู้เรียนอ่านความคืบหน้า ผลสอบ และ enrollments ของผู้อื่นไม่ได้ | Local (Supabase local) | 2026-10-23 | Dev | **ผ่าน** — B มีแถวครบ 4 ตาราง (ตรวจในฐานะ postgres) แล้ว A (role `authenticated`) SELECT `lesson_progress`, `quiz_attempts`, `quiz_attempt_answers`, `enrollments` กรองด้วย B ได้ผลว่างทุกตาราง (pgTAP 5/5 ในทรานแซกชันที่ rollback) | [สคริปต์](evidence/2026-10-23-manual-group-a.sql) |
+| TC-SEC-16 | ไม่มี service role key ในโค้ดฝั่งเบราว์เซอร์ | Local (`npm run build`) | 2026-10-23 | Dev | **ผ่าน** — ใน `.next/static` (38 ไฟล์) ไม่พบชื่อ `SERVICE_ROLE`, ไม่พบค่า key จาก `.env.local` และไม่มี JWT ที่ role = `service_role`; คำ `sb_secret_` ที่พบ 1 จุดเป็นโค้ดของ supabase-js ที่ใช้ตรวจรูปแบบ key ไม่ใช่ค่า key; ในซอร์สมีอ้างถึงเฉพาะ `e2e/utils/env.ts`; `.env*` ไม่มีตัวแปร `NEXT_PUBLIC_*` ที่เป็น service/secret | ผลคำสั่งใน session ของ Dev |
+| TC-QZ-08 | สอบผ่านซ้ำที่บทสุดท้าย | Local (Supabase local) | 2026-10-23 | Dev | **ผ่าน** — `submit_quiz` ซ้ำที่บทสุดท้ายที่ completed แล้ว: ไม่ error, `passed` = true, `next_lesson_slug` = null, สถานะยัง completed, attempt เพิ่ม 1 | [สคริปต์](evidence/2026-10-23-manual-group-a.sql) |
+| TC-QZ-11 | สอบไม่ผ่านซ้ำที่บทสุดท้าย | Local (Supabase local) | 2026-10-23 | Dev | **ผ่าน** — สอบไม่ผ่านครั้งที่ 2: `passed` = false, `next_lesson_slug` = null, ไม่ completed, attempt บันทึกครบ 2 | [สคริปต์](evidence/2026-10-23-manual-group-a.sql) |
+| TC-QZ-13 | คะแนน 59% ที่ `pass_score` 60 ไม่ผ่าน | Local (Supabase local) | 2026-10-23 | Dev | **ผ่าน** — บท 17 ข้อ ตอบถูก 10: `score_pct` = 59, `passed` = false | [สคริปต์](evidence/2026-10-23-manual-group-a.sql) |
+| TC-QZ-15 | การปัดแบบ half-up: 1/8 = 12.5 → 13 | Local (Supabase local) | 2026-10-23 | Dev | **ผ่าน** — บท 8 ข้อ ตอบถูก 1: `score_pct` = 13 | [สคริปต์](evidence/2026-10-23-manual-group-a.sql) |
+| TC-DSH-06 | กราฟคะแนนสูงสุดรายบทแสดงค่าตรงกับผลสอบ (FR-06.3) | Local (`npm run start`, Chromium ผ่าน Playwright) | 2026-10-23 | Dev | **ผ่าน (มีข้อสังเกต)** — สอบบท 1 = 100%, บท 2 = 60% แล้ว 40% (ต้องเก็บค่าสูงสุด): แท่งบท 1 = 100, บท 2 = 60 ตรงกับการ์ดใน `/path` ("คะแนนสูงสุด 100%" / "60%"); บทที่ยังไม่สอบไม่มีแท่ง; ข้อสังเกต: `aria-label` ของกราฟอ่านบทที่ยังไม่สอบเป็น "บท 3 0 %" แยกไม่ออกจากการสอบได้ 0% (ดูหัวข้อ 9 ข้อ 10) | [dashboard](img/dsh-06-dashboard.png), [path](img/dsh-06-path.png) |
 | TC-MOB-03 | เส้นทางหลักและเสียงดีดสายบน Safari ของ iPhone จริง (NFR-03) | iPhone จริง | <!-- รอผล --> | <!-- รอผล --> | <!-- รอผล --> | <!-- รอผล: ภาพหน้าจอ/คลิป --> |
 | TC-PRD-05 | ลิงก์ยืนยันอีเมลและรีเซ็ตรหัสผ่านบน production ใช้ได้จากอีกอุปกรณ์ | Production + โทรศัพท์ | 2026-10-20 | ทีม | **ผ่าน** — สมัครบนคอม เปิดลิงก์ในโทรศัพท์ เห็นหน้า "ยืนยันและเข้าสู่ระบบ" เข้า Dashboard ได้ บท 1 ปลดล็อก; ลืมรหัสผ่าน: อีเมลไทยถึง ตั้งรหัสใหม่ได้ รหัสเก่าใช้ไม่ได้ | <!-- รอผล: ภาพหน้าจอ --> |
 | TC-AUTH-18 | ล็อกอินด้วย Google บน production | Production | 2026-10-23 | ทีม | **ผ่าน** — ปุ่ม "เข้าสู่ระบบด้วย Google" แสดงบน `/login`, CSP `form-action` มี Supabase และ `accounts.google.com`; ล็อกอินด้วยบัญชีใน Test users สำเร็จ (รอบแรกเด้งไป `/?code=…` เพราะ `NEXT_PUBLIC_SITE_URL` ใน Vercel ว่าง ตั้งค่าแล้ว redeploy จึงผ่าน) smoke test `--project=prod` หลังเปิด Google ยังไม่ได้รัน | <!-- รอผล: ภาพหน้าจอ Dashboard + ผล smoke test --> |
@@ -114,7 +114,7 @@ TC เหล่านี้ไม่มีเทสต์อัตโนมั�
 |---|---|---|---|---|---|
 | TC-OPS-04 | กู้คืนจาก backup จริงลง Supabase local ตาม `docs/deploy/backup-restore.md` แล้ว `select count(*) from public.lessons;` ≥ 1 | 2026-10-23 | ทีม + Dev | **ผ่าน** — ถอดรหัส `fretpath-backup-2026-10-20.tar.gz.gpg` ด้วย GnuPG 2.4.5 (ที่มากับ Git for Windows) ได้ `roles.sql` `schema.sql` `data.sql`; `supabase db reset --no-seed` (ก่อนโหลด lessons=0, users=0) แล้วโหลด `data.sql`: lessons=5, auth.users=1, profiles=1; error 1 ข้อ `duplicate key ... "buckets_pkey"` ไม่เป็นอันตราย (bucket ถูกสร้างโดย migration `20261021000017_storage.sql` แล้ว) ลบไฟล์ที่ถอดรหัสแล้วและ reset DB local หลังทดสอบ | ผลคำสั่งใน session ของ Dev |
 | TC-OPS-03 | ดาวน์โหลด artifact แล้ว `file fretpath-backup-*.gpg` ต้องเป็น PGP/GPG encrypted data และไม่มีไฟล์ `.sql` | 2026-10-20 (ส่วนอัตโนมัติ) | GitHub Actions | ส่วนอัตโนมัติ **ผ่าน**: restore check ผ่าน (schema 0 / data 0 error, lessons=5, users=1, profiles=1), artifact `fretpath-backup` 45,632 bytes; ส่วนดาวน์โหลดตรวจด้วยมือ (2026-10-23, Dev) **ผ่าน**: `gh run download` ได้ไฟล์เดียว `fretpath-backup-2026-10-20.tar.gz.gpg` (45,429 bytes) ไม่มี `.sql`; `file` รายงาน "PGP symmetric key encrypted data - AES with 256-bit key salted & iterated - SHA512"; ถอดรหัสด้วย passphrase ผิดได้ `decryption failed: Bad session key` | [39437226337](https://github.com/MiaMaiMaXD/fretpath/actions/runs/39437226337) |
-| TC-QZ-18, TC-QZ-20 | ส่วน UI (ส่วน API/DB อัตโนมัติ) | <!-- รอผล --> | <!-- รอผล --> | <!-- รอผล --> | <!-- รอผล --> |
+| TC-QZ-18, TC-QZ-20 | ส่วน UI (ส่วน API/DB อัตโนมัติ) | 2026-10-23 | Dev (Chromium ผ่าน Playwright, local) | **ผ่าน** — QZ-18: คลิกตัวเลือกที่ 1 แล้วที่ 2 ของข้อ 1 เหลือเลือกไว้ 1 ตัว (ตัวแรกถูกยกเลิก); QZ-20: ก่อนส่งคำตอบ HTML และ response ที่ไม่ใช่ JS ของหน้า quiz ไม่มีคำอธิบายเฉลยทั้ง 5 ข้อ ไม่มี `correct_choice_id`/`is_correct` และผู้เรียนอ่าน `quiz_answer_keys` ได้ 0 แถว | [QZ-18](img/qz-18-one-choice.png), [QZ-20](img/qz-20-quiz-before-submit.png) |
 
 ## 5. ความครอบคลุม (RTM)
 
@@ -182,6 +182,7 @@ TC เหล่านี้ไม่มีเทสต์อัตโนมั�
 | 7 | Safari บน iPhone ไม่มีเทสต์อัตโนมัติ | ความเสี่ยงเรื่องเสียงและเลย์เอาต์เฉพาะ WebKit | TC-MOB-03 (Manual) |
 | 8 | GitHub ปิด scheduled workflow เมื่อ repo ไม่มีความเคลื่อนไหว 60 วัน | keep-alive/nightly/backup หยุดเงียบ ๆ | ขั้นตอนเปิดใหม่ใน `docs/deploy/secrets.md`; ตรวจแท็บ Actions เป็นระยะ |
 | 9 | Supabase Free อาจถูกหยุดถ้า keep-alive ล้มหลายรอบ | กระทบ NFR-05 | TC-OPS-01/02, backup รายสัปดาห์เก็บ 90 วัน |
+| 10 | กราฟ "คะแนนสูงสุดรายบท" ให้ค่า 0 กับบทที่ยังไม่สอบ (พบใน TC-DSH-06, 2026-10-23) | ภาพไม่มีแท่งจึงดูถูกต้อง แต่ screen reader อ่าน "บท 3 0 %" เหมือนสอบได้ 0% (`app/(learner)/dashboard/page.tsx`: `bestScore ?? 0`) ระดับ Low | ยังไม่เปิด issue — ตัดสินว่าจะแก้ (เช่นอ่านเป็น "ยังไม่สอบ") หรือยอมรับ |
 
 ## 10. ภาคผนวก
 
