@@ -1,0 +1,28 @@
+# GitHub ขอรีวิวจากเจ้าของไฟล์อัตโนมัติเมื่อมี PR แก้ไฟล์เหล่านั้น
+# บรรทัดล่างทับบรรทัดบนเมื่อ path ซ้ำกัน ดูหน้าที่แต่ละคนใน CONTRIBUTING.md
+#
+# TODO: แทน @KONG_GITHUB และ @IDEA_GITHUB ด้วย GitHub username จริง
+# (ต้องเชิญเป็น collaborator ที่มีสิทธิ์ Write ก่อน ไม่อย่างนั้น GitHub จะข้ามชื่อนั้น)
+
+# ค่าเริ่มต้น: ไอซ์ (Backend + QA)
+*                       @MiaMaiMaXD
+
+# ไอเดีย: หน้าเว็บและคอมโพเนนต์
+/app/                   @IDEA_GITHUB
+/components/            @IDEA_GITHUB @KONG_GITHUB
+
+# ไอซ์: ส่วนที่แตะข้อมูลและสิทธิ์ (ทับ /app/ ด้านบน)
+**/actions.ts           @MiaMaiMaXD
+/app/api/               @MiaMaiMaXD
+/app/auth/              @MiaMaiMaXD
+/lib/                   @MiaMaiMaXD
+/proxy.ts               @MiaMaiMaXD
+/supabase/              @MiaMaiMaXD
+/e2e/                   @MiaMaiMaXD
+/tests/                 @MiaMaiMaXD
+/docs/qa/               @MiaMaiMaXD
+/.github/               @MiaMaiMaXD
+
+# ก้อง: ธีมและชิ้นส่วน UI พื้นฐาน (อยู่ใต้ /app/ และ /components/ จึงต้องวางไว้ท้ายสุดเพื่อทับ)
+/app/globals.css        @KONG_GITHUB
+/components/ui/         @KONG_GITHUB
