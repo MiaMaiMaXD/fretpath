@@ -16,6 +16,8 @@ const STRONG_MARGIN = 0.05;
 const WEAK_SCORE = 0.6;
 const FILL_STEP = 1 / 20;
 const ROWS = 5;
+// Easiest first; F (partial barre) last.
+const QUESTIONS: ChordName[] = ['C', 'G', 'D', 'Am', 'Em', 'F'];
 
 type Ranking = { name: ChordName; score: number }[];
 type Lock = { name: ChordName; progress: number; passed: boolean };
@@ -25,10 +27,24 @@ export function ChordMeter() {
   const [error, setError] = useState<string | null>(null);
   const [lock, setLock] = useState<Lock | null>(null);
   const [ranking, setRanking] = useState<Ranking | null>(null);
+  const [index, setIndex] = useState(0);
 
   const streamRef = useRef<MediaStream | null>(null);
   const sourceRef = useRef<MediaStreamAudioSourceNode | null>(null);
   const timerRef = useRef<number | null>(null);
+  const targetRef = useRef<ChordName>(QUESTIONS[0]);
+  const currentRef = useRef<Lock | null>(null);
+
+  const finished = index >= QUESTIONS.length;
+  const target = QUESTIONS[Math.min(index, QUESTIONS.length - 1)];
+  const passed = lock?.passed === true && lock.name === target;
+
+  function goTo(i: number) {
+    setIndex(i);
+    targetRef.current = QUESTIONS[Math.min(i, QUESTIONS.length - 1)];
+    currentRef.current = null;
+    setLock(null);
+  }
 
   useEffect(() => () => stop(), []);
 
@@ -70,13 +86,15 @@ export function ChordMeter() {
     source.connect(analyser);
     streamRef.current = stream;
     sourceRef.current = source;
-    setLock(null);
     setRanking(null);
 
     const time = new Float32Array(FFT_SIZE);
     const freq = new Float32Array(FFT_SIZE / 2);
-    let current: Lock | null = null;
     timerRef.current = window.setInterval(() => {
+      let current = currentRef.current;
+      // A passed question stays passed until the learner moves on.
+      if (current?.passed) return;
+      const target = targetRef.current;
       analyser.getFloatTimeDomainData(time);
       // Silence keeps the last result on screen.
       if (rms(time.subarray(FFT_SIZE - LEVEL_WINDOW)) < GATE) return;
@@ -87,11 +105,14 @@ export function ChordMeter() {
       const heard = best.score >= WEAK_SCORE;
 
       if (heard && (!current || current.name !== best.name)) {
-        current = { name: best.name, progress: strong ? 1 : FILL_STEP, passed: strong };
-      } else if (current && !current.passed) {
+        // Only the question's chord fills the bar; any other chord is shown but scores nothing.
+        const isTarget = best.name === target;
+        current = { name: best.name, progress: isTarget ? (strong ? 1 : FILL_STEP) : 0, passed: isTarget && strong };
+      } else if (current && current.name === target) {
         const progress = Math.min(1, Math.max(0, current.progress + (heard ? FILL_STEP : -FILL_STEP / 2)));
         current = { ...current, progress, passed: progress >= 1 };
       }
+      currentRef.current = current;
       setLock(current);
       setRanking(ranked);
     }, TICK_MS);
@@ -104,6 +125,26 @@ export function ChordMeter() {
 
   return (
     <div className="rounded-2xl bg-[#0f172a] p-3 text-white shadow-xl">
+      <section aria-label="โจทย์" className="mb-3 flex flex-wrap items-center justify-between gap-3 rounded-xl bg-[#2a3a5c] px-5 py-4">
+        {finished ? (
+          <>
+            <p className="text-lg font-semibold text-emerald-400">ผ่านครบทั้ง {QUESTIONS.length} ข้อ เก่งมาก!</p>
+            <button type="button" onClick={() => goTo(0)} className="rounded-full border border-white/60 px-5 py-1.5 font-semibold hover:bg-white/10">
+              เริ่มใหม่
+            </button>
+          </>
+        ) : (
+          <>
+            <p className="text-lg font-semibold">
+              ข้อที่ {index + 1}: ดีดคอร์ด <span className="text-amber-300">{target}</span> ให้ผ่าน
+            </p>
+            <p className="text-sm text-neutral-300 tabular-nums">
+              {index + 1} / {QUESTIONS.length}
+            </p>
+          </>
+        )}
+      </section>
+
       <section
         aria-label="คอร์ดที่ได้ยิน"
         className="flex flex-col items-center gap-6 rounded-xl bg-[#2a3a5c] px-6 py-8"
@@ -111,24 +152,34 @@ export function ChordMeter() {
         <p
           role="status"
           aria-live="polite"
-          className={`text-6xl leading-none font-bold ${lock?.passed ? 'text-emerald-400' : 'text-white'}`}
+          className={`text-6xl leading-none font-bold ${passed ? 'text-emerald-400' : 'text-white'}`}
         >
-          {lock ? lock.name : '–'}
+          {lock && !finished ? lock.name : '–'}
         </p>
         <div
           role="progressbar"
-          aria-label={lock?.passed ? `ผ่าน: คอร์ด ${lock.name}` : 'ความมั่นใจของคอร์ดที่ได้ยิน'}
+          aria-label={passed ? `ผ่าน: คอร์ด ${target}` : `ความคืบหน้าของคอร์ด ${target}`}
           aria-valuemin={0}
           aria-valuemax={100}
           aria-valuenow={Math.round((lock?.progress ?? 0) * 100)}
           className="relative h-2.5 w-full max-w-md rounded-full bg-white"
         >
           <div
-            className={`h-full rounded-full transition-[width] duration-100 ${lock?.passed ? 'bg-emerald-500' : 'bg-amber-400'}`}
-            style={{ width: `${fillPct}%` }}
+            className={`h-full rounded-full transition-[width] duration-100 ${passed ? 'bg-emerald-500' : 'bg-amber-400'}`}
+            style={{ width: `${finished ? 0 : fillPct}%` }}
           />
           <div className="absolute top-1/2 left-1/2 h-5 w-1 -translate-x-1/2 -translate-y-1/2 rounded bg-[#d97706]" />
         </div>
+        {passed && !finished ? (
+          <div className="flex flex-wrap items-center justify-center gap-4">
+            <p className="font-semibold text-emerald-400">ถูกต้อง! ผ่านข้อนี้</p>
+            <button type="button" onClick={() => goTo(index + 1)} className="rounded-full border border-white/60 px-5 py-1.5 font-semibold hover:bg-white/10">
+              {index + 1 < QUESTIONS.length ? 'ข้อต่อไป' : 'ดูผล'}
+            </button>
+          </div>
+        ) : lock && !finished && lock.name !== target ? (
+          <p className="text-sm text-amber-200">ได้ยินคอร์ด {lock.name} ยังไม่ใช่ ลองดีดคอร์ด {target}</p>
+        ) : null}
         {running ? (
           <button type="button" onClick={stop} className="rounded-full bg-[#b95500] px-8 py-2.5 text-lg font-semibold hover:bg-[#9a4700]">
             หยุด
