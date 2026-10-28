@@ -9,7 +9,7 @@ import { chroma, rankChords, rms } from '../mic/detect';
 const FFT_SIZE = 16384;
 const LEVEL_WINDOW = 2048;
 const TICK_MS = 50;
-const GATE = 10 ** (-45 / 20);
+const DEFAULT_GATE_DB = -45;
 // A clear first hit passes at once; a weaker one must hold for about 1 s (20 ticks).
 const STRONG_SCORE = 0.8;
 const STRONG_MARGIN = 0.05;
@@ -28,12 +28,19 @@ export function ChordMeter() {
   const [lock, setLock] = useState<Lock | null>(null);
   const [ranking, setRanking] = useState<Ranking | null>(null);
   const [index, setIndex] = useState(0);
+  const [gateDb, setGateDb] = useState(DEFAULT_GATE_DB);
+  const [levelDb, setLevelDb] = useState<number | null>(null);
 
   const streamRef = useRef<MediaStream | null>(null);
   const sourceRef = useRef<MediaStreamAudioSourceNode | null>(null);
   const timerRef = useRef<number | null>(null);
   const targetRef = useRef<ChordName>(QUESTIONS[0]);
   const currentRef = useRef<Lock | null>(null);
+  const gateRef = useRef(10 ** (DEFAULT_GATE_DB / 20));
+
+  useEffect(() => {
+    gateRef.current = 10 ** (gateDb / 20);
+  }, [gateDb]);
 
   const finished = index >= QUESTIONS.length;
   const target = QUESTIONS[Math.min(index, QUESTIONS.length - 1)];
@@ -56,6 +63,7 @@ export function ChordMeter() {
     streamRef.current?.getTracks().forEach((t) => t.stop());
     streamRef.current = null;
     setRunning(false);
+    setLevelDb(null);
   }
 
   async function start() {
@@ -91,13 +99,15 @@ export function ChordMeter() {
     const time = new Float32Array(FFT_SIZE);
     const freq = new Float32Array(FFT_SIZE / 2);
     timerRef.current = window.setInterval(() => {
+      analyser.getFloatTimeDomainData(time);
+      const level = rms(time.subarray(FFT_SIZE - LEVEL_WINDOW));
+      setLevelDb(level > 0 ? 20 * Math.log10(level) : -100);
       let current = currentRef.current;
       // A passed question stays passed until the learner moves on.
       if (current?.passed) return;
       const target = targetRef.current;
-      analyser.getFloatTimeDomainData(time);
       // Silence keeps the last result on screen.
-      if (rms(time.subarray(FFT_SIZE - LEVEL_WINDOW)) < GATE) return;
+      if (level < gateRef.current) return;
       analyser.getFloatFrequencyData(freq);
       const ranked = rankChords(chroma(freq, ctx.sampleRate, FFT_SIZE));
       const [best, second] = ranked;
@@ -194,6 +204,39 @@ export function ChordMeter() {
             {error}
           </p>
         ) : null}
+      </section>
+
+      <section aria-label="ความไวไมค์" className="mt-3 flex flex-col gap-2 rounded-xl bg-[#2a3a5c] px-5 py-4">
+        <label htmlFor="gate" className="font-semibold">
+          ความไวไมค์ (เกณฑ์เสียง {gateDb} dB)
+        </label>
+        <input
+          id="gate"
+          type="range"
+          min={-60}
+          max={-20}
+          step={1}
+          value={gateDb}
+          onChange={(e) => setGateDb(Number(e.target.value))}
+          className="w-full accent-[#d97706]"
+        />
+        <div className="flex justify-between text-xs text-neutral-300">
+          <span>ไวมาก (-60)</span>
+          <span>ไวน้อย (-20)</span>
+        </div>
+        <div className="relative h-2 w-full overflow-hidden rounded-full bg-white/20" aria-hidden="true">
+          <div
+            className={`h-full ${levelDb !== null && levelDb >= gateDb ? 'bg-emerald-500' : 'bg-neutral-400'}`}
+            style={{ width: `${levelDb === null ? 0 : Math.min(100, Math.max(0, ((levelDb + 70) / 60) * 100))}%` }}
+          />
+          <div className="absolute top-0 h-full w-0.5 bg-[#d97706]" style={{ left: `${((gateDb + 70) / 60) * 100}%` }} />
+        </div>
+        <p className="text-sm text-neutral-300">
+          {levelDb === null
+            ? 'กด "เริ่ม" เพื่อดูระดับเสียง'
+            : `ระดับเสียงตอนนี้ ${Math.round(levelDb)} dB — ${levelDb >= gateDb ? 'ดังพอ ระบบกำลังฟัง' : 'เบากว่าเกณฑ์ ระบบไม่ฟัง'}`}
+        </p>
+        <p className="text-xs text-neutral-400">ถ้าห้องมีเสียงรบกวนจนระบบฟังตลอด ให้เลื่อนไปทางขวา ถ้าดีดแล้วระบบไม่ฟัง ให้เลื่อนไปทางซ้าย</p>
       </section>
 
       <section aria-label="คอร์ดที่ใกล้ที่สุด" className="mt-3 rounded-xl bg-[#2a3a5c] px-5 py-4">
