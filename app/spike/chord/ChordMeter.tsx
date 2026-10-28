@@ -4,28 +4,41 @@
 import { useEffect, useRef, useState } from 'react';
 import type { ChordName } from '@/lib/audio/chords';
 import { getAudioContext } from '@/lib/audio/strings';
-import { chroma, rankChords, rms } from '../mic/detect';
+import { chordStringNotes, chroma, detectPitch, hzToMidi, midiName, rankChords, rms } from '../mic/detect';
 
 const FFT_SIZE = 16384;
 const LEVEL_WINDOW = 2048;
 const TICK_MS = 50;
 const DEFAULT_GATE_DB = -45;
-// A clear first hit passes at once; a weaker one must hold for about 1 s (20 ticks).
-const STRONG_SCORE = 0.8;
-const STRONG_MARGIN = 0.05;
-const WEAK_SCORE = 0.6;
-const FILL_STEP = 1 / 20;
+// A plucked note must hold the same pitch for 4 ticks (0.2 s) before it counts.
+const STABLE_TICKS = 4;
+const MIN_CLARITY = 0.85;
 const ROWS = 5;
 // Easiest first; F (partial barre) last.
 const QUESTIONS: ChordName[] = ['C', 'G', 'D', 'Am', 'Em', 'F'];
 
 type Ranking = { name: ChordName; score: number }[];
-type Lock = { name: ChordName; progress: number; passed: boolean };
+type Wrong = { string: number; heard: number; expected: number };
+type Check = { step: number; heard: number | null; wrong: Wrong | null };
+
+/** Strings the learner must pluck for this chord, thick to thin. */
+function playedStrings(name: ChordName) {
+  return chordStringNotes(name).filter((s): s is { string: number; midi: number } => s.midi !== null);
+}
+
+/**
+ * Whether a stable pitch counts as the expected string. An octave slip (a common pitch-tracker
+ * error) is forgiven unless that octave is another string of the same chord.
+ */
+function matches(heard: number, expected: number, chordMidis: number[]): boolean {
+  if (heard === expected) return true;
+  return Math.abs(heard - expected) === 12 && !chordMidis.includes(heard);
+}
 
 export function ChordMeter() {
   const [running, setRunning] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [lock, setLock] = useState<Lock | null>(null);
+  const [check, setCheck] = useState<Check>({ step: 0, heard: null, wrong: null });
   const [ranking, setRanking] = useState<Ranking | null>(null);
   const [index, setIndex] = useState(0);
   const [gateDb, setGateDb] = useState(DEFAULT_GATE_DB);
@@ -35,7 +48,7 @@ export function ChordMeter() {
   const sourceRef = useRef<MediaStreamAudioSourceNode | null>(null);
   const timerRef = useRef<number | null>(null);
   const targetRef = useRef<ChordName>(QUESTIONS[0]);
-  const currentRef = useRef<Lock | null>(null);
+  const checkRef = useRef<Check>({ step: 0, heard: null, wrong: null });
   const gateRef = useRef(10 ** (DEFAULT_GATE_DB / 20));
 
   useEffect(() => {
@@ -44,13 +57,15 @@ export function ChordMeter() {
 
   const finished = index >= QUESTIONS.length;
   const target = QUESTIONS[Math.min(index, QUESTIONS.length - 1)];
-  const passed = lock?.passed === true && lock.name === target;
+  const strings = chordStringNotes(target);
+  const played = playedStrings(target);
+  const passed = !finished && check.step >= played.length;
 
   function goTo(i: number) {
     setIndex(i);
     targetRef.current = QUESTIONS[Math.min(i, QUESTIONS.length - 1)];
-    currentRef.current = null;
-    setLock(null);
+    checkRef.current = { step: 0, heard: null, wrong: null };
+    setCheck(checkRef.current);
   }
 
   useEffect(() => () => stop(), []);
@@ -98,39 +113,52 @@ export function ChordMeter() {
 
     const time = new Float32Array(FFT_SIZE);
     const freq = new Float32Array(FFT_SIZE / 2);
+    let lastMidi: number | null = null;
+    let stableTicks = 0;
     timerRef.current = window.setInterval(() => {
       analyser.getFloatTimeDomainData(time);
-      const level = rms(time.subarray(FFT_SIZE - LEVEL_WINDOW));
+      const recent = time.subarray(FFT_SIZE - LEVEL_WINDOW);
+      const level = rms(recent);
       setLevelDb(level > 0 ? 20 * Math.log10(level) : -100);
-      let current = currentRef.current;
-      // A passed question stays passed until the learner moves on.
-      if (current?.passed) return;
-      const target = targetRef.current;
-      // Silence keeps the last result on screen.
-      if (level < gateRef.current) return;
-      analyser.getFloatFrequencyData(freq);
-      const ranked = rankChords(chroma(freq, ctx.sampleRate, FFT_SIZE));
-      const [best, second] = ranked;
-      const strong = best.score >= STRONG_SCORE && best.score - second.score >= STRONG_MARGIN;
-      const heard = best.score >= WEAK_SCORE;
-
-      if (heard && (!current || current.name !== best.name)) {
-        // Only the question's chord fills the bar; any other chord is shown but scores nothing.
-        const isTarget = best.name === target;
-        current = { name: best.name, progress: isTarget ? (strong ? 1 : FILL_STEP) : 0, passed: isTarget && strong };
-      } else if (current && current.name === target) {
-        const progress = Math.min(1, Math.max(0, current.progress + (heard ? FILL_STEP : -FILL_STEP / 2)));
-        current = { ...current, progress, passed: progress >= 1 };
+      if (level < gateRef.current) {
+        lastMidi = null;
+        stableTicks = 0;
+        return;
       }
-      currentRef.current = current;
-      setLock(current);
-      setRanking(ranked);
+      analyser.getFloatFrequencyData(freq);
+      setRanking(rankChords(chroma(freq, ctx.sampleRate, FFT_SIZE)));
+
+      const want = playedStrings(targetRef.current);
+      const prev = checkRef.current;
+      // A finished chord stays passed until the learner moves on.
+      if (prev.step >= want.length) return;
+
+      const pitch = detectPitch(recent, ctx.sampleRate);
+      const midi = pitch && pitch.clarity >= MIN_CLARITY ? Math.round(hzToMidi(pitch.hz)) : null;
+      stableTicks = midi !== null && midi === lastMidi ? stableTicks + 1 : midi !== null ? 1 : 0;
+      lastMidi = midi;
+      if (midi === null || stableTicks !== STABLE_TICKS) return;
+
+      const chordMidis = want.map((s) => s.midi);
+      const expected = want[prev.step];
+      let next: Check;
+      if (matches(midi, expected.midi, chordMidis)) {
+        next = { step: prev.step + 1, heard: midi, wrong: null };
+      } else if (want.slice(0, prev.step).some((s) => matches(midi, s.midi, chordMidis))) {
+        // An earlier string still ringing is not a mistake.
+        return;
+      } else {
+        next = { step: prev.step, heard: midi, wrong: { string: expected.string, heard: midi, expected: expected.midi } };
+      }
+      checkRef.current = next;
+      setCheck(next);
     }, TICK_MS);
     setRunning(true);
   }
 
   // The marker in the middle of the bar is the pass point.
-  const fillPct = lock ? lock.progress * 50 : 0;
+  const fillPct = finished ? 0 : (Math.min(check.step, played.length) / played.length) * 50;
+  const current = played[check.step];
   const rows = ranking ? ranking.slice(0, ROWS) : null;
 
   return (
@@ -146,7 +174,7 @@ export function ChordMeter() {
         ) : (
           <>
             <p className="text-lg font-semibold">
-              ข้อที่ {index + 1}: ดีดคอร์ด <span className="text-amber-300">{target}</span> ให้ผ่าน
+              ข้อที่ {index + 1}: ดีดคอร์ด <span className="text-amber-300">{target}</span> ไล่ทีละสายให้ผ่าน
             </p>
             <p className="text-sm text-neutral-300 tabular-nums">
               {index + 1} / {QUESTIONS.length}
@@ -155,41 +183,78 @@ export function ChordMeter() {
         )}
       </section>
 
-      <section
-        aria-label="คอร์ดที่ได้ยิน"
-        className="flex flex-col items-center gap-6 rounded-xl bg-[#2a3a5c] px-6 py-8"
-      >
+      <section aria-label="ผลการไล่สาย" className="flex flex-col items-center gap-6 rounded-xl bg-[#2a3a5c] px-4 py-8 sm:px-6">
         <p
           role="status"
           aria-live="polite"
           className={`text-6xl leading-none font-bold ${passed ? 'text-emerald-400' : 'text-white'}`}
         >
-          {lock && !finished ? lock.name : '–'}
+          {finished ? '–' : passed ? target : check.heard !== null ? midiName(check.heard) : '–'}
         </p>
+
+        {!finished ? (
+          <ol aria-label={`สายของคอร์ด ${target}`} className="grid w-full max-w-md grid-cols-6 gap-1.5">
+            {strings.map((s) => {
+              const order = played.findIndex((p) => p.string === s.string);
+              const done = order >= 0 && order < check.step;
+              const isCurrent = order === check.step && running;
+              const isWrong = check.wrong?.string === s.string;
+              return (
+                <li
+                  key={s.string}
+                  className={`flex flex-col items-center gap-0.5 rounded-lg px-1 py-2 text-center ${
+                    s.midi === null
+                      ? 'bg-white/5 text-neutral-400'
+                      : done
+                        ? 'bg-emerald-600/80'
+                        : isWrong
+                          ? 'bg-red-500/30 ring-2 ring-red-400'
+                          : isCurrent
+                            ? 'bg-white/10 ring-2 ring-amber-400'
+                            : 'bg-white/10'
+                  }`}
+                >
+                  <span className="text-[11px] text-neutral-200">สาย {s.string}</span>
+                  <span className="text-sm font-bold">{s.midi === null ? '×' : midiName(s.midi)}</span>
+                  <span className="text-[11px]">{s.midi === null ? 'ไม่ดีด' : done ? 'ผ่าน' : isWrong ? 'ผิด' : ''}</span>
+                </li>
+              );
+            })}
+          </ol>
+        ) : null}
+
         <div
           role="progressbar"
-          aria-label={passed ? `ผ่าน: คอร์ด ${target}` : `ความคืบหน้าของคอร์ด ${target}`}
+          aria-label={passed ? `ผ่าน: คอร์ด ${target}` : `ไล่สายคอร์ด ${target} แล้ว ${check.step} จาก ${played.length} สาย`}
           aria-valuemin={0}
-          aria-valuemax={100}
-          aria-valuenow={Math.round((lock?.progress ?? 0) * 100)}
+          aria-valuemax={played.length}
+          aria-valuenow={Math.min(check.step, played.length)}
           className="relative h-2.5 w-full max-w-md rounded-full bg-white"
         >
           <div
-            className={`h-full rounded-full transition-[width] duration-100 ${passed ? 'bg-emerald-500' : 'bg-amber-400'}`}
-            style={{ width: `${finished ? 0 : fillPct}%` }}
+            className={`h-full rounded-full transition-[width] duration-150 ${passed ? 'bg-emerald-500' : 'bg-amber-400'}`}
+            style={{ width: `${fillPct}%` }}
           />
           <div className="absolute top-1/2 left-1/2 h-5 w-1 -translate-x-1/2 -translate-y-1/2 rounded bg-[#d97706]" />
         </div>
-        {passed && !finished ? (
+
+        {passed ? (
           <div className="flex flex-wrap items-center justify-center gap-4">
-            <p className="font-semibold text-emerald-400">ถูกต้อง! ผ่านข้อนี้</p>
+            <p className="font-semibold text-emerald-400">ถูกต้อง! จับคอร์ด {target} ถูกครบทุกสาย</p>
             <button type="button" onClick={() => goTo(index + 1)} className="rounded-full border border-white/60 px-5 py-1.5 font-semibold hover:bg-white/10">
               {index + 1 < QUESTIONS.length ? 'ข้อต่อไป' : 'ดูผล'}
             </button>
           </div>
-        ) : lock && !finished && lock.name !== target ? (
-          <p className="text-sm text-amber-200">ได้ยินคอร์ด {lock.name} ยังไม่ใช่ ลองดีดคอร์ด {target}</p>
+        ) : !finished && check.wrong ? (
+          <p className="text-center text-sm text-red-200">
+            สาย {check.wrong.string} ได้ยิน {midiName(check.wrong.heard)} แต่ควรเป็น {midiName(check.wrong.expected)} ลองเช็กนิ้วแล้วดีดสายนี้ใหม่
+          </p>
+        ) : !finished && running && current ? (
+          <p className="text-center text-sm text-amber-200">
+            ดีดสาย {current.string} ({midiName(current.midi)}) ทีละสาย
+          </p>
         ) : null}
+
         {running ? (
           <button type="button" onClick={stop} className="rounded-full bg-[#b95500] px-8 py-2.5 text-lg font-semibold hover:bg-[#9a4700]">
             หยุด

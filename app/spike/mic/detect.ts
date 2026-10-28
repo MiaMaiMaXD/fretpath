@@ -1,5 +1,18 @@
 // SPIKE (throwaway): note and chord detection from microphone audio.
-import type { ChordName } from '@/lib/audio/chords';
+import { CHORDS, type ChordName } from '@/lib/audio/chords';
+
+// MIDI numbers of the open strings, string 6 -> 1 (E2 A2 D3 G3 B3 E4).
+const OPEN_MIDI = [40, 45, 50, 55, 59, 64];
+
+/** The note each string should sound for a chord shape, string 6 -> 1; null = not played. */
+export function chordStringNotes(name: ChordName): { string: number; midi: number | null }[] {
+  return CHORDS[name].frets.map((fret, i) => ({ string: 6 - i, midi: fret === 'x' ? null : OPEN_MIDI[i] + fret }));
+}
+
+/** e.g. 48 -> "C3". */
+export function midiName(midi: number): string {
+  return `${NOTE_NAMES[((midi % 12) + 12) % 12]}${Math.floor(midi / 12) - 1}`;
+}
 
 export const NOTE_NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'] as const;
 

@@ -12,7 +12,7 @@ export default function ChordMeterPage() {
     <main className="mx-auto flex w-full max-w-2xl flex-col gap-4 p-4">
       <h1 className="text-2xl font-bold">วัดคอร์ดจากไมค์</h1>
       <p className="text-sm text-neutral-600 dark:text-neutral-400">
-        กด &quot;เริ่ม&quot; แล้วดีดคอร์ดตามโจทย์ทีละข้อ ทำในที่เงียบ ถือกีตาร์ห่างไมค์ประมาณ 30–50 ซม.
+        กด &quot;เริ่ม&quot; จับคอร์ดตามโจทย์ แล้วดีดไล่ทีละสายจากสายบน (สายหนา) ลงมา ทำในที่เงียบ ถือกีตาร์ห่างไมค์ประมาณ 30–50 ซม.
       </p>
       <ChordMeter />
     </main>
