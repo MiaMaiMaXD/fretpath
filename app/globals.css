@@ -11,6 +11,16 @@
   --font-sans: var(--font-inter), var(--font-noto-sans-thai);
 }
 
+/* FretPath brand (Figma home page). Accent is darkened from the mockup so white text passes WCAG AA. */
+@theme {
+  --color-ink: #0f172a;
+  --color-ink-soft: #1e293b;
+  --color-accent: #b95500;
+  --color-accent-strong: #9a4700;
+  --color-accent-light: #f59e0b;
+  --color-paper: #f4f9fb;
+}
+
 @media (prefers-color-scheme: dark) {
   :root {
     --background: #0a0a0a;

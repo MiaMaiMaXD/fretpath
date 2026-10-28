@@ -12,7 +12,7 @@ test('TC-PRD-01 health reports database reachable @prod', async ({ request }) =>
 
 test('TC-PRD-02 home page renders in Thai with security headers @prod', async ({ page, baseURL }) => {
   const res = await page.goto('/');
-  await expect(page.getByRole('heading', { name: 'FretPath' })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1, name: /เริ่มต้นเส้นทาง/ })).toBeVisible();
   const h = res!.headers();
   expect(h['content-security-policy']).toContain("frame-ancestors 'none'");
   // HSTS is only meaningful over https; a local production build on http skips this check.
