@@ -10,13 +10,12 @@ function format(ms: number): string {
   return `${String(mm).padStart(2, '0')}:${String(ss).padStart(2, '0')}`;
 }
 
-const BTN = 'rounded border border-neutral-400 px-3 py-1 disabled:opacity-50';
-
 /** Elapsed time comes from timestamps (startedAt + accumulatedMs), never from counting ticks. */
 export function PracticeTimer({ onUse }: { onUse: (minutes: number) => void }) {
   const [startedAt, setStartedAt] = useState<number | null>(null);
   const [accumulatedMs, setAccumulatedMs] = useState(0);
   const [, setTick] = useState(0);
+  const [used, setUsed] = useState<string | null>(null);
 
   // The interval only triggers a re-render; the displayed time is derived from Date.now().
   useEffect(() => {
@@ -30,39 +29,64 @@ export function PracticeTimer({ onUse }: { onUse: (minutes: number) => void }) {
   const running = startedAt !== null;
 
   return (
-    <section aria-label="ตัวจับเวลา" className="flex flex-col gap-2 rounded border border-neutral-300 p-3 dark:border-neutral-700">
-      <p className="font-mono text-3xl">{format(elapsed)}</p>
-      <div className="flex flex-wrap gap-2">
+    <section aria-label="ตัวจับเวลา" className="timer">
+      <span className={`live-dot${running ? ' on' : ''}`} aria-hidden="true" />
+      <p className="clock" data-testid="timer-display">
+        {format(elapsed)}
+      </p>
+      <p className="clock-sub">เวลาซ้อมในรอบนี้ (นาที:วินาที)</p>
+      <div className="timer-actions">
         {running ? (
           <button
             type="button"
-            className={BTN}
+            className="tbtn pause"
             onClick={() => {
               setAccumulatedMs(accumulatedMs + Date.now() - startedAt);
               setStartedAt(null);
             }}
           >
-            หยุด
+            <span aria-hidden="true">❚❚ </span>หยุดชั่วคราว
           </button>
         ) : (
-          <button type="button" className={BTN} onClick={() => setStartedAt(Date.now())}>
-            เริ่ม
+          <button
+            type="button"
+            className="tbtn go"
+            onClick={() => {
+              setUsed(null);
+              setStartedAt(Date.now());
+            }}
+          >
+            <span aria-hidden="true">▶ </span>
+            {elapsed > 0 ? 'จับเวลาต่อ' : 'เริ่มจับเวลา'}
           </button>
         )}
         <button
           type="button"
-          className={BTN}
+          className="tbtn use"
+          disabled={elapsed < 1000}
+          onClick={() => {
+            const m = minutesFromElapsed(elapsed);
+            onUse(m);
+            setUsed(`กรอก ${m} นาทีลงในฟอร์มแล้ว`);
+          }}
+        >
+          นำเวลาไปกรอกฟอร์ม
+        </button>
+        <button
+          type="button"
+          className="tbtn ghost"
           onClick={() => {
             setStartedAt(null);
             setAccumulatedMs(0);
+            setUsed(null);
           }}
         >
           รีเซ็ต
         </button>
-        <button type="button" className={BTN} disabled={elapsed <= 0} onClick={() => onUse(minutesFromElapsed(elapsed))}>
-          ใช้เวลานี้
-        </button>
       </div>
+      <p className="timer-status" role="status">
+        {used}
+      </p>
     </section>
   );
 }

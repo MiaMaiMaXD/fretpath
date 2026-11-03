@@ -1,25 +1,29 @@
-import { Metronome } from '@/components/Metronome';
+import type { Metadata } from 'next';
 import { PracticeForm } from '@/components/PracticeForm';
 import { PracticeList } from '@/components/PracticeList';
 import { bangkokToday } from '@/lib/bangkok';
 import { getPath } from '@/lib/data/path';
-import { listMyPracticeLogs } from '@/lib/data/practice';
+import { listMyPracticeLogs, myPracticeTotals } from '@/lib/data/practice';
+import './practice.css';
+
+export const metadata: Metadata = { title: 'บันทึกการฝึก — FretPath' };
 
 export default async function PracticePage() {
   const today = bangkokToday();
-  const [path, logs] = await Promise.all([getPath(), listMyPracticeLogs()]);
+  const [path, logs, totals] = await Promise.all([getPath(), listMyPracticeLogs(100), myPracticeTotals()]);
   const lessons = (path?.lessons ?? []).filter((l) => l.state !== 'locked').map((l) => ({ id: l.id, title: l.title }));
   return (
-    <div className="flex flex-col gap-6">
-      <h1 className="text-2xl font-semibold">บันทึกการฝึก</h1>
-      <Metronome />
-      <PracticeForm today={today} lessons={lessons} />
-      <section aria-labelledby="history" className="flex flex-col gap-3">
-        <h2 id="history" className="text-xl font-semibold">
-          ประวัติการฝึก
-        </h2>
-        <PracticeList logs={logs} today={today} lessons={lessons} />
-      </section>
+    <div className="fp-prac">
+      <header className="prac-head">
+        <h1>บันทึกการฝึก</h1>
+        <p>จับเวลา เปิดเมโทรนอม แล้วจดสิ่งที่ซ้อมไว้ ย้อนกลับมาดูพัฒนาการของตัวเองได้ทุกเมื่อ</p>
+      </header>
+      <div className="prac-grid">
+        <div className="prac-left">
+          <PracticeForm today={today} lessons={lessons} />
+        </div>
+        <PracticeList logs={logs} today={today} lessons={lessons} totals={totals} />
+      </div>
     </div>
   );
 }

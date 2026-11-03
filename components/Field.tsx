@@ -17,7 +17,9 @@ type Props = {
   as?: 'input' | 'textarea' | 'select';
   /** select only */
   options?: readonly Option[];
+  /** select: the empty first option; input/textarea: the placeholder text */
   placeholder?: string;
+  maxLength?: number;
   /** textarea only: the N in the "count/N" counter */
   maxCount?: number;
   /** textarea only: change to remount (re-sync the counter) after a successful save */
@@ -42,6 +44,7 @@ export function Field({
   placeholder,
   maxCount,
   resetKey = 0,
+  maxLength,
 }: Props) {
   const id = `${idPrefix}${name}`;
   const errorId = `${id}-error`;
@@ -61,6 +64,7 @@ export function Field({
           maxCount={maxCount ?? 500}
           invalid={Boolean(error)}
           describedBy={describedBy}
+          placeholder={placeholder}
         />
       ) : as === 'select' ? (
         <select
@@ -89,6 +93,8 @@ export function Field({
           required={required}
           max={max}
           inputMode={inputMode}
+          placeholder={placeholder}
+          maxLength={maxLength}
           aria-invalid={error ? true : undefined}
           aria-describedby={describedBy}
           className={CONTROL}

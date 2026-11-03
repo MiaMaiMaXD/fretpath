@@ -7,21 +7,33 @@ import { getAudioContext } from '@/lib/audio/strings';
 
 const LOOKAHEAD_MS = 100;
 const TICK_MS = 25;
-const BTN = 'rounded border border-neutral-400 px-3 py-1 disabled:opacity-50';
+const STEP = 5;
+
+function tempoName(bpm: number): string {
+  if (bpm < 70) return 'ช้า';
+  if (bpm < 110) return 'ปานกลาง';
+  if (bpm < 150) return 'ค่อนข้างเร็ว';
+  return 'เร็ว';
+}
 
 /** Click timing comes from the AudioContext clock; the 25 ms interval only schedules the next 100 ms of clicks. */
 export function Metronome() {
   const supported = useAudioSupported();
-  const [bpm, setBpm] = useState(100);
-  const [draft, setDraft] = useState('100');
+  const [bpm, setBpm] = useState(80);
+  const [draft, setDraft] = useState('80');
   const [running, setRunning] = useState(false);
+  const [beat, setBeat] = useState(-1);
   const bpmRef = useRef(bpm);
   const timer = useRef<ReturnType<typeof setInterval> | null>(null);
+  const lights = useRef<ReturnType<typeof setTimeout>[]>([]);
 
   const stop = useCallback(() => {
     if (timer.current !== null) clearInterval(timer.current);
     timer.current = null;
+    lights.current.forEach(clearTimeout);
+    lights.current = [];
     setRunning(false);
+    setBeat(-1);
   }, []);
 
   useEffect(() => stop, [stop]);
@@ -37,15 +49,19 @@ export function Metronome() {
     const ctx = getAudioContext();
     if (!ctx || timer.current !== null) return;
     let nextTime = ctx.currentTime + 0.05;
-    let beat = 0;
+    let next = 0;
     const pump = () => {
       // after a throttled/backgrounded tab, skip missed beats instead of firing them all at once
       if (nextTime < ctx.currentTime) nextTime = ctx.currentTime + 0.05;
       const horizon = ctx.currentTime + LOOKAHEAD_MS / 1000;
       while (nextTime < horizon) {
-        scheduleClicks(ctx, bpmRef.current, nextTime, 1, beat);
+        scheduleClicks(ctx, bpmRef.current, nextTime, 1, next);
+        // Light the beat indicator when the click actually sounds (visual only, so setTimeout precision is fine).
+        const b = next;
+        const t = setTimeout(() => setBeat(b), Math.max(0, (nextTime - ctx.currentTime) * 1000));
+        lights.current = [...lights.current.slice(-8), t];
         nextTime += beatIntervalMs(bpmRef.current) / 1000;
-        beat = (beat + 1) % BEATS_PER_BAR;
+        next = (next + 1) % BEATS_PER_BAR;
       }
     };
     pump();
@@ -54,11 +70,50 @@ export function Metronome() {
   }
 
   return (
-    <section aria-label="เมโทรนอม" className="flex flex-col gap-2 rounded border border-neutral-300 p-3 dark:border-neutral-700">
-      <h2 className="text-xl font-semibold">เมโทรนอม</h2>
-      <div className="flex flex-wrap items-center gap-3">
-        <label className="flex items-center gap-2">
-          <span>จังหวะ (BPM)</span>
+    <section aria-labelledby="metro-title" className="metro">
+      <div className="metro-head">
+        <h3 id="metro-title">
+          <span aria-hidden="true">♫ </span>เมโทรนอม (Metronome): <b>{bpm} BPM</b>
+        </h3>
+        {running ? (
+          <button type="button" className="metro-toggle on" onClick={stop}>
+            หยุดจังหวะเคาะ
+          </button>
+        ) : (
+          <button type="button" className="metro-toggle" disabled={!supported} onClick={start}>
+            เปิดจังหวะเคาะ
+          </button>
+        )}
+      </div>
+
+      <div className="beats" aria-hidden="true">
+        {Array.from({ length: BEATS_PER_BAR }, (_, i) => (
+          <span key={i} className={`${i === 0 ? 'accent ' : ''}${beat === i ? 'lit' : ''}`} />
+        ))}
+      </div>
+
+      <input
+        type="range"
+        className="metro-range"
+        aria-label="จังหวะ (BPM)"
+        min={MIN_BPM}
+        max={MAX_BPM}
+        value={bpm}
+        style={{ '--fill': `${((bpm - MIN_BPM) / (MAX_BPM - MIN_BPM)) * 100}%` } as React.CSSProperties}
+        onChange={(e) => commit(Number(e.target.value))}
+      />
+      <div className="metro-scale" aria-hidden="true">
+        <span>{MIN_BPM} BPM (ช้า)</span>
+        <span>{tempoName(bpm)}</span>
+        <span>{MAX_BPM} BPM (เร็ว)</span>
+      </div>
+
+      <div className="metro-fine">
+        <button type="button" aria-label={`ลดจังหวะ ${STEP} BPM`} onClick={() => commit(bpm - STEP)} disabled={bpm <= MIN_BPM}>
+          −
+        </button>
+        <label>
+          <span className="sr-only">จังหวะ (BPM)</span>
           <input
             type="number"
             min={MIN_BPM}
@@ -74,30 +129,13 @@ export function Metronome() {
               }
             }}
             onBlur={() => commit(Number(draft))}
-            className="w-24 rounded border border-neutral-400 px-2 py-1"
           />
+          <span aria-hidden="true">BPM</span>
         </label>
-        <label className="flex flex-1 items-center gap-2">
-          <span className="sr-only">จังหวะ (BPM)</span>
-          <input
-            type="range"
-            min={MIN_BPM}
-            max={MAX_BPM}
-            value={bpm}
-            onChange={(e) => commit(Number(e.target.value))}
-            className="min-w-40 flex-1"
-          />
-        </label>
+        <button type="button" aria-label={`เพิ่มจังหวะ ${STEP} BPM`} onClick={() => commit(bpm + STEP)} disabled={bpm >= MAX_BPM}>
+          +
+        </button>
       </div>
-      {running ? (
-        <button type="button" className={`${BTN} w-fit`} onClick={stop}>
-          หยุดเมโทรนอม
-        </button>
-      ) : (
-        <button type="button" className={`${BTN} w-fit`} disabled={!supported} onClick={start}>
-          เริ่มเมโทรนอม
-        </button>
-      )}
       {!supported ? <p role="status">เบราว์เซอร์นี้ไม่รองรับเสียง</p> : null}
     </section>
   );

@@ -33,7 +33,7 @@ test('TC-PRC-03 minutes boundaries 0/1/600/601 @regression', async ({ memberPage
     await practice.fill({ minutes: bad, activity: 'song' });
     await practice.save();
     await expect(memberPage.getByText(MINUTES_ERROR)).toBeVisible();
-    await expect(memberPage.getByLabel('จำนวนนาที')).toHaveValue(String(bad));
+    await expect(memberPage.getByLabel('เวลาที่ฝึก (นาที)')).toHaveValue(String(bad));
   }
   for (const [i, good] of [1, 600].entries()) {
     await practice.fill({ minutes: good, activity: 'song' });
@@ -49,7 +49,7 @@ test.describe('another browser timezone', () => {
   test('TC-PRC-04 date defaults to Bangkok today in another browser timezone @smoke @regression', async ({ memberPage }) => {
     const practice = new PracticePage(memberPage);
     await practice.goto();
-    const date = memberPage.getByLabel('วันที่');
+    const date = memberPage.getByLabel('วันที่ฝึกซ้อม');
     await expect(date).toHaveValue(bangkokDate(0));
     await expect(date).toHaveAttribute('max', bangkokDate(0));
   });
@@ -58,7 +58,7 @@ test.describe('another browser timezone', () => {
 test('TC-PRC-05 future date rejected even if the max attribute is bypassed @regression @security', async ({ memberPage }) => {
   const practice = new PracticePage(memberPage);
   await practice.goto();
-  await memberPage.getByLabel('วันที่').evaluate((el) => el.removeAttribute('max'));
+  await memberPage.getByLabel('วันที่ฝึกซ้อม').evaluate((el) => el.removeAttribute('max'));
   await practice.fill({ date: bangkokDate(1), minutes: 20, activity: 'other' });
   await practice.save();
   await expect(memberPage.getByText('วันที่ต้องไม่เป็นวันในอนาคต')).toBeVisible();
@@ -71,7 +71,7 @@ test('TC-PRC-06 note longer than 500 characters is rejected @regression', async 
   await practice.fill({ minutes: 20, activity: 'other', note: 'ก'.repeat(501) });
   await expect(memberPage.getByText('501/500')).toBeVisible();
   await practice.save();
-  await expect(memberPage.getByText('บันทึกสั้นต้องไม่เกิน 500 ตัวอักษร')).toBeVisible();
+  await expect(memberPage.getByText('บันทึกช่วยจำต้องไม่เกิน 500 ตัวอักษร')).toBeVisible();
   await expect(practice.rows()).toHaveCount(0);
 
   await practice.fill({ minutes: 20, activity: 'other', note: 'ก'.repeat(500) });
@@ -80,17 +80,17 @@ test('TC-PRC-06 note longer than 500 characters is rejected @regression', async 
   await expect(memberPage.getByText('0/500')).toBeVisible();
 });
 
-test('TC-PRC-07 timer fills minutes with "ใช้เวลานี้" @smoke @regression', async ({ memberPage }) => {
+test('TC-PRC-07 timer fills minutes with "นำเวลาไปกรอกฟอร์ม" @smoke @regression', async ({ memberPage }) => {
   const practice = new PracticePage(memberPage);
   await memberPage.clock.install();
   await practice.goto();
 
-  await memberPage.getByRole('button', { name: 'เริ่ม', exact: true }).click();
+  await memberPage.getByRole('button', { name: 'เริ่มจับเวลา' }).click();
   await memberPage.clock.fastForward('05:20');
-  await memberPage.getByRole('button', { name: 'หยุด', exact: true }).click();
-  await expect(memberPage.getByText('05:20')).toBeVisible();
-  await memberPage.getByRole('button', { name: 'ใช้เวลานี้', exact: true }).click();
-  await expect(memberPage.getByLabel('จำนวนนาที')).toHaveValue('5');
+  await memberPage.getByRole('button', { name: 'หยุดชั่วคราว' }).click();
+  await expect(memberPage.getByTestId('timer-display')).toHaveText('05:20');
+  await memberPage.getByRole('button', { name: 'นำเวลาไปกรอกฟอร์ม' }).click();
+  await expect(memberPage.getByLabel('เวลาที่ฝึก (นาที)')).toHaveValue('5');
 });
 
 test('TC-PRC-08 edit and delete own log @regression', async ({ memberPage }) => {
@@ -102,11 +102,11 @@ test('TC-PRC-08 edit and delete own log @regression', async ({ memberPage }) => 
 
   const row = practice.rows().first();
   await row.getByRole('button', { name: 'แก้ไข', exact: true }).click();
-  await row.getByLabel('จำนวนนาที').fill('45');
+  await row.getByLabel('เวลาที่ฝึก (นาที)').fill('45');
   await row.getByRole('button', { name: 'บันทึก', exact: true }).click();
   await expect(practice.rows().first()).toContainText('45 นาที');
 
-  await practice.rows().first().getByRole('button', { name: 'ลบ', exact: true }).click();
+  await practice.rows().first().getByRole('button', { name: 'ลบรายการ' }).click();
   const dialog = memberPage.getByRole('dialog', { name: 'ลบบันทึกนี้?' });
   await expect(dialog).toBeVisible();
   await expect(dialog.getByRole('button', { name: 'ยกเลิก', exact: true })).toBeFocused();
@@ -114,7 +114,7 @@ test('TC-PRC-08 edit and delete own log @regression', async ({ memberPage }) => 
   await expect(dialog).toHaveCount(0);
   await expect(practice.rows()).toHaveCount(1);
 
-  const deleteBtn = practice.rows().first().getByRole('button', { name: 'ลบ', exact: true });
+  const deleteBtn = practice.rows().first().getByRole('button', { name: 'ลบรายการ' });
   await expect(deleteBtn).toBeFocused();
   await deleteBtn.click();
   await expect(dialog).toBeVisible();
@@ -122,7 +122,50 @@ test('TC-PRC-08 edit and delete own log @regression', async ({ memberPage }) => 
   await expect(dialog).toHaveCount(0);
   await expect(deleteBtn).toBeFocused();
 
-  await practice.rows().first().getByRole('button', { name: 'ลบ', exact: true }).click();
+  await practice.rows().first().getByRole('button', { name: 'ลบรายการ' }).click();
   await memberPage.getByRole('dialog').getByRole('button', { name: 'ลบ', exact: true }).click();
   await expect(practice.rows()).toHaveCount(0);
+});
+
+test('TC-PRC-11 topic and feeling are saved, totals add up, search filters the notebook @regression', async ({ memberPage, member, memberDb }) => {
+  const seed = await memberDb.from('practice_logs').insert([
+    { user_id: member.id, practiced_on: bangkokDate(-2), minutes: 20, activity: 'tuning', topic: 'ตั้งสายกีตาร์', note: 'จำชื่อสาย E-A-D-G-B-E ได้แล้ว' },
+    { user_id: member.id, practiced_on: bangkokDate(-1), minutes: 35, activity: 'chords', feeling: 'sore' },
+  ]);
+  expect(seed.error).toBeNull();
+
+  const practice = new PracticePage(memberPage);
+  await practice.goto();
+  await expect(memberPage.getByTestId('practice-totals')).toHaveText('รวมทั้งหมด 2 ครั้ง • สะสม 55 นาที');
+  // a log without a topic falls back to the activity name
+  await expect(practice.rows().filter({ hasText: 'ฝึกคอร์ด' })).toContainText('ยังเจ็บนิ้ว/ต้องซ้อมเพิ่ม');
+
+  await practice.fill({ minutes: 30, activity: 'chords', topic: 'เปลี่ยนคอร์ด G - Em - C - D', feeling: 'great', note: 'ใช้ Anchor Finger' });
+  await practice.save();
+  await expect(practice.rows()).toHaveCount(3);
+  const first = practice.rows().first();
+  await expect(first.getByRole('heading', { name: 'เปลี่ยนคอร์ด G - Em - C - D' })).toBeVisible();
+  await expect(first).toContainText('คล่องขึ้นมาก');
+  await expect(first).toContainText('ใช้ Anchor Finger');
+  await expect(memberPage.getByTestId('practice-totals')).toHaveText('รวมทั้งหมด 3 ครั้ง • สะสม 85 นาที (1 ชม. 25 นาที)');
+  await expect(practice.form().getByLabel('วันนี้ฝึกอะไรไปบ้าง?')).toHaveValue('');
+
+  const search = practice.history().getByRole('searchbox', { name: 'ค้นหาบันทึกการซ้อม' });
+  await search.fill('สาย');
+  await expect(practice.rows()).toHaveCount(1);
+  await expect(practice.rows().first()).toContainText('ตั้งสายกีตาร์');
+  await expect(practice.history().getByRole('status')).toHaveText('พบ 1 รายการ');
+  await search.fill('ไม่มีคำนี้แน่นอน');
+  await expect(practice.rows()).toHaveCount(0);
+  await expect(practice.history().getByRole('status')).toContainText('ไม่พบรายการ');
+  await search.fill('');
+  await expect(practice.rows()).toHaveCount(3);
+});
+
+test('TC-PRC-12 empty notebook shows a hint and no search box @regression', async ({ memberPage }) => {
+  const practice = new PracticePage(memberPage);
+  await practice.goto();
+  await expect(memberPage.getByTestId('practice-empty')).toBeVisible();
+  await expect(memberPage.getByTestId('practice-totals')).toHaveText('รวมทั้งหมด 0 ครั้ง • สะสม 0 นาที');
+  await expect(memberPage.getByRole('searchbox')).toHaveCount(0);
 });

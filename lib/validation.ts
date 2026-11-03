@@ -36,14 +36,15 @@ export function validateProfile(input: { displayName: string; weeklyGoalMinutes:
 }
 
 export function validatePractice(
-  input: { practicedOn: string; minutes: string; activity: string; note: string },
+  input: { practicedOn: string; minutes: string; activity: string; note: string; topic?: string },
   today: string,
 ): FieldErrors {
   const errors: FieldErrors = {};
   if (!isRealDate(input.practicedOn)) errors.practicedOn = 'กรุณาเลือกวันที่';
   else if (input.practicedOn > today) errors.practicedOn = thaiError('FUTURE_DATE');
   if (!intInRange(input.minutes, 1, 600)) errors.minutes = 'จำนวนนาทีต้องเป็นจำนวนเต็ม 1–600';
-  if (input.activity === '') errors.activity = 'กรุณาเลือกหัวข้อที่ฝึก';
-  if (len(input.note) > 500) errors.note = 'บันทึกสั้นต้องไม่เกิน 500 ตัวอักษร';
+  if (input.activity === '') errors.activity = 'กรุณาเลือกหมวดที่ฝึก';
+  if (len(input.topic ?? '') > 120) errors.topic = 'หัวข้อต้องไม่เกิน 120 ตัวอักษร';
+  if (len(input.note) > 500) errors.note = 'บันทึกช่วยจำต้องไม่เกิน 500 ตัวอักษร';
   return errors;
 }

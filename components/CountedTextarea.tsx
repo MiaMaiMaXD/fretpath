@@ -9,9 +9,10 @@ type Props = {
   maxCount: number;
   invalid?: boolean;
   describedBy?: string;
+  placeholder?: string;
 };
 
-export function CountedTextarea({ id, name, defaultValue = '', maxCount, invalid, describedBy }: Props) {
+export function CountedTextarea({ id, name, defaultValue = '', maxCount, invalid, describedBy, placeholder }: Props) {
   const [count, setCount] = useState(() => [...defaultValue].length);
   return (
     <>
@@ -20,6 +21,7 @@ export function CountedTextarea({ id, name, defaultValue = '', maxCount, invalid
         name={name}
         defaultValue={defaultValue}
         rows={3}
+        placeholder={placeholder}
         aria-invalid={invalid ? true : undefined}
         aria-describedby={describedBy}
         onChange={(e) => setCount([...e.target.value].length)}
