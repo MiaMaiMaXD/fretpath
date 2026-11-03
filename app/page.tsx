@@ -1,21 +1,236 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
+import { IBM_Plex_Sans_Thai } from 'next/font/google';
+import { preload } from 'react-dom';
+import { TryFretboard } from '@/components/home/TryFretboard';
+import './home.css';
+
+const plexThai = IBM_Plex_Sans_Thai({
+  variable: '--font-plex-thai',
+  weight: ['400', '500', '600', '700'],
+  subsets: ['thai', 'latin'],
+});
+
+export const metadata: Metadata = {
+  title: 'FretPath — เรียนกีตาร์จากศูนย์ ทีละก้าว',
+};
+
+const PAINS = [
+  ['ดูคลิปสอนเยอะมาก แต่ไม่รู้ควรเริ่มอันไหนก่อน', 'บทเรียนเรียงลำดับไว้ให้แล้ว ทำตามทีละบท บทถัดไปจะเปิดเมื่อคุณพร้อม'],
+  ['กดสายแล้วเจ็บนิ้ว เสียงก็บอด', 'บทที่ 2 สอนวิธีวางนิ้วให้ใช้แรงน้อยและเสียงใส ปลายนิ้วจะชินภายในสองสามสัปดาห์'],
+  ['คอร์ด F ยากจนอยากเลิก', 'เราเก็บคอร์ด F ไว้บทสุดท้าย ตอนนั้นนิ้วคุณแข็งแรงพอแล้ว'],
+  ['ฝึกทุกวันแต่ไม่รู้ว่าเก่งขึ้นจริงไหม', 'มีแบบทดสอบท้ายบทและบันทึกเวลาฝึก ดูความก้าวหน้าของตัวเองได้ในหน้าเดียว'],
+];
+
+const STEPS = [
+  ['รู้จักกีตาร์และตั้งสาย', 'ส่วนต่าง ๆ ของกีตาร์ ชื่อสายทั้ง 6 และการตั้งเสียงให้ตรง'],
+  ['คอร์ดแรกของคุณ', 'วางนิ้วให้เสียงใส เริ่มจาก Em, Am, C, D'],
+  ['เปลี่ยนคอร์ดให้ลื่น', 'คอร์ดยอดฮิต G, C, D, Em และเทคนิคย้ายนิ้วให้ทัน'],
+  ['ดีดให้เข้าจังหวะ', 'รูปแบบการดีดพื้นฐานและการนับจังหวะ 4/4'],
+  ['คอร์ด F และเพลงแรก', 'ทาบคอร์ดเบื้องต้น แล้วรวมทุกอย่างเป็นเพลงเต็มเพลง'],
+];
+
+const FAQ = [
+  ['ต้องมีกีตาร์ของตัวเองไหม', 'ต้องมีครับ แนะนำกีตาร์โปร่งสายเหล็กขนาดมาตรฐานสำหรับเริ่มต้น ไม่จำเป็นต้องเป็นรุ่นแพง ขอแค่ตั้งสายได้ตรงและสายไม่สูงจากคอจนกดยาก'],
+  ['ฟรีจริงไหม', 'ฟรีทั้ง 5 บท รวมแบบทดสอบและระบบบันทึกการฝึก แค่สมัครสมาชิกด้วยอีเมล'],
+  ['ต้องฝึกวันละกี่นาที นานแค่ไหนถึงเล่นเพลงได้', 'วันละ 15–20 นาทีสม่ำเสมอดีกว่าฝึกนาน ๆ แค่สัปดาห์ละครั้ง ความเร็วขึ้นกับแต่ละคน หน้า Dashboard จะช่วยให้คุณเห็นว่าฝึกไปแล้วเท่าไหร่'],
+  ['คนถนัดซ้ายเรียนได้ไหม', 'ได้ครับ หลักการวางนิ้วและการดีดเหมือนกัน แค่ใช้กีตาร์สำหรับคนถนัดซ้าย หรือสลับสายกีตาร์ปกติ แล้วมองภาพในบทเรียนแบบกลับด้าน'],
+  ['เจ็บปลายนิ้วตอนกดสาย ทำยังไงดี', 'เป็นเรื่องปกติของสองสามสัปดาห์แรก พักเมื่อเจ็บ ฝึกสั้นแต่บ่อย และกดด้วยปลายนิ้วใกล้เฟรต จะใช้แรงน้อยลงมาก บทที่ 2 อธิบายวิธีนี้ละเอียด'],
+];
 
 export default function Home() {
+  // The hero photo is a CSS background; preload it so it is not discovered late (LCP).
+  preload('/images/hero-guitar.jpg', { as: 'image', fetchPriority: 'high' });
+
   return (
-    <main className="mx-auto flex w-full max-w-xl flex-1 flex-col items-center justify-center gap-6 p-4 text-center">
-      <h1 className="text-3xl font-semibold">FretPath</h1>
-      <p className="text-lg">คอร์สกีตาร์พื้นฐาน เรียนทีละก้าว พร้อมแบบทดสอบและบันทึกการฝึก</p>
-      <div className="flex gap-3">
-        <Link
-          href="/signup"
-          className="rounded bg-neutral-900 px-4 py-2 font-medium text-white dark:bg-neutral-100 dark:text-neutral-900"
-        >
-          เริ่มเรียนฟรี
-        </Link>
-        <Link href="/login" className="rounded border border-neutral-400 px-4 py-2 font-medium">
-          เข้าสู่ระบบ
-        </Link>
-      </div>
-    </main>
+    <div className={`fp-home ${plexThai.variable}`}>
+      <header className="site-header">
+        <div className="wrap">
+          <Link href="/" className="logo" data-testid="home-logo" aria-label="FretPath หน้าแรก">
+            <svg viewBox="0 0 26 26" aria-hidden="true">
+              <path d="M13 2 4 9.5v9L13 24l9-5.5v-9z" fill="none" stroke="#e38b12" strokeWidth="2.2" strokeLinejoin="round" />
+              <path d="M9 11h8M9 15h8" stroke="#fff" strokeWidth="2" strokeLinecap="round" />
+            </svg>
+            FretPath
+          </Link>
+          <nav className="nav" aria-label="เมนูหลัก">
+            <a href="#path">เส้นทางการเรียน</a>
+            <a href="#how">เรียนยังไง</a>
+            <a href="#faq">คำถามที่พบบ่อย</a>
+          </nav>
+          <div className="header-actions">
+            <Link href="/login" className="login" data-testid="header-login">
+              เข้าสู่ระบบ
+            </Link>
+            <Link href="/signup" className="btn btn-primary" data-testid="header-signup">
+              สมัครฟรี
+            </Link>
+          </div>
+        </div>
+      </header>
+
+      <main>
+        <section className="hero" aria-labelledby="hero-title">
+          <div className="banner">
+            <div className="wrap">
+              <div className="hero-text">
+                <h1 id="hero-title">
+                  ไม่เคยจับกีตาร์มาก่อน?
+                  <br />
+                  ดีเลย เริ่มจากศูนย์ไปด้วยกัน
+                </h1>
+                <p className="lede">
+                  5 บทเรียน ตั้งแต่จับกีตาร์ครั้งแรก จนเล่นเพลงแรกได้จบเพลง ฝึกวันละ 15 นาที
+                  มีแบบทดสอบบอกว่าพร้อมไปบทถัดไปหรือยัง
+                </p>
+                <div className="hero-ctas">
+                  <Link href="/signup" className="btn btn-primary" data-testid="hero-signup">
+                    สมัครฟรี เริ่มบทที่ 1
+                  </Link>
+                  <a href="#path" className="btn btn-ghost" data-testid="hero-see-path">
+                    ดูเส้นทางการเรียน
+                  </a>
+                </div>
+                <ul className="assurances">
+                  <li>ฟรีทั้งหมด</li>
+                  <li>เรียนบนมือถือได้</li>
+                  <li>ไม่ต้องอ่านโน้ตเป็น</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <div className="wrap">
+            <div className="try" data-testid="try-fretboard">
+              <div className="try-head">
+                <h2 id="try-title">ลองดีดดูก่อนเลย</h2>
+                <p>แตะที่สายเพื่อดีดทีละสาย หรือเลือกคอร์ดแล้วกดดีด</p>
+              </div>
+              <TryFretboard labelledBy="try-title" />
+            </div>
+          </div>
+        </section>
+
+        <section className="block" aria-labelledby="pains-title">
+          <div className="wrap">
+            <h2 id="pains-title">เคยเป็นแบบนี้ไหม</h2>
+            <p className="intro">ครูเจอคำถามเหล่านี้จากมือใหม่แทบทุกคน และนี่คือเหตุผลที่บทเรียนเรียงมาแบบนี้</p>
+            <div className="pains">
+              {PAINS.map(([q, a]) => (
+                <div className="pain" key={q}>
+                  <q>{q}</q>
+                  <p>{a}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="block path-sec" id="path" aria-labelledby="path-title">
+          <div className="wrap">
+            <h2 id="path-title">จากศูนย์ ถึงเพลงแรก ใน 5 บท</h2>
+            <p className="intro">
+              แต่ละบทจบด้วยแบบทดสอบสั้น ๆ ทำได้ 60% ขึ้นไป บทถัดไปจะเปิดให้ทันที สอบใหม่ได้ไม่จำกัด
+            </p>
+            <ol className="path" data-testid="learning-path">
+              {STEPS.map(([title, desc], i) => (
+                <li className="step" key={title}>
+                  <span className="dot">{i + 1}</span>
+                  <h3>{title}</h3>
+                  <p>{desc}</p>
+                </li>
+              ))}
+              <li className="step goal">
+                <span className="dot" aria-hidden="true">
+                  ♪
+                </span>
+                <h3>เล่นเพลงแรกได้จบเพลง</h3>
+                <p>เป้าหมายของคอร์สนี้</p>
+              </li>
+            </ol>
+          </div>
+        </section>
+
+        <section className="block" id="how" aria-labelledby="how-title">
+          <div className="wrap">
+            <h2 id="how-title">เรียน ทดสอบ แล้วฝึก</h2>
+            <p className="intro">ทุกบทใช้จังหวะเดียวกัน คุณจะรู้เสมอว่าตอนนี้อยู่ตรงไหน และต้องทำอะไรต่อ</p>
+            <div className="how">
+              <figure>
+                <div className="shot" aria-hidden="true">
+                  <div className="vid" />
+                  <div className="sk" style={{ width: '70%' }} />
+                  <div className="sk" style={{ width: '90%' }} />
+                </div>
+                <figcaption>
+                  <h3>เรียนจากวิดีโอและภาพ</h3>
+                  <p>ดูครูสาธิตช้า ๆ อ่านสรุปสั้น และกดฟังเสียงคอร์ดจากหน้าบทเรียนได้เลย</p>
+                </figcaption>
+              </figure>
+              <figure>
+                <div className="shot" aria-hidden="true">
+                  <div className="sk title" style={{ width: '60%' }} />
+                  <div className="opt">G</div>
+                  <div className="opt ok">✓ Em</div>
+                  <div className="opt">Am</div>
+                </div>
+                <figcaption>
+                  <h3>ทำแบบทดสอบท้ายบท</h3>
+                  <p>รู้คะแนนทันที พร้อมคำอธิบายทุกข้อ ตอบผิดก็เข้าใจว่าผิดเพราะอะไร</p>
+                </figcaption>
+              </figure>
+              <figure>
+                <div className="shot" aria-hidden="true">
+                  <div className="sk title" style={{ width: '45%' }} />
+                  <div className="bars">
+                    {[35, 55, 40, 70, 60, 85, 75].map((h, i) => (
+                      <span key={i} style={{ height: `${h}%` }} />
+                    ))}
+                  </div>
+                </div>
+                <figcaption>
+                  <h3>บันทึกการฝึก ดูความก้าวหน้า</h3>
+                  <p>จับเวลาฝึกในเว็บ แล้วดูกราฟนาทีฝึกกับคะแนนแต่ละบทใน Dashboard</p>
+                </figcaption>
+              </figure>
+            </div>
+          </div>
+        </section>
+
+        {/* Teacher section and learner quotes are held back until real, approved content exists. */}
+
+        <section className="block faq-sec" id="faq" aria-labelledby="faq-title">
+          <div className="wrap">
+            <h2 id="faq-title">คำถามที่พบบ่อย</h2>
+            <div className="faq" data-testid="faq">
+              {FAQ.map(([q, a]) => (
+                <details key={q}>
+                  <summary>{q}</summary>
+                  <p>{a}</p>
+                </details>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="final" aria-labelledby="final-title">
+          <div className="wrap">
+            <h2 id="final-title">กีตาร์ของคุณรออยู่</h2>
+            <p>สมัครวันนี้ แล้วเริ่มบทที่ 1 ได้ทันที</p>
+            <Link href="/signup" className="btn btn-primary" data-testid="final-signup">
+              สมัครฟรี เริ่มบทที่ 1
+            </Link>
+          </div>
+        </section>
+      </main>
+
+      <footer>
+        <div className="wrap">
+          <a href="#path">เส้นทางการเรียน</a>
+          <a href="#faq">คำถามที่พบบ่อย</a>
+          <span className="copy">FretPath · โปรเจกต์จบการศึกษา</span>
+        </div>
+      </footer>
+    </div>
   );
 }
