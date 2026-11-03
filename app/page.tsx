@@ -1,15 +1,9 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { IBM_Plex_Sans_Thai } from 'next/font/google';
 import { preload } from 'react-dom';
 import { TryFretboard } from '@/components/home/TryFretboard';
+import { plexThai } from '@/lib/fonts';
 import './home.css';
-
-const plexThai = IBM_Plex_Sans_Thai({
-  variable: '--font-plex-thai',
-  weight: ['400', '500', '600', '700'],
-  subsets: ['thai', 'latin'],
-});
 
 export const metadata: Metadata = {
   title: 'FretPath — เรียนกีตาร์จากศูนย์ ทีละก้าว',

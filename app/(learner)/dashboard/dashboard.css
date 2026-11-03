@@ -1,0 +1,92 @@
+/* Dashboard body, ported from dashboard-mockup.html. Scoped under .fp-dash.
+   Cards set their own colours so the page reads correctly in both light and dark mode. */
+
+.fp-dash { line-height: 1.6; }
+.fp-dash .greet { font-size: clamp(1.5rem, 3vw, 1.9rem); font-weight: 700; margin: 0 0 18px; letter-spacing: -.01em; }
+.fp-dash .btn { display: inline-flex; align-items: center; justify-content: center; gap: .4em; font: inherit; font-weight: 600; border: 0; cursor: pointer; text-decoration: none; border-radius: 999px; padding: .65em 1.4em; white-space: nowrap; }
+.fp-dash .btn-primary { background: var(--amber); color: #1a1205; }
+.fp-dash .btn-primary:hover { background: var(--amber-hi); }
+.fp-dash .btn-quiet { color: var(--amber-ink); font-weight: 600; text-decoration: none; white-space: nowrap; }
+.fp-dash .btn-quiet:hover, .fp-dash .link:hover { text-decoration: underline; }
+.fp-dash .link { color: var(--amber-ink); font-weight: 600; text-decoration: none; }
+
+/* continue card */
+.fp-dash .continue { background: var(--night); color: #fff; border-radius: var(--radius); padding: 26px 28px; display: grid; grid-template-columns: 1fr auto; gap: 18px 28px; align-items: center; }
+.fp-dash .continue .kicker { color: #94a3b8; font-size: .95rem; margin: 0; }
+.fp-dash .continue h2 { margin: 2px 0 14px; font-size: 1.4rem; line-height: 1.4; font-weight: 700; }
+.fp-dash .progress { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.fp-dash .pips { display: flex; gap: 6px; list-style: none; margin: 0; padding: 0; }
+.fp-dash .pips li { width: 34px; height: 8px; border-radius: 4px; background: #334155; }
+.fp-dash .pips li.done { background: var(--amber); }
+.fp-dash .pips li.now { background: repeating-linear-gradient(90deg, var(--amber) 0 4px, #334155 4px 8px); }
+.fp-dash .progress span { color: #cbd5e1; font-size: .93rem; }
+.fp-dash .continue .btn { font-size: 1.05rem; padding: .8em 1.8em; }
+
+/* stats */
+.fp-dash .stats { display: grid; grid-template-columns: 1fr 1fr 1.4fr; gap: 16px; margin: 16px 0; }
+.fp-dash .stat, .fp-dash .card { background: var(--surface); color: var(--ink); border: 1px solid var(--line); border-radius: var(--radius); }
+.fp-dash .stat { padding: 18px 20px; }
+.fp-dash .stat h3 { margin: 0 0 6px; font-size: .93rem; font-weight: 500; color: var(--muted); }
+.fp-dash .stat .value { font-size: 2rem; font-weight: 700; line-height: 1.2; font-variant-numeric: tabular-nums; }
+.fp-dash .stat .value small { font-size: 1rem; font-weight: 500; color: var(--muted); }
+.fp-dash .stat .sub { margin: 4px 0 0; font-size: .88rem; color: var(--muted); }
+.fp-dash .meter { height: 8px; background: #eef2f6; border-radius: 4px; margin-top: 10px; overflow: hidden; }
+.fp-dash .meter i { display: block; height: 100%; background: var(--bar); border-radius: 4px; }
+
+/* charts */
+.fp-dash .charts { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; }
+.fp-dash .card { padding: 20px 22px; position: relative; }
+.fp-dash .card-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
+.fp-dash .card h2 { font-size: 1.05rem; margin: 0; font-weight: 700; }
+.fp-dash .card-sub { margin: 2px 0 0; font-size: .88rem; color: var(--muted); }
+.fp-dash .chart-canvas { position: relative; }
+.fp-dash .chart svg { display: block; width: 100%; height: auto; overflow: visible; }
+.fp-dash .chart svg text { font-family: inherit; pointer-events: none; }
+.fp-dash .bar { fill: var(--bar); pointer-events: none; }
+.fp-dash .bar.today { fill: var(--amber-ink); }
+.fp-dash .hit { fill: transparent; }
+.fp-dash .tooltip { position: absolute; pointer-events: none; background: var(--night); color: #fff; border-radius: 8px; padding: 6px 10px; font-size: .85rem; line-height: 1.35; white-space: nowrap; transform: translate(-50%, calc(-100% - 10px)); opacity: 0; transition: opacity .1s; }
+.fp-dash .tooltip strong { display: block; font-size: 1rem; }
+.fp-dash .tooltip span { color: #cbd5e1; }
+.fp-dash .tooltip.show { opacity: 1; }
+.fp-dash .table-toggle { margin-top: 8px; font-size: .88rem; color: var(--muted); }
+.fp-dash .table-toggle summary { cursor: pointer; color: var(--amber-ink); font-weight: 500; width: max-content; }
+.fp-dash .table-toggle table { border-collapse: collapse; margin-top: 8px; width: 100%; }
+.fp-dash .table-toggle th, .fp-dash .table-toggle td { text-align: left; padding: 4px 8px; border-bottom: 1px solid var(--line); font-variant-numeric: tabular-nums; }
+
+/* empty states */
+.fp-dash .empty { display: flex; flex-direction: column; align-items: flex-start; gap: 10px; padding: 26px 4px 8px; color: var(--muted); }
+.fp-dash .empty svg { width: 56px; height: 56px; }
+.fp-dash .empty p { margin: 0; max-width: 30em; }
+
+/* recent practice table */
+.fp-dash .recent { margin-top: 16px; }
+.fp-dash .log { width: 100%; border-collapse: collapse; }
+.fp-dash .log th { text-align: left; font-size: .85rem; font-weight: 600; color: var(--muted); padding: 10px 12px; border-bottom: 2px solid var(--line); white-space: nowrap; }
+.fp-dash .log td { padding: 12px; border-bottom: 1px solid var(--line); vertical-align: top; overflow-wrap: anywhere; }
+.fp-dash .log tbody tr:last-child td { border-bottom: 0; }
+.fp-dash .log .date { color: var(--muted); font-size: .93rem; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.fp-dash .log .what small { display: block; color: var(--faint); font-size: .85rem; }
+.fp-dash .log .mins { font-weight: 600; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.fp-dash .log .none { color: var(--faint); }
+
+@media (max-width: 900px) {
+  .fp-dash .stats { grid-template-columns: 1fr 1fr; }
+  .fp-dash .stats .stat:last-child { grid-column: 1 / -1; }
+  .fp-dash .charts { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 560px) {
+  .fp-dash .continue { grid-template-columns: 1fr; padding: 22px; }
+  .fp-dash .continue .btn { width: 100%; }
+  .fp-dash .pips li { width: 26px; }
+  .fp-dash .stat .value { font-size: 1.6rem; }
+  /* table rows become stacked cards: date + minutes on top, topic and note below */
+  .fp-dash .log thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  .fp-dash .log tr { display: grid; grid-template-columns: 1fr auto; gap: 2px 12px; padding: 12px 0; border-bottom: 1px solid var(--line); }
+  .fp-dash .log tbody tr:last-child { border-bottom: 0; }
+  .fp-dash .log td { display: block; padding: 0; border: 0; }
+  .fp-dash .log .date { grid-column: 1; grid-row: 1; }
+  .fp-dash .log .mins { grid-column: 2; grid-row: 1; }
+  .fp-dash .log .what, .fp-dash .log .note { grid-column: 1 / -1; }
+  .fp-dash .log .note { color: var(--muted); font-size: .93rem; }
+}

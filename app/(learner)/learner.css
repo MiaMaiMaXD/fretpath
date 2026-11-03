@@ -1,0 +1,65 @@
+/* Learner app shell (header, account menu, mobile bottom nav), ported from dashboard-mockup.html.
+   Scoped under .fp-app so it never affects public or admin pages. */
+
+.fp-app {
+  --night: #0f172a;
+  --night-2: #1e293b;
+  --amber: #e38b12;
+  --amber-hi: #f5a524;
+  --amber-ink: #b45309;
+  --bar: #d97706;
+  --paper: #f5f7fa;
+  --surface: #fff;
+  --ink: #1e293b;
+  --muted: #55657d;
+  --faint: #8a97aa;
+  --line: #e2e8f0;
+  --radius: 16px;
+  --radius-sm: 10px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  font-family: var(--font-plex-thai), 'Noto Sans Thai', system-ui, sans-serif;
+}
+.fp-app .wrap { width: min(1120px, 100% - 32px); margin-inline: auto; }
+.fp-app :focus-visible { outline: 3px solid var(--amber-hi); outline-offset: 2px; border-radius: 6px; }
+.fp-app .app-main { flex: 1; padding: 32px 0 64px; }
+
+.fp-app .app-header { background: var(--night); color: #fff; position: sticky; top: 0; z-index: 20; }
+.fp-app .app-header .wrap { display: flex; align-items: center; gap: 28px; height: 64px; }
+.fp-app .logo { font-weight: 700; font-size: 1.3rem; text-decoration: none; display: flex; align-items: center; gap: .45em; color: #fff; }
+.fp-app .logo svg { width: 24px; height: 24px; }
+.fp-app .tabs { display: flex; gap: 4px; height: 100%; }
+.fp-app .tabs a { display: flex; align-items: center; padding: 0 12px; text-decoration: none; color: #cbd5e1; font-size: .95rem; border-bottom: 3px solid transparent; }
+.fp-app .tabs a:hover { color: #fff; }
+.fp-app .tabs a[aria-current='page'] { color: #fff; border-bottom-color: var(--amber); }
+
+.fp-app .user { margin-left: auto; position: relative; }
+.fp-app .user summary { list-style: none; cursor: pointer; display: flex; align-items: center; gap: 10px; padding: 6px 8px; border-radius: 999px; }
+.fp-app .user summary::-webkit-details-marker { display: none; }
+.fp-app .user summary:hover { background: var(--night-2); }
+.fp-app .avatar { width: 34px; height: 34px; border-radius: 50%; background: var(--amber); color: #1a1205; display: grid; place-items: center; font-weight: 700; object-fit: cover; }
+.fp-app .user .name { font-size: .95rem; max-width: 14em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fp-app .user .caret { color: #94a3b8; font-size: .8rem; }
+.fp-app .menu { position: absolute; right: 0; top: calc(100% + 8px); background: #fff; color: var(--ink); border-radius: var(--radius-sm); box-shadow: 0 12px 32px rgba(15, 23, 42, .18); min-width: 200px; padding: 6px; margin: 0; list-style: none; }
+.fp-app .menu a, .fp-app .menu button { display: block; width: 100%; text-align: left; padding: 9px 12px; border-radius: 8px; text-decoration: none; font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+.fp-app .menu a:hover, .fp-app .menu button:hover { background: var(--paper); }
+.fp-app .menu .sep { border-top: 1px solid var(--line); margin: 6px 0; }
+
+.fp-app .bottom-nav { display: none; }
+.fp-app .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+
+@media (max-width: 900px) {
+  .fp-app .tabs { display: none; }
+  .fp-app .user .caret { display: none; }
+  /* name stays in the accessibility tree (it is part of the menu button's name), only hidden visually */
+  .fp-app .user .name { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .fp-app .bottom-nav { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; position: fixed; bottom: 0; left: 0; right: 0; background: var(--night); z-index: 20; padding: 6px 4px calc(6px + env(safe-area-inset-bottom)); }
+  .fp-app .bottom-nav a { display: flex; flex-direction: column; align-items: center; gap: 2px; text-decoration: none; color: #94a3b8; font-size: .75rem; padding: 4px 0; }
+  .fp-app .bottom-nav a svg { width: 22px; height: 22px; }
+  .fp-app .bottom-nav a[aria-current='page'] { color: var(--amber-hi); }
+  .fp-app .app-main { padding-bottom: 110px; }
+}
+@media (max-width: 560px) {
+  .fp-app .app-main { padding-top: 22px; }
+}

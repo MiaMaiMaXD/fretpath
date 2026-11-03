@@ -10,4 +10,9 @@ export class DashboardPage {
   stat(name: 'lessons' | 'avg-score' | 'week-minutes'): Locator {
     return this.page.getByTestId(`stat-${name}`);
   }
+
+  /** "เริ่มบทที่ 1" / "เรียนต่อ" button in the dark continue card. */
+  continueButton(): Locator {
+    return this.page.getByTestId('dash-continue-btn');
+  }
 }

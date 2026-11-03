@@ -10,12 +10,11 @@ test('TC-DSH-01 new learner dashboard shows zero state @regression', async ({ me
   await expect(memberPage.getByRole('heading', { level: 1 })).toBeVisible();
   await expect(dash.stat('lessons')).toContainText('0 / 5 บท');
   await expect(dash.stat('avg-score')).toContainText('—');
-  await expect(dash.stat('week-minutes')).toContainText('0 นาที (ยังไม่ตั้งเป้าหมาย)');
-  await expect(memberPage.getByRole('link', { name: 'ไปบทถัดไป' })).toHaveAttribute(
-    'href',
-    '/lessons/guitar-anatomy-tuning',
-  );
-  await expect(memberPage.getByText('ยังไม่มีบันทึกการฝึก')).toBeVisible();
+  await expect(dash.stat('week-minutes')).toContainText('0 นาที');
+  await expect(dash.stat('week-minutes')).toContainText('ยังไม่ตั้งเป้าหมาย');
+  await expect(dash.continueButton()).toHaveText('เริ่มบทที่ 1');
+  await expect(dash.continueButton()).toHaveAttribute('href', '/lessons/guitar-anatomy-tuning');
+  await expect(memberPage.getByTestId('recent-empty')).toBeVisible();
 });
 
 test('TC-DSH-02 practice log changes weekly minutes and 7-day chart @smoke @regression', async ({ memberPage }) => {
@@ -41,7 +40,7 @@ test('TC-DSH-03 passing a quiz updates lessons count and average @regression', a
   await dash.goto();
   await expect(dash.stat('lessons')).toContainText('1 / 5 บท');
   await expect(dash.stat('avg-score')).toContainText('80%');
-  await expect(memberPage.getByRole('link', { name: 'ไปบทถัดไป' })).toHaveAttribute('href', '/lessons/first-chords');
+  await expect(dash.continueButton()).toHaveAttribute('href', '/lessons/first-chords');
   // lessons not attempted read as "ยังไม่สอบ", not as a 0% score
   await expect(memberPage.getByRole('img', { name: /^คะแนนสูงสุดรายบท: บท 1 80 %, บท 2 ยังไม่สอบ/ })).toBeVisible();
 });
@@ -57,9 +56,10 @@ test('TC-DSH-04 recent history shows latest five logs @regression', async ({ mem
   expect(ins.error).toBeNull();
   const dash = new DashboardPage(memberPage);
   await dash.goto();
-  const list = memberPage.getByRole('list', { name: 'ประวัติการฝึกล่าสุด' });
-  const items = list.getByRole('listitem');
-  await expect(items).toHaveCount(5);
-  await expect(items.first()).toContainText('10 นาที');
-  await expect(items.last()).toContainText('14 นาที');
+  const table = memberPage.getByRole('table', { name: 'ประวัติการฝึกซ้อมล่าสุด' });
+  const logRows = table.locator('tbody tr');
+  await expect(logRows).toHaveCount(5);
+  await expect(logRows.first()).toContainText(bangkokDate(0));
+  await expect(logRows.first()).toContainText('10 นาที');
+  await expect(logRows.last()).toContainText('14 นาที');
 });

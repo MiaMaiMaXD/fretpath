@@ -24,10 +24,10 @@ test('TC-AUTH-12 member uploads and removes avatar @regression', async ({ member
     await expect(img).toHaveAttribute('src', new RegExp(`/storage/v1/object/public/avatars/${member.id}/avatar\\.png`));
     await expect.poll(() => img.evaluate((e: HTMLImageElement) => e.naturalWidth)).toBeGreaterThan(0);
 
-    // persists after reload and shows in the navigation bar
+    // persists after reload and shows in the header account menu
     await memberPage.reload();
     await expect(
-      memberPage.getByRole('navigation', { name: 'เมนูหลัก' }).getByRole('img', { name: 'รูปโปรไฟล์' }),
+      memberPage.getByTestId('user-menu').getByRole('img', { name: 'รูปโปรไฟล์' }),
     ).toBeVisible();
 
     await memberPage.getByRole('button', { name: 'ลบรูป' }).click();
