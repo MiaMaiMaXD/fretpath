@@ -18,7 +18,7 @@ test('TC-AUTH-01 signup, confirm email, land on dashboard with lesson 1 unlocked
     await page.goto(await latestLinkFor(email));
     await page.getByRole('button', { name: 'ยืนยันและเข้าสู่ระบบ' }).click();
     await expect(page).toHaveURL((u) => u.pathname === '/dashboard');
-    await expect(page.getByRole('heading', { name: 'Dashboard' })).toBeVisible();
+    await expect(page.getByRole('heading', { level: 1, name: /สวัสดี|ยินดีต้อนรับ/ })).toBeVisible();
 
     // The /path page arrives in Task 5: assert the unlock through the DB for now.
     const admin = adminClient();
@@ -93,6 +93,7 @@ test('TC-AUTH-04 wrong password shows generic message @smoke @regression', async
 });
 
 test('TC-AUTH-05 logout returns to home and protects pages @regression', async ({ memberPage }) => {
+  await memberPage.getByTestId('user-menu').locator('summary').click();
   await memberPage.getByRole('button', { name: 'ออกจากระบบ' }).click();
   await expect(memberPage).toHaveURL(/\/$/);
   await memberPage.goto('/dashboard');
@@ -117,6 +118,7 @@ test('TC-AUTH-06 forgot password always shows same message and reset works @regr
   await page.getByRole('button', { name: 'ตั้งรหัสผ่านใหม่' }).click();
   await expect(page).toHaveURL((u) => u.pathname === '/dashboard');
 
+  await page.getByTestId('user-menu').locator('summary').click();
   await page.getByRole('button', { name: 'ออกจากระบบ' }).click();
   // Wait for sign-out to finish; navigating away mid-action leaves the session alive.
   await expect(page).toHaveURL(/\/$/);

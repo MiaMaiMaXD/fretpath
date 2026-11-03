@@ -23,7 +23,7 @@ test('TC-AUTH-11 confirmation link works in a fresh browser context @smoke @regr
     await other.goto(link);
     await other.getByRole('button', { name: 'ยืนยันและเข้าสู่ระบบ' }).click();
     await expect(other).toHaveURL((u) => u.pathname === '/dashboard');
-    await expect(other.getByRole('heading', { name: 'Dashboard' })).toBeVisible();
+    await expect(other.getByRole('heading', { level: 1, name: /สวัสดี|ยินดีต้อนรับ/ })).toBeVisible();
     expect(csp, 'CSP violations in console').toEqual([]);
   } finally {
     await fresh.close();
@@ -49,6 +49,7 @@ test('TC-AUTH-13 password reset link works in a fresh browser context @regressio
     await other.getByRole('button', { name: 'ตั้งรหัสผ่านใหม่' }).click();
     await expect(other).toHaveURL((u) => u.pathname === '/dashboard');
 
+    await other.getByTestId('user-menu').locator('summary').click();
     await other.getByRole('button', { name: 'ออกจากระบบ' }).click();
     await expect(other).toHaveURL(/\/$/);
     const login = new LoginPage(other);
@@ -93,7 +94,7 @@ test('TC-AUTH-17 opening the link alone does not consume the token @security @re
     await other.goto(link);
     await other.getByRole('button', { name: 'ยืนยันและเข้าสู่ระบบ' }).click();
     await expect(other).toHaveURL((u) => u.pathname === '/dashboard');
-    await expect(other.getByRole('heading', { name: 'Dashboard' })).toBeVisible();
+    await expect(other.getByRole('heading', { level: 1, name: /สวัสดี|ยินดีต้อนรับ/ })).toBeVisible();
   } finally {
     await fresh.close();
     await deleteUserByEmail(email);

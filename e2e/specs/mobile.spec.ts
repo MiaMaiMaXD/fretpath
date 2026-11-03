@@ -66,15 +66,16 @@ test('TC-MOB-01b no horizontal scroll on public pages when logged out @regressio
 
 test('TC-MOB-02 navigation reachable on 375px @regression', async ({ memberPage }) => {
   await memberPage.setViewportSize({ width: 375, height: 812 });
-  const nav = memberPage.getByRole('navigation', { name: 'เมนูหลัก' });
+  // Below 900px the header tabs are hidden and the fixed bottom bar takes over.
+  const nav = memberPage.getByRole('navigation', { name: 'เมนูหลัก (มือถือ)' });
   const links: [string, RegExp][] = [
-    ['Dashboard', /\/dashboard$/],
-    ['เส้นทางเรียน', /\/path$/],
-    ['บันทึกการฝึก', /\/practice$/],
+    ['ภาพรวม', /\/dashboard$/],
+    ['เส้นทาง', /\/path$/],
+    ['ฝึก', /\/practice$/],
     ['โปรไฟล์', /\/profile$/],
   ];
   for (const [name, url] of links) {
-    const link = nav.getByRole('link', { name });
+    const link = nav.getByRole('link', { name, exact: true });
     await expect(link).toBeVisible();
     await link.click();
     await expect(memberPage).toHaveURL(url);
