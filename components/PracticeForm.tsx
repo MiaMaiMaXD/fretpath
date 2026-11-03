@@ -36,21 +36,13 @@ export function PracticeForm({ today, lessons }: { today: string; lessons: Lesso
 
   return (
     <>
-      <section className="studio" aria-labelledby="studio-title">
-        <div className="studio-head">
-          <h2 id="studio-title">
-            <span aria-hidden="true">⏱️ </span>เครื่องจับเวลาซ้อม &amp; เมโทรนอม
-          </h2>
-          <p>ซ้อมตรงจังหวะ แล้วส่งเวลาเข้าสมุดบันทึกได้ในคลิกเดียว</p>
-        </div>
+      <div className="session" role="group" aria-label="เครื่องมือระหว่างซ้อม">
         <PracticeTimer onUse={fillMinutes} />
         <Metronome />
-      </section>
+      </div>
 
-      <section className="card log-form" aria-labelledby="form-title">
-        <h2 id="form-title">
-          <span aria-hidden="true">📝 </span>บันทึกการฝึกซ้อมประจำวัน
-        </h2>
+      <section className="panel log-form" aria-labelledby="form-title">
+        <h2 id="form-title">จดบันทึกการซ้อม</h2>
         <form ref={formRef} onSubmit={keepValuesSubmit(action)}>
           <PracticeFields
             // No automatic form reset any more: remount to clear the fields after a successful save.
@@ -70,8 +62,8 @@ export function PracticeForm({ today, lessons }: { today: string; lessons: Lesso
             }}
           />
           <FormMessage state={state} />
-          <button type="submit" className="save-btn" disabled={pending}>
-            {pending ? 'กำลังบันทึก…' : '+ บันทึกข้อมูลการซ้อม'}
+          <button type="submit" className="btn btn-amber save-btn" disabled={pending}>
+            {pending ? 'กำลังบันทึก…' : 'บันทึกการซ้อม'}
           </button>
         </form>
       </section>

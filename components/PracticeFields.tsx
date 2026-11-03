@@ -1,3 +1,6 @@
+'use client';
+
+import { useRef } from 'react';
 import { Field } from '@/components/Field';
 import { ACTIVITIES, FEELINGS } from '@/lib/practice-activities';
 import type { FieldErrors } from '@/lib/validation';
@@ -23,60 +26,129 @@ type Props = {
   values: PracticeValues;
 };
 
-export function PracticeFields({ idPrefix, today, lessons, errors, values, noteResetKey }: Props) {
+const PRESETS = [10, 15, 20, 30, 45, 60];
+
+/** Radio buttons drawn as tappable pills; a fieldset/legend gives the group its name. */
+function Choices({
+  id,
+  name,
+  legend,
+  options,
+  defaultValue,
+  error,
+  required,
+  tone,
+}: {
+  id: string;
+  name: string;
+  legend: string;
+  options: readonly { value: string; label: string }[];
+  defaultValue: string;
+  error?: string;
+  required?: boolean;
+  tone?: boolean;
+}) {
+  const errorId = `${id}-error`;
   return (
-    <div className="fields">
-      <Field
-        idPrefix={idPrefix}
-        name="practicedOn"
-        label="วันที่ฝึกซ้อม"
-        type="date"
-        max={today}
-        error={errors?.practicedOn}
-        defaultValue={values.practicedOn}
-      />
+    <fieldset className="choices" aria-describedby={error ? errorId : undefined} aria-invalid={error ? true : undefined}>
+      <legend>{legend}</legend>
+      <div className="choice-row">
+        {options.map((o) => (
+          <label key={o.value} className={`choice${tone ? ` tone-${o.value}` : ''}`}>
+            <input type="radio" name={name} value={o.value} defaultChecked={defaultValue === o.value} required={required} />
+            <span>{o.label}</span>
+          </label>
+        ))}
+      </div>
+      {error ? (
+        <p id={errorId} className="field-error">
+          {error}
+        </p>
+      ) : null}
+    </fieldset>
+  );
+}
+
+export function PracticeFields({ idPrefix = '', today, lessons, errors, values, noteResetKey }: Props) {
+  const box = useRef<HTMLDivElement>(null);
+  function preset(n: number) {
+    const input = box.current?.querySelector<HTMLInputElement>('input[name="minutes"]');
+    if (input) input.value = String(n);
+  }
+
+  return (
+    <div className="fields" ref={box}>
       <Field
         idPrefix={idPrefix}
         name="topic"
-        label="วันนี้ฝึกอะไรไปบ้าง? (ตัวเลือก)"
+        label="วันนี้ฝึกอะไร"
         required={false}
         maxLength={120}
-        placeholder="เช่น ฝึกเปลี่ยนคอร์ด C - Am - Dm - G, ฝึกตีคอร์ดลง-ขึ้น"
+        placeholder="เช่น เปลี่ยนคอร์ด C → Am → G ให้ทันจังหวะ"
         error={errors?.topic}
         defaultValue={values.topic}
       />
-      <div className="pair">
+
+      <div className="minutes-row">
         <Field
           idPrefix={idPrefix}
           name="minutes"
-          label="เวลาที่ฝึก (นาที)"
+          label="ซ้อมไปกี่นาที"
           inputMode="numeric"
-          placeholder="เช่น 20"
           error={errors?.minutes}
           defaultValue={values.minutes}
         />
-        <Field
-          idPrefix={idPrefix}
-          name="feeling"
-          label="ความรู้สึกหลังซ้อม"
-          as="select"
-          placeholder="ไม่ระบุ"
-          required={false}
-          options={FEELINGS}
-          error={errors?.feeling}
-          defaultValue={values.feeling}
-        />
+        <div className="presets" role="group" aria-label="เลือกนาทีแบบเร็ว">
+          {PRESETS.map((n) => (
+            <button key={n} type="button" onClick={() => preset(n)}>
+              {n}
+            </button>
+          ))}
+        </div>
       </div>
+
+      <Choices
+        id={`${idPrefix}activity`}
+        name="activity"
+        legend="หมวด"
+        options={ACTIVITIES}
+        defaultValue={values.activity}
+        error={errors?.activity}
+        required
+      />
+
+      <Choices
+        id={`${idPrefix}feeling`}
+        name="feeling"
+        legend="ซ้อมเสร็จแล้วรู้สึกยังไง"
+        options={FEELINGS}
+        defaultValue={values.feeling}
+        error={errors?.feeling}
+        tone
+      />
+
+      <Field
+        idPrefix={idPrefix}
+        name="note"
+        label="โน้ตถึงตัวเอง"
+        as="textarea"
+        required={false}
+        maxCount={500}
+        resetKey={noteResetKey}
+        placeholder="อะไรที่ยังติด หรือเทคนิคที่ได้ผล ไว้อ่านตอนซ้อมครั้งหน้า"
+        error={errors?.note}
+        defaultValue={values.note}
+      />
+
       <div className="pair">
         <Field
           idPrefix={idPrefix}
-          name="activity"
-          label="หมวดที่ฝึก"
-          as="select"
-          placeholder="เลือกหมวด"
-          options={ACTIVITIES}
-          error={errors?.activity}
-          defaultValue={values.activity}
+          name="practicedOn"
+          label="วันที่ซ้อม"
+          type="date"
+          max={today}
+          error={errors?.practicedOn}
+          defaultValue={values.practicedOn}
         />
         <Field
           idPrefix={idPrefix}
@@ -90,18 +162,6 @@ export function PracticeFields({ idPrefix, today, lessons, errors, values, noteR
           defaultValue={values.lessonId}
         />
       </div>
-      <Field
-        idPrefix={idPrefix}
-        name="note"
-        label="บันทึกช่วยจำ (ตัวเลือก)"
-        as="textarea"
-        required={false}
-        maxCount={500}
-        resetKey={noteResetKey}
-        placeholder="เช่น คอร์ด F ยังบอดที่สาย 2 ต้องตั้งนิ้วชี้ให้ชันขึ้น"
-        error={errors?.note}
-        defaultValue={values.note}
-      />
     </div>
   );
 }

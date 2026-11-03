@@ -38,10 +38,10 @@ function EditRow({ log, today, lessons, onDone }: Shared & { log: PracticeLog; o
       />
       <FormMessage state={state} />
       <div className="row-actions">
-        <button type="submit" className="pill primary" disabled={pending}>
+        <button type="submit" className="btn btn-amber" disabled={pending}>
           บันทึก
         </button>
-        <button type="button" className="pill" onClick={onDone}>
+        <button type="button" className="btn btn-line" onClick={onDone}>
           ยกเลิก
         </button>
       </div>
@@ -76,13 +76,13 @@ function DeleteDialog({ id, title, onClose }: { id: string; title: string; onClo
       className="confirm"
     >
       <h2 id={titleId}>ลบบันทึกนี้?</h2>
-      <p>“{title}” จะถูกลบถาวร และนาทีของรายการนี้จะหายจากสถิติด้วย</p>
+      <p>“{title}” จะหายไปถาวร และนาทีของครั้งนี้จะถูกหักออกจากสถิติ</p>
       {error ? <p role="alert" className="err">{error}</p> : null}
       <div className="row-actions">
         <button
           type="button"
           disabled={pending}
-          className="pill danger"
+          className="btn btn-danger"
           onClick={() =>
             start(async () => {
               const r = await deletePracticeLog(id);
@@ -93,7 +93,7 @@ function DeleteDialog({ id, title, onClose }: { id: string; title: string; onClo
         >
           ลบ
         </button>
-        <button ref={cancelRef} type="button" disabled={pending} className="pill" onClick={() => dialogRef.current?.close()}>
+        <button ref={cancelRef} type="button" disabled={pending} className="btn btn-line" onClick={() => dialogRef.current?.close()}>
           ยกเลิก
         </button>
       </div>
@@ -112,40 +112,28 @@ function Row({ log, today, lessons }: Shared & { log: PracticeLog }) {
       {editing ? (
         <EditRow log={log} today={today} lessons={lessons} onDone={() => setEditing(false)} />
       ) : (
-        <div className="entry-body">
-          <div className="entry-main">
-            <p className="chips">
-              <span className="chip date">
-                <span aria-hidden="true">📅 </span>
-                <time dateTime={log.practicedOn}>{log.practicedOn}</time>
-              </span>
-              <span className="chip mins">
-                <span aria-hidden="true">⏱ </span>
-                {log.minutes} นาที
-              </span>
-              {feeling ? <span className="feeling">{feeling}</span> : null}
+        <>
+          <div className="entry-text">
+            <h4>{title}</h4>
+            <p className="entry-meta">
+              <span>{activityLabel(log.activity)}</span>
+              {log.lessonTitle ? <span>บทเรียน {log.lessonTitle}</span> : null}
+              {feeling ? <span className={`feel tone-${log.feeling}`}>{feeling}</span> : null}
             </p>
-            <h3>{title}</h3>
-            <p className="meta">
-              {activityLabel(log.activity)}
-              {log.lessonTitle ? ` · บทเรียน: ${log.lessonTitle}` : ''}
-            </p>
-            {log.note ? (
-              <p className="tip">
-                <span aria-hidden="true">💡 </span>
-                {log.note}
-              </p>
-            ) : null}
+            {log.note ? <p className="entry-note">{log.note}</p> : null}
+            <div className="entry-actions">
+              <button type="button" className="link-btn" onClick={() => setEditing(true)}>
+                แก้ไข
+              </button>
+              <button ref={deleteBtnRef} type="button" className="link-btn danger" onClick={() => setDeleting(true)}>
+                ลบ
+              </button>
+            </div>
           </div>
-          <div className="entry-actions">
-            <button type="button" className="pill" onClick={() => setEditing(true)}>
-              แก้ไข
-            </button>
-            <button ref={deleteBtnRef} type="button" className="pill danger-outline" onClick={() => setDeleting(true)}>
-              ลบรายการ
-            </button>
-          </div>
-        </div>
+          <p className="entry-mins">
+            <b>{log.minutes}</b> นาที
+          </p>
+        </>
       )}
       {deleting ? (
         <DeleteDialog
@@ -162,10 +150,25 @@ function Row({ log, today, lessons }: Shared & { log: PracticeLog }) {
 }
 
 function hoursText(minutes: number): string {
-  if (minutes < 60) return '';
+  if (minutes < 60) return `${minutes} นาที`;
   const h = Math.floor(minutes / 60);
   const m = minutes % 60;
-  return ` (${h} ชม.${m ? ` ${m} นาที` : ''})`;
+  return `${h} ชม.${m ? ` ${m} นาที` : ''}`;
+}
+
+/** วันนี้ / เมื่อวาน / "ศ. 31 ต.ค." (year only when it is not the current one). */
+function dayLabel(iso: string, today: string): string {
+  if (iso === today) return 'วันนี้';
+  const t = new Date(`${today}T00:00:00Z`);
+  const d = new Date(`${iso}T00:00:00Z`);
+  if ((t.getTime() - d.getTime()) / 864e5 === 1) return 'เมื่อวาน';
+  return new Intl.DateTimeFormat('th-TH', {
+    timeZone: 'UTC',
+    weekday: 'short',
+    day: 'numeric',
+    month: 'short',
+    ...(iso.slice(0, 4) === today.slice(0, 4) ? {} : { year: 'numeric' }),
+  }).format(d);
 }
 
 export function PracticeList({
@@ -183,49 +186,65 @@ export function PracticeList({
           .some((s) => s!.toLowerCase().includes(q)),
       )
     : logs;
+  const days: { date: string; logs: PracticeLog[] }[] = [];
+  for (const l of shown) {
+    const last = days[days.length - 1];
+    if (last?.date === l.practicedOn) last.logs.push(l);
+    else days.push({ date: l.practicedOn, logs: [l] });
+  }
 
   return (
-    <section className="card history" aria-labelledby="history">
-      <div className="history-head">
+    <section className="panel journal" aria-labelledby="history">
+      <div className="journal-head">
         <div>
-          <h2 id="history">
-            <span aria-hidden="true">📖 </span>สมุดประวัติการฝึกซ้อมทั้งหมด
-          </h2>
+          <h2 id="history">ประวัติการซ้อม</h2>
           <p className="totals" data-testid="practice-totals">
-            รวมทั้งหมด {totals.sessions} ครั้ง • สะสม {totals.minutes} นาที{hoursText(totals.minutes)}
+            ซ้อมมาแล้ว {totals.sessions} ครั้ง รวม {hoursText(totals.minutes)}
           </p>
         </div>
         {logs.length > 0 ? (
           <label className="search">
             <span className="sr-only">ค้นหาบันทึกการซ้อม</span>
-            <input
-              type="search"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="ค้นหาหัวข้อที่ซ้อม..."
-            />
+            <svg viewBox="0 0 20 20" aria-hidden="true">
+              <circle cx="8.5" cy="8.5" r="5.5" fill="none" stroke="currentColor" strokeWidth="1.8" />
+              <path d="M13 13l4 4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+            </svg>
+            <input type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="ค้นหา เช่น คอร์ด Am" />
           </label>
         ) : null}
       </div>
 
       {logs.length === 0 ? (
         <div className="empty" data-testid="practice-empty">
-          <p className="empty-title">ยังไม่มีบันทึกการฝึก</p>
-          <p>ลองจับเวลาซ้อมสัก 10 นาที แล้วกด “บันทึกข้อมูลการซ้อม” รายการแรกจะมาอยู่ที่นี่</p>
+          <p className="empty-title">ยังไม่มีบันทึก</p>
+          <p>เริ่มจับเวลาด้านบน ซ้อมสัก 10 นาที แล้วจดไว้ในช่องบันทึก ครั้งแรกจะขึ้นที่นี่</p>
         </div>
       ) : (
         <>
           {/* Always mounted so screen readers announce the change when the result count updates. */}
           <p className={`search-status${q ? '' : ' sr-only'}`} role="status">
-            {q ? (shown.length > 0 ? `พบ ${shown.length} รายการ` : `ไม่พบรายการที่ตรงกับ “${query.trim()}”`) : ''}
+            {q ? (shown.length > 0 ? `พบ ${shown.length} รายการ` : `ไม่พบบันทึกที่มีคำว่า “${query.trim()}”`) : ''}
           </p>
-          <ul className="entries">
-            {shown.map((l) => (
-              <Row key={l.id} log={l} today={today} lessons={lessons} />
-            ))}
-          </ul>
+          <div className="days">
+            {days.map((d) => {
+              const sum = d.logs.reduce((n, l) => n + l.minutes, 0);
+              return (
+                <section key={d.date} className="day" aria-labelledby={`day-${d.date}`}>
+                  <h3 id={`day-${d.date}`} className="day-head">
+                    <time dateTime={d.date}>{dayLabel(d.date, today)}</time>
+                    {d.logs.length > 1 ? <span className="day-sum">รวม {sum} นาที</span> : null}
+                  </h3>
+                  <ul className="entries">
+                    {d.logs.map((l) => (
+                      <Row key={l.id} log={l} today={today} lessons={lessons} />
+                    ))}
+                  </ul>
+                </section>
+              );
+            })}
+          </div>
           {totals.sessions > logs.length ? (
-            <p className="more">แสดง {logs.length} รายการล่าสุดจากทั้งหมด {totals.sessions} รายการ</p>
+            <p className="more">แสดง {logs.length} ครั้งล่าสุดจาก {totals.sessions} ครั้ง</p>
           ) : null}
         </>
       )}

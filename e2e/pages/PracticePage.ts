@@ -13,29 +13,29 @@ export class PracticePage {
    */
   async fill(v: { date?: string; minutes: number; activity: string; topic?: string; feeling?: string; note?: string }) {
     const form = this.form();
-    if (v.date !== undefined) await form.getByLabel('วันที่ฝึกซ้อม').fill(v.date);
-    if (v.topic !== undefined) await form.getByLabel('วันนี้ฝึกอะไรไปบ้าง?').fill(v.topic);
-    await form.getByLabel('เวลาที่ฝึก (นาที)').fill(String(v.minutes));
-    if (v.feeling !== undefined) await form.getByLabel('ความรู้สึกหลังซ้อม').selectOption(v.feeling);
-    await form.getByLabel('หมวดที่ฝึก').selectOption(v.activity);
-    if (v.note !== undefined) await form.getByLabel('บันทึกช่วยจำ').fill(v.note);
+    if (v.date !== undefined) await form.getByLabel('วันที่ซ้อม').fill(v.date);
+    if (v.topic !== undefined) await form.getByLabel('วันนี้ฝึกอะไร').fill(v.topic);
+    await form.getByLabel('ซ้อมไปกี่นาที').fill(String(v.minutes));
+    if (v.feeling !== undefined) await form.locator(`input[name="feeling"][value="${v.feeling}"]`).check();
+    await form.locator(`input[name="activity"][value="${v.activity}"]`).check();
+    if (v.note !== undefined) await form.getByLabel('โน้ตถึงตัวเอง').fill(v.note);
   }
 
   /** The daily log form (the edit forms inside history cards are separate). */
   form(): Locator {
-    return this.page.getByRole('region', { name: 'บันทึกการฝึกซ้อมประจำวัน' });
+    return this.page.getByRole('region', { name: 'จดบันทึกการซ้อม' });
   }
 
   minutesInput(): Locator {
-    return this.form().getByLabel('เวลาที่ฝึก (นาที)');
+    return this.form().getByLabel('ซ้อมไปกี่นาที');
   }
 
   async save() {
-    await this.page.getByRole('button', { name: '+ บันทึกข้อมูลการซ้อม', exact: true }).click();
+    await this.page.getByRole('button', { name: 'บันทึกการซ้อม', exact: true }).click();
   }
 
   history(): Locator {
-    return this.page.getByRole('region', { name: 'สมุดประวัติการฝึกซ้อมทั้งหมด' });
+    return this.page.getByRole('region', { name: 'ประวัติการซ้อม' });
   }
 
   rows(): Locator {

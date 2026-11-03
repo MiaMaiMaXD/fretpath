@@ -12,10 +12,10 @@ export function activityLabel(value: string): string {
 
 /** How a session felt; stored in practice_logs.feeling (CHECK constraint lists the same values). */
 export const FEELINGS = [
-  { value: 'great', label: 'คล่องขึ้นมาก 🔥' },
-  { value: 'progress', label: 'เริ่มจับจังหวะได้ 👍' },
-  { value: 'sore', label: 'ยังเจ็บนิ้ว/ต้องซ้อมเพิ่ม 💪' },
-  { value: 'tough', label: 'ยากมาก ยังไม่เข้าใจ 😵' },
+  { value: 'great', label: 'คล่องขึ้นมาก' },
+  { value: 'progress', label: 'เริ่มจับทางได้' },
+  { value: 'sore', label: 'เจ็บนิ้ว ต้องซ้อมอีก' },
+  { value: 'tough', label: 'ยังยากอยู่' },
 ] as const;
 
 export function feelingLabel(value: string | null): string | null {

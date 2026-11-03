@@ -27,62 +27,66 @@ export function PracticeTimer({ onUse }: { onUse: (minutes: number) => void }) {
   // eslint-disable-next-line react-hooks/purity
   const elapsed = accumulatedMs + (startedAt === null ? 0 : Date.now() - startedAt);
   const running = startedAt !== null;
+  const state = running ? 'กำลังจับเวลา' : elapsed > 0 ? 'พักไว้' : 'ตัวจับเวลา';
 
   return (
-    <section aria-label="ตัวจับเวลา" className="timer">
-      <span className={`live-dot${running ? ' on' : ''}`} aria-hidden="true" />
+    <section aria-label="ตัวจับเวลา" className={`timer${running ? ' is-running' : ''}`}>
+      <p className="zone-label">
+        <span className="rec" aria-hidden="true" />
+        {state}
+      </p>
       <p className="clock" data-testid="timer-display">
         {format(elapsed)}
       </p>
-      <p className="clock-sub">เวลาซ้อมในรอบนี้ (นาที:วินาที)</p>
       <div className="timer-actions">
         {running ? (
           <button
             type="button"
-            className="tbtn pause"
+            className="btn btn-dark"
             onClick={() => {
               setAccumulatedMs(accumulatedMs + Date.now() - startedAt);
               setStartedAt(null);
             }}
           >
-            <span aria-hidden="true">❚❚ </span>หยุดชั่วคราว
+            พักเวลา
           </button>
         ) : (
           <button
             type="button"
-            className="tbtn go"
+            className="btn btn-dark"
             onClick={() => {
               setUsed(null);
               setStartedAt(Date.now());
             }}
           >
-            <span aria-hidden="true">▶ </span>
             {elapsed > 0 ? 'จับเวลาต่อ' : 'เริ่มจับเวลา'}
           </button>
         )}
         <button
           type="button"
-          className="tbtn use"
+          className="btn btn-line"
           disabled={elapsed < 1000}
           onClick={() => {
             const m = minutesFromElapsed(elapsed);
             onUse(m);
-            setUsed(`กรอก ${m} นาทีลงในฟอร์มแล้ว`);
+            setUsed(`ใส่ ${m} นาทีในบันทึกแล้ว`);
           }}
         >
-          นำเวลาไปกรอกฟอร์ม
+          ใช้เวลานี้บันทึก
         </button>
-        <button
-          type="button"
-          className="tbtn ghost"
-          onClick={() => {
-            setStartedAt(null);
-            setAccumulatedMs(0);
-            setUsed(null);
-          }}
-        >
-          รีเซ็ต
-        </button>
+        {elapsed > 0 ? (
+          <button
+            type="button"
+            className="btn btn-text"
+            onClick={() => {
+              setStartedAt(null);
+              setAccumulatedMs(0);
+              setUsed(null);
+            }}
+          >
+            รีเซ็ต
+          </button>
+        ) : null}
       </div>
       <p className="timer-status" role="status">
         {used}

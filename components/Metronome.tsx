@@ -10,9 +10,9 @@ const TICK_MS = 25;
 const STEP = 5;
 
 function tempoName(bpm: number): string {
-  if (bpm < 70) return 'ช้า';
-  if (bpm < 110) return 'ปานกลาง';
-  if (bpm < 150) return 'ค่อนข้างเร็ว';
+  if (bpm < 66) return 'ช้า เหมาะกับฝึกเปลี่ยนคอร์ด';
+  if (bpm < 100) return 'ปานกลาง';
+  if (bpm < 140) return 'ค่อนข้างเร็ว';
   return 'เร็ว';
 }
 
@@ -70,49 +70,13 @@ export function Metronome() {
   }
 
   return (
-    <section aria-labelledby="metro-title" className="metro">
-      <div className="metro-head">
-        <h3 id="metro-title">
-          <span aria-hidden="true">♫ </span>เมโทรนอม (Metronome): <b>{bpm} BPM</b>
-        </h3>
-        {running ? (
-          <button type="button" className="metro-toggle on" onClick={stop}>
-            หยุดจังหวะเคาะ
-          </button>
-        ) : (
-          <button type="button" className="metro-toggle" disabled={!supported} onClick={start}>
-            เปิดจังหวะเคาะ
-          </button>
-        )}
-      </div>
-
-      <div className="beats" aria-hidden="true">
-        {Array.from({ length: BEATS_PER_BAR }, (_, i) => (
-          <span key={i} className={`${i === 0 ? 'accent ' : ''}${beat === i ? 'lit' : ''}`} />
-        ))}
-      </div>
-
-      <input
-        type="range"
-        className="metro-range"
-        aria-label="จังหวะ (BPM)"
-        min={MIN_BPM}
-        max={MAX_BPM}
-        value={bpm}
-        style={{ '--fill': `${((bpm - MIN_BPM) / (MAX_BPM - MIN_BPM)) * 100}%` } as React.CSSProperties}
-        onChange={(e) => commit(Number(e.target.value))}
-      />
-      <div className="metro-scale" aria-hidden="true">
-        <span>{MIN_BPM} BPM (ช้า)</span>
-        <span>{tempoName(bpm)}</span>
-        <span>{MAX_BPM} BPM (เร็ว)</span>
-      </div>
-
-      <div className="metro-fine">
-        <button type="button" aria-label={`ลดจังหวะ ${STEP} BPM`} onClick={() => commit(bpm - STEP)} disabled={bpm <= MIN_BPM}>
+    <section aria-label="เมโทรนอม" className={`metro${running ? ' is-running' : ''}`}>
+      <p className="zone-label">เมโทรนอม</p>
+      <div className="metro-main">
+        <button type="button" className="step" aria-label={`ลดจังหวะ ${STEP} BPM`} onClick={() => commit(bpm - STEP)} disabled={bpm <= MIN_BPM}>
           −
         </button>
-        <label>
+        <label className="bpm">
           <span className="sr-only">จังหวะ (BPM)</span>
           <input
             type="number"
@@ -132,11 +96,38 @@ export function Metronome() {
           />
           <span aria-hidden="true">BPM</span>
         </label>
-        <button type="button" aria-label={`เพิ่มจังหวะ ${STEP} BPM`} onClick={() => commit(bpm + STEP)} disabled={bpm >= MAX_BPM}>
+        <button type="button" className="step" aria-label={`เพิ่มจังหวะ ${STEP} BPM`} onClick={() => commit(bpm + STEP)} disabled={bpm >= MAX_BPM}>
           +
         </button>
+        <div className="beats" aria-hidden="true">
+          {Array.from({ length: BEATS_PER_BAR }, (_, i) => (
+            <span key={i} className={`${i === 0 ? 'accent' : ''}${beat === i ? ' lit' : ''}`} />
+          ))}
+        </div>
       </div>
-      {!supported ? <p role="status">เบราว์เซอร์นี้ไม่รองรับเสียง</p> : null}
+      <input
+        type="range"
+        className="metro-range"
+        aria-label="จังหวะ (BPM)"
+        min={MIN_BPM}
+        max={MAX_BPM}
+        value={bpm}
+        style={{ '--fill': `${((bpm - MIN_BPM) / (MAX_BPM - MIN_BPM)) * 100}%` } as React.CSSProperties}
+        onChange={(e) => commit(Number(e.target.value))}
+      />
+      <p className="tempo-name">{tempoName(bpm)}</p>
+      <div className="metro-actions">
+        {running ? (
+          <button type="button" className="btn btn-dark" onClick={stop}>
+            หยุดเสียงเคาะ
+          </button>
+        ) : (
+          <button type="button" className="btn btn-line" disabled={!supported} onClick={start}>
+            เปิดเสียงเคาะ
+          </button>
+        )}
+        {!supported ? <p role="status">เบราว์เซอร์นี้เล่นเสียงไม่ได้</p> : null}
+      </div>
     </section>
   );
 }

@@ -71,12 +71,12 @@ test('TC-PRC-09 metronome starts and stops without errors @regression', async ({
   await bpm.fill('90');
   await expect(memberPage.getByRole('slider', { name: 'จังหวะ (BPM)' })).toHaveValue('90');
 
-  await memberPage.getByRole('button', { name: 'เปิดจังหวะเคาะ' }).click();
-  await expect(memberPage.getByRole('button', { name: 'หยุดจังหวะเคาะ' })).toBeVisible();
-  await expect(memberPage.getByRole('button', { name: 'เปิดจังหวะเคาะ' })).toHaveCount(0);
+  await memberPage.getByRole('button', { name: 'เปิดเสียงเคาะ' }).click();
+  await expect(memberPage.getByRole('button', { name: 'หยุดเสียงเคาะ' })).toBeVisible();
+  await expect(memberPage.getByRole('button', { name: 'เปิดเสียงเคาะ' })).toHaveCount(0);
   await memberPage.waitForTimeout(1500);
-  await memberPage.getByRole('button', { name: 'หยุดจังหวะเคาะ' }).click();
-  await expect(memberPage.getByRole('button', { name: 'เปิดจังหวะเคาะ' })).toBeVisible();
+  await memberPage.getByRole('button', { name: 'หยุดเสียงเคาะ' }).click();
+  await expect(memberPage.getByRole('button', { name: 'เปิดเสียงเคาะ' })).toBeVisible();
   expect(errors).toEqual([]);
 });
 
