@@ -4,6 +4,7 @@ import { buildAnswers, lessonIdBySlug } from "../utils/quiz";
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/database.types";
 import { env } from "../utils/env";
+import { LESSON_COUNT } from '../utils/course';
 import {
   createTestUser,
   deleteTestUser,
@@ -48,7 +49,7 @@ test("TC-ADM-16 learner list shows progress read-only @regression", async ({
       ).toBeVisible();
     }
     const row = adminPage.getByRole("row").filter({ hasText: name });
-    await expect(row).toContainText("1 / 5");
+    await expect(row).toContainText(`1 / ${LESSON_COUNT}`);
     await expect(
       row.getByRole("button", { name: "ตั้งเป็นผู้ดูแล" }),
     ).toBeVisible();

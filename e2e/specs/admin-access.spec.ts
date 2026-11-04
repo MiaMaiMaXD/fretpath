@@ -1,4 +1,5 @@
 import { test, expect, MEMBER_STATE } from '../fixtures';
+import { LESSON_COUNT } from '../utils/course';
 
 test.describe('member', () => {
   test.use({ storageState: MEMBER_STATE });
@@ -22,5 +23,5 @@ test('TC-ADM-03 admin sees overview and admin link @smoke', async ({ adminPage }
   await expect(adminPage.getByRole('link', { name: 'จัดการบทเรียน' }).first()).toBeVisible();
   await expect(adminPage.getByRole('link', { name: 'ผู้เรียน' }).first()).toBeVisible();
   const row = adminPage.getByRole('listitem').filter({ hasText: 'กีตาร์พื้นฐาน' });
-  await expect(row).toContainText('เผยแพร่ 5 บท');
+  await expect(row).toContainText(`เผยแพร่ ${LESSON_COUNT} บท`);
 });

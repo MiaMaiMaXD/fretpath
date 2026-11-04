@@ -8,9 +8,10 @@ import { DashboardPage } from '../pages/DashboardPage';
 import { latestLinkFor } from '../utils/mailpit';
 import { deleteUserByEmail } from '../utils/supabaseAdmin';
 import { buildAnswers, choiceTexts, lessonIdBySlug } from '../utils/quiz';
+import { SECOND_LESSON } from '../utils/course';
 
 const L1 = 'guitar-anatomy-tuning';
-const L2 = 'first-chords';
+const L2 = SECOND_LESSON;
 
 test('TC-PATH-17 signup → lesson 1 unlocked → fail → lesson 2 locked → pass → lesson 2 unlocked @smoke @regression', async ({
   page,

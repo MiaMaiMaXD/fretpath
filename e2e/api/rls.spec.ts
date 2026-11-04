@@ -1,6 +1,7 @@
 import { test, expect } from '../fixtures';
 import { adminClient } from '../utils/supabaseAdmin';
 import { bangkokDate, lessonIdBySlug } from '../utils/quiz';
+import { SECOND_LESSON } from '../utils/course';
 
 let l1: string;
 let l2: string;
@@ -8,7 +9,7 @@ let l2: string;
 test.beforeAll(async () => {
   const db = adminClient();
   l1 = await lessonIdBySlug(db, 'guitar-anatomy-tuning');
-  l2 = await lessonIdBySlug(db, 'first-chords');
+  l2 = await lessonIdBySlug(db, SECOND_LESSON);
 });
 
 test('TC-SEC-01 member cannot read answer keys @security', async ({ memberDb, adminDb }) => {

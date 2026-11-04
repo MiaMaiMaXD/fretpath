@@ -1,5 +1,6 @@
 import { test, expect, MEMBER_STATE } from '../fixtures';
 import { LessonPage } from '../pages/LessonPage';
+import { SECOND_LESSON } from '../utils/course';
 
 test.use({ storageState: MEMBER_STATE });
 
@@ -23,8 +24,8 @@ test('TC-LSN-02 lesson without video shows no broken frame @regression', async (
 });
 
 test('TC-PATH-16 opening a locked lesson redirects with Thai notice @smoke @regression', async ({ page }) => {
-  await page.goto('/lessons/first-chords');
-  await expect(page).toHaveURL(/\/path\?locked=first-chords$/);
+  await page.goto(`/lessons/${SECOND_LESSON}`);
+  await expect(page).toHaveURL(new RegExp(`/path\\?locked=${SECOND_LESSON}$`));
   await expect(page.getByRole('alert').and(page.locator(':not(#__next-route-announcer__)'))).toHaveText(
     'ต้องผ่านแบบทดสอบบท รู้จักส่วนประกอบของกีตาร์และการตั้งสาย ก่อน',
   );

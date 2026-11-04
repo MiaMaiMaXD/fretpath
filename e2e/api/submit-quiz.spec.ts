@@ -1,6 +1,7 @@
 import { test, expect } from '../fixtures';
 import { adminClient } from '../utils/supabaseAdmin';
 import { buildAnswers, lessonIdBySlug } from '../utils/quiz';
+import { SECOND_LESSON } from '../utils/course';
 
 let l1: string;
 let l2: string;
@@ -8,7 +9,7 @@ let l2: string;
 test.beforeAll(async () => {
   const db = adminClient();
   l1 = await lessonIdBySlug(db, 'guitar-anatomy-tuning');
-  l2 = await lessonIdBySlug(db, 'first-chords');
+  l2 = await lessonIdBySlug(db, SECOND_LESSON);
 });
 
 type QuizResult = {
@@ -64,7 +65,7 @@ test('TC-QZ-02 score 60% at pass_score 60 unlocks next lesson @security', async 
   expect(res.score_pct).toBe(60);
   expect(res.pass_score).toBe(60);
   expect(res.passed).toBe(true);
-  expect(res.next_lesson_slug).toBe('first-chords');
+  expect(res.next_lesson_slug).toBe(SECOND_LESSON);
   const rows = await adminClient()
     .from('lesson_progress')
     .select('status')

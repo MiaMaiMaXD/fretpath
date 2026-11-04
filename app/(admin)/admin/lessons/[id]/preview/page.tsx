@@ -5,7 +5,8 @@ import { LessonMarkdown } from '@/components/LessonMarkdown';
 import { StringPlayer } from '@/components/StringPlayer';
 import { YouTubeEmbed } from '@/components/YouTubeEmbed';
 import { requireAdmin } from '@/lib/data/admin';
-import { getAdminLesson, getAdminLessonSortOrder, getAdminQuestions } from '@/lib/data/admin-lessons';
+import { showsChordLab } from '@/lib/chord-lab';
+import { getAdminLesson, getAdminQuestions } from '@/lib/data/admin-lessons';
 
 export const metadata = { title: 'ตัวอย่างบทเรียน' };
 
@@ -17,7 +18,7 @@ export default async function LessonPreviewPage({ params }: { params: Promise<{ 
   if (!UUID_RE.test(id)) notFound();
   const lesson = await getAdminLesson(id);
   if (!lesson) notFound();
-  const [questions, sortOrder] = await Promise.all([getAdminQuestions(id), getAdminLessonSortOrder(id)]);
+  const questions = await getAdminQuestions(id);
   return (
     <main className="space-y-4">
       <p role="note" className="rounded border border-amber-600 bg-amber-50 p-3 text-amber-900 dark:bg-amber-950 dark:text-amber-100">
@@ -31,7 +32,7 @@ export default async function LessonPreviewPage({ params }: { params: Promise<{ 
         {lesson.videoUrl ? <YouTubeEmbed url={lesson.videoUrl} title={lesson.title} /> : null}
         <LessonMarkdown source={lesson.contentMd} />
         <StringPlayer />
-        {sortOrder >= 2 && sortOrder <= 5 ? <ChordLab /> : null}
+        {showsChordLab(lesson.slug) ? <ChordLab /> : null}
         <section aria-labelledby="preview-questions" className="space-y-3">
           <h2 id="preview-questions" className="text-xl font-semibold">
             แบบทดสอบ
