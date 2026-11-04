@@ -1,9 +1,9 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { FretNeck } from '@/components/path/FretNeck';
-import { LessonRow } from '@/components/path/LessonRow';
+import { LessonRow, SoonRow } from '@/components/path/LessonRow';
 import { getPath } from '@/lib/data/path';
-import { unitsFor } from '@/lib/path-frets';
+import { layoutPath, unitsFor } from '@/lib/path-frets';
 import { lockedNotice } from '@/lib/path-state';
 import { lessonsProgress, nextLesson } from '@/lib/stats';
 import './path.css';
@@ -25,7 +25,8 @@ export default async function PathPage({ searchParams }: { searchParams: Promise
   const slug = typeof locked === 'string' ? locked : null;
   const notice = slug ? lockedNotice(lessons, slug) : null;
   const next = nextLesson(lessons);
-  const nextFret = next ? lessons.findIndex((l) => l.id === next.id) : -1;
+  const slots = layoutPath(path.course.slug, lessons);
+  const nextFret = next ? slots.findIndex((s) => s.lesson?.id === next.id) : -1;
   const progress = lessonsProgress(lessons);
   const allDone = progress.total > 0 && progress.completed === progress.total;
 
@@ -47,25 +48,33 @@ export default async function PathPage({ searchParams }: { searchParams: Promise
         </p>
       ) : null}
 
-      <FretNeck lessons={lessons} currentId={next?.id ?? null} />
+      <FretNeck slots={slots} currentId={next?.id ?? null} />
 
       <div className="path-grid">
         <div className="lessons">
-          {unitsFor(lessons.length).map((u) => {
-            const inUnit = lessons.slice(u.from, u.to + 1);
-            const done = inUnit.filter((l) => l.state === 'completed').length;
+          {unitsFor(slots.length).map((u) => {
+            const inUnit = slots.slice(u.from, u.to + 1);
+            const real = inUnit.flatMap((s) => (s.lesson ? [s.lesson] : []));
+            const done = real.filter((l) => l.state === 'completed').length;
+            const soon = inUnit.length - real.length;
             return (
               <section key={u.from} className="unit" aria-labelledby={`unit-${u.from}`}>
                 <div className="unit-head">
                   <h2 id={`unit-${u.from}`}>{u.name}</h2>
                   <small>
-                    เฟรต {u.from}–{u.to} · จบ {done}/{inUnit.length}
+                    เฟรต {u.from}–{u.to}
+                    {real.length > 0 ? ` · จบ ${done}/${real.length}` : ''}
+                    {soon > 0 ? ` · อีก ${soon} บทเร็ว ๆ นี้` : ''}
                   </small>
                 </div>
                 <ol className="lesson-list">
-                  {inUnit.map((l, k) => (
-                    <LessonRow key={l.id} lesson={l} fret={u.from + k} current={l.id === next?.id} />
-                  ))}
+                  {inUnit.map((s) =>
+                    s.lesson ? (
+                      <LessonRow key={s.fret} lesson={s.lesson} fret={s.fret} current={s.lesson.id === next?.id} />
+                    ) : (
+                      <SoonRow key={s.fret} plan={s.plan} fret={s.fret} />
+                    ),
+                  )}
                 </ol>
               </section>
             );
@@ -113,7 +122,7 @@ export default async function PathPage({ searchParams }: { searchParams: Promise
               </li>
               <li>
                 <i className="dot empty" />
-                เฟรตว่าง บทใหม่กำลังจะมา
+                เร็ว ๆ นี้ บทใหม่กำลังจะมา
               </li>
             </ul>
           </div>

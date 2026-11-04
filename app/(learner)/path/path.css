@@ -41,7 +41,8 @@
 .fp-path .fret.unlocked .stone { border-color: var(--amber-hi); }
 .fp-path .fret.now .stone { background: #fff; border: 4px solid var(--amber-hi); box-shadow: 0 0 0 6px rgba(245, 165, 36, .25); animation: fp-path-pulse 2.2s ease-in-out infinite; }
 .fp-path .fret.locked { opacity: .75; }
-.fp-path .fret.empty .stone { border-style: dashed; border-color: #3b4a61; }
+.fp-path .fret.soon .stone, .fp-path .fret.empty .stone { border-style: dashed; border-color: #56657c; }
+.fp-path .fret.empty { opacity: .6; }
 .fp-path .inlay { position: absolute; bottom: -22px; display: flex; gap: 5px; }
 .fp-path .inlay i { width: 9px; height: 9px; border-radius: 50%; background: #c7ced9; }
 @keyframes fp-path-pulse { 50% { box-shadow: 0 0 0 11px rgba(245, 165, 36, .08); } }
@@ -74,6 +75,9 @@
 .fp-path .row-state.completed { color: var(--done); }
 .fp-path .row-state.unlocked { color: var(--amber-ink); }
 .fp-path .row-state.locked { color: var(--muted); font-weight: 500; }
+.fp-path .lesson-row.soon .no { background: transparent; border: 2px dashed #94a3b8; color: var(--muted); }
+.fp-path .lesson-row.soon .row-title { color: var(--muted); font-weight: 500; }
+.fp-path .row-state.soon { color: var(--muted); font-weight: 500; background: var(--tint); border-radius: 999px; padding: 1px 10px; font-size: .8rem; }
 .fp-path .lesson-row:target .row-inner { animation: fp-path-flash 1.2s ease-out; }
 @keyframes fp-path-flash { from { background: #fde9c4; } }
 
@@ -96,7 +100,7 @@
   .fp-path .side { position: static; order: -1; }
   .fp-path .legend-card { display: none; }
   .fp-path .row-inner { grid-template-columns: 44px minmax(0, 1fr); gap: 10px; }
-  .fp-path .row-state { grid-column: 2; }
+  .fp-path .row-state { grid-column: 2; justify-self: start; }
 }
 @media (prefers-color-scheme: dark) {
   .fp-path .lessons { background: var(--surface); color: var(--ink); border-radius: 16px; padding: 16px 18px 4px; }

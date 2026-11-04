@@ -1,50 +1,55 @@
-import { FRET_COUNT, INLAYS, unitsFor } from '@/lib/path-frets';
-import type { PathLesson } from '@/lib/path-state';
+import { FRET_COUNT, INLAYS, unitsFor, type FretSlot } from '@/lib/path-frets';
 import { NeckScroll } from './NeckScroll';
 import { STATE_LABEL } from './LessonRow';
 
 /** The course as a guitar neck: one fret per lesson; each fret jumps to its lesson in the list below. */
-export function FretNeck({ lessons, currentId }: { lessons: PathLesson[]; currentId: string | null }) {
-  const frets = Math.max(FRET_COUNT, lessons.length);
+export function FretNeck({ slots, currentId }: { slots: FretSlot[]; currentId: string | null }) {
+  const frets = Math.max(FRET_COUNT, slots.length);
   const cols = { gridTemplateColumns: `56px repeat(${frets - 1}, minmax(44px, 1fr))` };
-  const current = lessons.findIndex((l) => l.id === currentId);
-  const units = unitsFor(lessons.length);
+  const current = slots.findIndex((s) => s.lesson?.id === currentId);
+  const units = unitsFor(frets);
   return (
     <nav className="neck-wrap" aria-label="คอกีตาร์ กดเฟรตเพื่อไปที่บทเรียน">
       <NeckScroll>
         <div className="neck" style={cols} data-testid="fret-neck">
           {Array.from({ length: frets }, (_, i) => {
-            const l = lessons[i];
-            const cls = `fret${i === 0 ? ' nut' : ''} ${l ? (l.id === currentId ? 'now' : l.state) : 'empty'}`;
-            const inlay = INLAYS.has(i) ? (
-              <span className="inlay" aria-hidden="true">
-                <i />
-                {i === 12 ? <i /> : null}
-              </span>
-            ) : null;
+            const slot = slots[i];
+            const l = slot?.lesson;
+            const kind = l ? (l.id === currentId ? 'now' : l.state) : slot ? 'soon' : 'empty';
             const inner = (
               <>
                 <span className="no" aria-hidden="true">
                   {i}
                 </span>
                 <span className="stone" aria-hidden="true" />
-                {inlay}
+                {INLAYS.has(i) ? (
+                  <span className="inlay" aria-hidden="true">
+                    <i />
+                    {i === 12 ? <i /> : null}
+                  </span>
+                ) : null}
               </>
             );
-            return l ? (
+            const cls = `fret${i === 0 ? ' nut' : ''} ${kind}`;
+            if (!slot) {
+              return (
+                <span key={i} className={cls} aria-hidden="true">
+                  {inner}
+                </span>
+              );
+            }
+            const title = l ? l.title : slot.plan!.title;
+            const status = l ? STATE_LABEL[l.state] : 'เร็ว ๆ นี้';
+            return (
               <a
                 key={i}
                 href={`#fret-${i}`}
                 className={cls}
-                aria-current={l.id === currentId ? 'step' : undefined}
-                aria-label={`เฟรต ${i}: ${l.title} (${STATE_LABEL[l.state]})`}
+                aria-current={l && l.id === currentId ? 'step' : undefined}
+                aria-label={`เฟรต ${i}: ${title} (${status})`}
               >
                 {inner}
               </a>
-            ) : (
-              <span key={i} className={cls} aria-hidden="true">
-                {inner}
-              </span>
             );
           })}
         </div>

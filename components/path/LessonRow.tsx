@@ -1,5 +1,27 @@
 import Link from 'next/link';
+import type { PlannedLesson } from '@/lib/path-frets';
 import type { LessonState, PathLesson } from '@/lib/path-state';
+
+/** A planned lesson that has no content yet: shown so learners can see the whole course. */
+export function SoonRow({ plan, fret }: { plan: PlannedLesson; fret: number }) {
+  return (
+    <li id={`fret-${fret}`} className="lesson-row soon" data-testid="lesson-soon">
+      <div className="row-inner">
+        <span className="no" aria-hidden="true">
+          {fret}
+        </span>
+        <span className="row-main">
+          <span className="row-title">
+            <span className="sr-only">เฟรต {fret}: </span>
+            {plan.title}
+          </span>
+          <span className="row-summary">{plan.summary}</span>
+        </span>
+        <span className="row-state soon">เร็ว ๆ นี้</span>
+      </div>
+    </li>
+  );
+}
 
 export const STATE_LABEL: Record<LessonState, string> = { locked: 'ล็อก', unlocked: 'เรียนได้', completed: 'จบแล้ว' };
 
