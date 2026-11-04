@@ -1,6 +1,3 @@
-'use client';
-
-import { useRef } from 'react';
 import { Field } from '@/components/Field';
 import { ACTIVITIES, FEELINGS } from '@/lib/practice-activities';
 import type { FieldErrors } from '@/lib/validation';
@@ -25,8 +22,6 @@ type Props = {
   noteResetKey?: number;
   values: PracticeValues;
 };
-
-const PRESETS = [10, 15, 20, 30, 45, 60];
 
 /** Radio buttons drawn as tappable pills; a fieldset/legend gives the group its name. */
 function Choices({
@@ -70,14 +65,8 @@ function Choices({
 }
 
 export function PracticeFields({ idPrefix = '', today, lessons, errors, values, noteResetKey }: Props) {
-  const box = useRef<HTMLDivElement>(null);
-  function preset(n: number) {
-    const input = box.current?.querySelector<HTMLInputElement>('input[name="minutes"]');
-    if (input) input.value = String(n);
-  }
-
   return (
-    <div className="fields" ref={box}>
+    <div className="fields">
       <Field
         idPrefix={idPrefix}
         name="topic"
@@ -89,7 +78,7 @@ export function PracticeFields({ idPrefix = '', today, lessons, errors, values, 
         defaultValue={values.topic}
       />
 
-      <div className="minutes-row">
+      <div className="pair">
         <Field
           idPrefix={idPrefix}
           name="minutes"
@@ -98,13 +87,15 @@ export function PracticeFields({ idPrefix = '', today, lessons, errors, values, 
           error={errors?.minutes}
           defaultValue={values.minutes}
         />
-        <div className="presets" role="group" aria-label="เลือกนาทีแบบเร็ว">
-          {PRESETS.map((n) => (
-            <button key={n} type="button" onClick={() => preset(n)}>
-              {n}
-            </button>
-          ))}
-        </div>
+        <Field
+          idPrefix={idPrefix}
+          name="practicedOn"
+          label="วันที่ซ้อม"
+          type="date"
+          max={today}
+          error={errors?.practicedOn}
+          defaultValue={values.practicedOn}
+        />
       </div>
 
       <Choices
@@ -120,7 +111,7 @@ export function PracticeFields({ idPrefix = '', today, lessons, errors, values, 
       <Choices
         id={`${idPrefix}feeling`}
         name="feeling"
-        legend="ซ้อมเสร็จแล้วรู้สึกยังไง"
+        legend="รู้สึกยังไง"
         options={FEELINGS}
         defaultValue={values.feeling}
         error={errors?.feeling}
@@ -140,28 +131,17 @@ export function PracticeFields({ idPrefix = '', today, lessons, errors, values, 
         defaultValue={values.note}
       />
 
-      <div className="pair">
-        <Field
-          idPrefix={idPrefix}
-          name="practicedOn"
-          label="วันที่ซ้อม"
-          type="date"
-          max={today}
-          error={errors?.practicedOn}
-          defaultValue={values.practicedOn}
-        />
-        <Field
-          idPrefix={idPrefix}
-          name="lessonId"
-          label="บทเรียนที่เกี่ยวข้อง"
-          as="select"
-          placeholder="ไม่ระบุ"
-          required={false}
-          options={lessons.map((l) => ({ value: l.id, label: l.title }))}
-          error={errors?.lessonId}
-          defaultValue={values.lessonId}
-        />
-      </div>
+      <Field
+        idPrefix={idPrefix}
+        name="lessonId"
+        label="บทเรียนที่เกี่ยวข้อง"
+        as="select"
+        placeholder="ไม่ระบุ"
+        required={false}
+        options={lessons.map((l) => ({ value: l.id, label: l.title }))}
+        error={errors?.lessonId}
+        defaultValue={values.lessonId}
+      />
     </div>
   );
 }

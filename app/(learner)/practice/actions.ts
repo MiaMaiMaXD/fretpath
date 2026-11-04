@@ -52,6 +52,7 @@ function dbMessage(error: { message?: string; code?: string }): string {
 
 function refresh() {
   revalidatePath('/practice');
+  revalidatePath('/practice/history');
   revalidatePath('/dashboard');
 }
 

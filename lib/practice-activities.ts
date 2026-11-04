@@ -27,3 +27,18 @@ export function feelingLabel(value: string | null): string | null {
 export function practiceTitle(log: { topic: string | null; activity: string }): string {
   return log.topic?.trim() || `ฝึก${activityLabel(log.activity)}`;
 }
+
+/** วันนี้ / เมื่อวาน / "ศ. 31 ต.ค." (weekday optional; year only when it is not the current one). */
+export function practiceDayLabel(iso: string, today: string, withWeekday = true): string {
+  if (iso === today) return 'วันนี้';
+  const t = new Date(`${today}T00:00:00Z`);
+  const d = new Date(`${iso}T00:00:00Z`);
+  if ((t.getTime() - d.getTime()) / 864e5 === 1) return 'เมื่อวาน';
+  return new Intl.DateTimeFormat('th-TH', {
+    timeZone: 'UTC',
+    ...(withWeekday ? { weekday: 'short' as const } : {}),
+    day: 'numeric',
+    month: 'short',
+    ...(iso.slice(0, 4) === today.slice(0, 4) ? {} : { year: 'numeric' as const }),
+  }).format(d);
+}

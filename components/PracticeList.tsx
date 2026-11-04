@@ -7,7 +7,7 @@ import { PracticeFields, type LessonOption } from '@/components/PracticeFields';
 import { keepValuesSubmit } from '@/components/useKeepValuesSubmit';
 import type { ActionState } from '@/lib/action-state';
 import type { PracticeLog } from '@/lib/data/practice';
-import { activityLabel, feelingLabel, practiceTitle } from '@/lib/practice-activities';
+import { activityLabel, feelingLabel, practiceDayLabel, practiceTitle } from '@/lib/practice-activities';
 
 type Shared = { today: string; lessons: LessonOption[] };
 
@@ -156,21 +156,6 @@ function hoursText(minutes: number): string {
   return `${h} ชม.${m ? ` ${m} นาที` : ''}`;
 }
 
-/** วันนี้ / เมื่อวาน / "ศ. 31 ต.ค." (year only when it is not the current one). */
-function dayLabel(iso: string, today: string): string {
-  if (iso === today) return 'วันนี้';
-  const t = new Date(`${today}T00:00:00Z`);
-  const d = new Date(`${iso}T00:00:00Z`);
-  if ((t.getTime() - d.getTime()) / 864e5 === 1) return 'เมื่อวาน';
-  return new Intl.DateTimeFormat('th-TH', {
-    timeZone: 'UTC',
-    weekday: 'short',
-    day: 'numeric',
-    month: 'short',
-    ...(iso.slice(0, 4) === today.slice(0, 4) ? {} : { year: 'numeric' }),
-  }).format(d);
-}
-
 export function PracticeList({
   logs,
   today,
@@ -197,7 +182,7 @@ export function PracticeList({
     <section className="panel journal" aria-labelledby="history">
       <div className="journal-head">
         <div>
-          <h2 id="history">ประวัติการซ้อม</h2>
+          <h2 id="history">บันทึกทั้งหมด</h2>
           <p className="totals" data-testid="practice-totals">
             ซ้อมมาแล้ว {totals.sessions} ครั้ง รวม {hoursText(totals.minutes)}
           </p>
@@ -217,7 +202,7 @@ export function PracticeList({
       {logs.length === 0 ? (
         <div className="empty" data-testid="practice-empty">
           <p className="empty-title">ยังไม่มีบันทึก</p>
-          <p>เริ่มจับเวลาด้านบน ซ้อมสัก 10 นาที แล้วจดไว้ในช่องบันทึก ครั้งแรกจะขึ้นที่นี่</p>
+          <p>ไปที่หน้าบันทึกการฝึก จับเวลาซ้อมสัก 10 นาที แล้วจดไว้ ครั้งแรกจะขึ้นที่นี่</p>
         </div>
       ) : (
         <>
@@ -231,7 +216,7 @@ export function PracticeList({
               return (
                 <section key={d.date} className="day" aria-labelledby={`day-${d.date}`}>
                   <h3 id={`day-${d.date}`} className="day-head">
-                    <time dateTime={d.date}>{dayLabel(d.date, today)}</time>
+                    <time dateTime={d.date}>{practiceDayLabel(d.date, today)}</time>
                     {d.logs.length > 1 ? <span className="day-sum">รวม {sum} นาที</span> : null}
                   </h3>
                   <ul className="entries">

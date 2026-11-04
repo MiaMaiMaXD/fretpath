@@ -53,4 +53,7 @@ test('TC-SEC-18c practice page (empty and with logs) has no serious axe violatio
   await memberPage.reload();
   await memberPage.waitForLoadState('networkidle');
   expect(await serious(memberPage), 'practice with logs').toEqual([]);
+  await memberPage.goto('/practice/history');
+  await memberPage.waitForLoadState('networkidle');
+  expect(await serious(memberPage), 'practice history').toEqual([]);
 });

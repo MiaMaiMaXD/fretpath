@@ -7,6 +7,11 @@ export class PracticePage {
     await this.page.goto('/practice');
   }
 
+  /** Full history: search, edit and delete live here. */
+  async gotoHistory() {
+    await this.page.goto('/practice/history');
+  }
+
   /**
    * `activity` is the option value: tuning | chords | strumming | song | other.
    * `feeling` is the option value: great | progress | sore | tough.
@@ -21,9 +26,9 @@ export class PracticePage {
     if (v.note !== undefined) await form.getByLabel('โน้ตถึงตัวเอง').fill(v.note);
   }
 
-  /** The daily log form (the edit forms inside history cards are separate). */
+  /** The log sheet on /practice (the edit forms on the history page are separate). */
   form(): Locator {
-    return this.page.getByRole('region', { name: 'จดบันทึกการซ้อม' });
+    return this.page.getByRole('region', { name: 'จดบันทึกรอบนี้' });
   }
 
   minutesInput(): Locator {
@@ -34,11 +39,17 @@ export class PracticePage {
     await this.page.getByRole('button', { name: 'บันทึกการซ้อม', exact: true }).click();
   }
 
-  history(): Locator {
-    return this.page.getByRole('region', { name: 'ประวัติการซ้อม' });
+  /** The five latest sessions beside the sheet on /practice. */
+  rows(): Locator {
+    return this.page.getByRole('complementary', { name: 'ซ้อมล่าสุด' }).getByRole('listitem');
   }
 
-  rows(): Locator {
+  /** The notebook on /practice/history. */
+  history(): Locator {
+    return this.page.getByRole('region', { name: 'บันทึกทั้งหมด' });
+  }
+
+  historyRows(): Locator {
     return this.history().getByRole('listitem');
   }
 }

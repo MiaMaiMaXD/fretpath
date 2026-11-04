@@ -9,7 +9,7 @@ import { PracticeTimer } from '@/components/PracticeTimer';
 import { keepValuesSubmit } from '@/components/useKeepValuesSubmit';
 import type { ActionState } from '@/lib/action-state';
 
-export function PracticeForm({ today, lessons }: { today: string; lessons: LessonOption[] }) {
+export function PracticeForm({ today, lessons, week }: { today: string; lessons: LessonOption[]; week: React.ReactNode }) {
   const initial: ActionState = { ok: false };
   const [saves, setSaves] = useState(0);
   const [state, action, pending] = useActionState(createPracticeLog, initial);
@@ -25,24 +25,29 @@ export function PracticeForm({ today, lessons }: { today: string; lessons: Lesso
 
   // Writes straight into the uncontrolled input; its defaultValue (and key) are unchanged, so it is not remounted.
   function fillMinutes(minutes: number) {
-    const input = formRef.current?.elements.namedItem('minutes');
-    if (input instanceof HTMLInputElement) {
-      input.value = String(minutes);
-      input.classList.remove('flash');
-      void input.offsetWidth; // restart the highlight animation
-      input.classList.add('flash');
-    }
+    const form = formRef.current;
+    const input = form?.elements.namedItem('minutes');
+    if (!(input instanceof HTMLInputElement)) return;
+    input.value = String(minutes);
+    input.classList.remove('flash');
+    void input.offsetWidth; // restart the highlight animation
+    input.classList.add('flash');
+    // Bring the sheet into view and put the cursor where the learner types next.
+    form?.closest('section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    const topic = form?.elements.namedItem('topic');
+    if (topic instanceof HTMLInputElement) topic.focus({ preventScroll: true });
   }
 
   return (
     <>
-      <div className="session" role="group" aria-label="เครื่องมือระหว่างซ้อม">
-        <PracticeTimer onUse={fillMinutes} />
+      <div className="stage" role="group" aria-label="เครื่องมือระหว่างซ้อม">
+        <PracticeTimer onFinish={fillMinutes} week={week} />
         <Metronome />
       </div>
 
-      <section className="panel log-form" aria-labelledby="form-title">
-        <h2 id="form-title">จดบันทึกการซ้อม</h2>
+      <section className="sheet" aria-labelledby="form-title">
+        <h2 id="form-title">จดบันทึกรอบนี้</h2>
+        <p className="hint">กด “จบรอบ แล้วจดบันทึก” เวลาจะถูกกรอกให้ แก้ได้ถ้าไม่ตรง</p>
         <form ref={formRef} onSubmit={keepValuesSubmit(action)}>
           <PracticeFields
             // No automatic form reset any more: remount to clear the fields after a successful save.

@@ -11,6 +11,7 @@ const LEARNER_PAGES = [
   '/lessons/guitar-anatomy-tuning',
   '/lessons/guitar-anatomy-tuning/quiz',
   '/practice',
+  '/practice/history',
   '/profile',
 ];
 
