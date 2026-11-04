@@ -1,37 +1,17 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
+import { formatClock, usePracticeTimer } from '@/components/practice/PracticeSession';
 import { minutesFromElapsed } from '@/lib/timer';
 
-function parts(ms: number): [string, string] {
-  const total = Math.floor(ms / 1000);
-  return [String(Math.floor(total / 60)).padStart(2, '0'), String(total % 60).padStart(2, '0')];
-}
+const LONG_MS = 3 * 60 * 60 * 1000;
 
-/** Elapsed time comes from timestamps (startedAt + accumulatedMs), never from counting ticks. */
+/** Stage timer on /practice. State lives in the session store, so it keeps running on other pages. */
 export function PracticeTimer({ onFinish, week }: { onFinish: (minutes: number) => void; week: React.ReactNode }) {
-  const [startedAt, setStartedAt] = useState<number | null>(null);
-  const [accumulatedMs, setAccumulatedMs] = useState(0);
-  const [, setTick] = useState(0);
+  const { running, elapsed, start, pause, reset } = usePracticeTimer();
   const [used, setUsed] = useState<string | null>(null);
-
-  // The interval only triggers a re-render; the displayed time is derived from Date.now().
-  useEffect(() => {
-    if (startedAt === null) return;
-    const t = setInterval(() => setTick((n) => n + 1), 250);
-    return () => clearInterval(t);
-  }, [startedAt]);
-
-  // eslint-disable-next-line react-hooks/purity
-  const elapsed = accumulatedMs + (startedAt === null ? 0 : Date.now() - startedAt);
-  const running = startedAt !== null;
-  const [mm, ss] = parts(elapsed);
+  const [mm, ss] = formatClock(elapsed);
   const kicker = running ? 'กำลังจับเวลา' : elapsed > 0 ? 'พักเวลาไว้' : 'พร้อมซ้อมแล้วกดเริ่มได้เลย';
-
-  function pause() {
-    if (startedAt !== null) setAccumulatedMs(accumulatedMs + Date.now() - startedAt);
-    setStartedAt(null);
-  }
 
   return (
     <section aria-label="ตัวจับเวลา" className={`stage-timer${running ? ' is-running' : ''}`}>
@@ -55,7 +35,7 @@ export function PracticeTimer({ onFinish, week }: { onFinish: (minutes: number) 
             className="btn btn-amber btn-big"
             onClick={() => {
               setUsed(null);
-              setStartedAt(Date.now());
+              start();
             }}
           >
             {elapsed > 0 ? 'จับเวลาต่อ' : 'เริ่มจับเวลา'}
@@ -69,7 +49,11 @@ export function PracticeTimer({ onFinish, week }: { onFinish: (minutes: number) 
             pause();
             const m = minutesFromElapsed(elapsed);
             onFinish(m);
-            setUsed(`ใส่ ${m} นาทีในใบบันทึกแล้ว`);
+            setUsed(
+              elapsed > LONG_MS
+                ? `จับเวลาไว้นานกว่า 3 ชั่วโมง ลืมหยุดหรือเปล่า? ใส่ ${m} นาทีไว้ให้ ตรวจตัวเลขก่อนบันทึก`
+                : `ใส่ ${m} นาทีในใบบันทึกแล้ว`,
+            );
           }}
         >
           จบรอบ แล้วจดบันทึก
@@ -79,7 +63,7 @@ export function PracticeTimer({ onFinish, week }: { onFinish: (minutes: number) 
             type="button"
             className="btn btn-quiet"
             onClick={() => {
-              setAccumulatedMs(0);
+              reset();
               setUsed(null);
             }}
           >

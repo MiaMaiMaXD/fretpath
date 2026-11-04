@@ -182,3 +182,36 @@ test('TC-PRC-12 empty state on both pages, no history link and no search box @re
   await expect(memberPage.getByTestId('practice-totals')).toHaveText('ซ้อมมาแล้ว 0 ครั้ง รวม 0 นาที');
   await expect(memberPage.getByRole('searchbox')).toHaveCount(0);
 });
+
+test('TC-PRC-13 timer keeps running across pages and reloads, with a floating mini player @regression', async ({ memberPage }) => {
+  const practice = new PracticePage(memberPage);
+  await memberPage.clock.install();
+  await practice.goto();
+  await expect(memberPage.getByTestId('mini-player')).toHaveCount(0);
+
+  await memberPage.getByRole('button', { name: 'เริ่มจับเวลา' }).click();
+  await memberPage.clock.fastForward('02:00');
+  await memberPage.goto('/dashboard');
+  const mini = memberPage.getByTestId('mini-player');
+  await expect(mini).toBeVisible();
+  await expect(mini).toContainText('02:0');
+
+  await mini.getByRole('button', { name: 'พักเวลา' }).click();
+  await expect(mini.getByRole('button', { name: 'จับเวลาต่อ' })).toBeVisible();
+  const paused = await mini.getByRole('link').innerText();
+
+  await memberPage.reload();
+  await expect(memberPage.getByTestId('mini-player')).toContainText(paused);
+
+  await memberPage.getByTestId('mini-player').getByRole('link').click();
+  await expect(memberPage).toHaveURL(/\/practice$/);
+  await expect(memberPage.getByTestId('timer-display')).toHaveText(paused);
+  await expect(memberPage.getByTestId('mini-player')).toHaveCount(0);
+
+  // saving a session clears the paused timer
+  await memberPage.getByRole('button', { name: 'จบรอบ แล้วจดบันทึก' }).click();
+  await practice.form().locator('input[name="activity"][value="chords"]').check();
+  await practice.save();
+  await expect(practice.rows()).toHaveCount(1);
+  await expect(memberPage.getByTestId('timer-display')).toHaveText('00:00');
+});

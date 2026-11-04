@@ -65,3 +65,33 @@
 @media (max-width: 560px) {
   .fp-app .app-main { padding-top: 22px; }
 }
+
+/* Floating practice timer + metronome, shown on every learner page except /practice. */
+.fp-app .mini-player {
+  position: fixed; right: 24px; bottom: 24px; z-index: 30;
+  display: flex; align-items: center; gap: 12px;
+  background: var(--night); color: #fff; border-radius: 999px; padding: 6px 6px 6px 18px;
+  box-shadow: 0 14px 40px rgba(15, 23, 42, .35);
+}
+.fp-app .mini-time { display: flex; align-items: center; gap: 9px; color: #fff; text-decoration: none; font-size: 1.3rem; font-weight: 600; font-variant-numeric: tabular-nums; letter-spacing: -.01em; }
+.fp-app .mini-time:hover { color: var(--amber-hi); }
+.fp-app .mini-rec { width: 8px; height: 8px; border-radius: 50%; background: #64748b; }
+.fp-app .mini-player.is-running .mini-rec { background: #ef4444; animation: fp-mini-rec 1.6s ease-in-out infinite; }
+@keyframes fp-mini-rec { 50% { opacity: .25; } }
+.fp-app .mini-sep { width: 1px; height: 26px; background: #334155; }
+.fp-app .mini-metro { display: flex; align-items: center; gap: 5px; height: 40px; padding: 0 12px; border-radius: 999px; border: 0; background: #1e293b; color: #cbd5e1; font: inherit; font-size: .9rem; cursor: pointer; }
+.fp-app .mini-metro svg { width: 18px; height: 18px; }
+.fp-app .mini-metro b { font-variant-numeric: tabular-nums; }
+.fp-app .mini-metro:hover:not(:disabled) { color: #fff; }
+.fp-app .mini-metro.on { background: rgba(245, 165, 36, .18); color: var(--amber-hi); }
+.fp-app .mini-metro:disabled { opacity: .45; cursor: not-allowed; }
+.fp-app .mini-play { width: 44px; height: 44px; border-radius: 50%; border: 0; background: var(--amber); color: #1a1205; display: grid; place-items: center; cursor: pointer; }
+.fp-app .mini-play:hover { background: var(--amber-hi); }
+.fp-app .mini-play svg { width: 18px; height: 18px; }
+@media (max-width: 900px) {
+  /* sit above the bottom navigation */
+  .fp-app .mini-player { right: 12px; bottom: calc(76px + env(safe-area-inset-bottom)); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .fp-app .mini-player.is-running .mini-rec { animation: none; }
+}

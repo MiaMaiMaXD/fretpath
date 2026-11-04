@@ -1,9 +1,10 @@
 'use client';
 
-import { useActionState, useRef, useState } from 'react';
+import { useActionState, useEffect, useRef, useState } from 'react';
 import { createPracticeLog } from '@/app/(learner)/practice/actions';
 import { FormMessage } from '@/components/FormMessage';
 import { Metronome } from '@/components/Metronome';
+import { timerActions } from '@/components/practice/PracticeSession';
 import { PracticeFields, type LessonOption } from '@/components/PracticeFields';
 import { PracticeTimer } from '@/components/PracticeTimer';
 import { keepValuesSubmit } from '@/components/useKeepValuesSubmit';
@@ -21,6 +22,10 @@ export function PracticeForm({ today, lessons, week }: { today: string; lessons:
     if (state.ok) setSaves((n) => n + 1);
   }
   const formRef = useRef<HTMLFormElement>(null);
+  // A saved session clears a paused timer so the next round starts at 00:00 (a running timer is left alone).
+  useEffect(() => {
+    if (state.ok) timerActions.resetIfPaused();
+  }, [state]);
   const v = state.values ?? {};
 
   // Writes straight into the uncontrolled input; its defaultValue (and key) are unchanged, so it is not remounted.
