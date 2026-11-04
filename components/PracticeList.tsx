@@ -1,18 +1,15 @@
 'use client';
 
-import { useActionState, useEffect, useRef, useState, useTransition } from 'react';
+import { useActionState, useDeferredValue, useEffect, useRef, useState, useTransition } from 'react';
 import { deletePracticeLog, updatePracticeLog } from '@/app/(learner)/practice/actions';
 import { FormMessage } from '@/components/FormMessage';
 import { PracticeFields, type LessonOption } from '@/components/PracticeFields';
-import { SubmitButton } from '@/components/SubmitButton';
 import { keepValuesSubmit } from '@/components/useKeepValuesSubmit';
 import type { ActionState } from '@/lib/action-state';
 import type { PracticeLog } from '@/lib/data/practice';
-import { activityLabel } from '@/lib/practice-activities';
+import { activityLabel, feelingLabel, practiceDayLabel, practiceTitle } from '@/lib/practice-activities';
 
 type Shared = { today: string; lessons: LessonOption[] };
-
-const BTN = 'rounded border border-neutral-400 px-3 py-1 disabled:opacity-50';
 
 function EditRow({ log, today, lessons, onDone }: Shared & { log: PracticeLog; onDone: () => void }) {
   const initial: ActionState = { ok: false };
@@ -23,7 +20,7 @@ function EditRow({ log, today, lessons, onDone }: Shared & { log: PracticeLog; o
   }, initial);
   const v = state.values ?? {};
   return (
-    <form onSubmit={keepValuesSubmit(action)} className="flex flex-col gap-3">
+    <form onSubmit={keepValuesSubmit(action)} className="edit-form">
       <PracticeFields
         idPrefix={`edit-${log.id}-`}
         today={today}
@@ -33,14 +30,18 @@ function EditRow({ log, today, lessons, onDone }: Shared & { log: PracticeLog; o
           practicedOn: v.practicedOn ?? log.practicedOn,
           minutes: v.minutes ?? String(log.minutes),
           activity: v.activity ?? log.activity,
+          topic: v.topic ?? log.topic ?? '',
+          feeling: v.feeling ?? log.feeling ?? '',
           note: v.note ?? log.note ?? '',
           lessonId: v.lessonId ?? log.lessonId ?? '',
         }}
       />
       <FormMessage state={state} />
-      <div className="flex gap-2">
-        <SubmitButton pending={pending}>บันทึก</SubmitButton>
-        <button type="button" className={BTN} onClick={onDone}>
+      <div className="row-actions">
+        <button type="submit" className="btn btn-amber" disabled={pending}>
+          บันทึก
+        </button>
+        <button type="button" className="btn btn-line" onClick={onDone}>
           ยกเลิก
         </button>
       </div>
@@ -48,7 +49,7 @@ function EditRow({ log, today, lessons, onDone }: Shared & { log: PracticeLog; o
   );
 }
 
-function DeleteDialog({ id, onClose }: { id: string; onClose: () => void }) {
+function DeleteDialog({ id, title, onClose }: { id: string; title: string; onClose: () => void }) {
   const [pending, start] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const dialogRef = useRef<HTMLDialogElement>(null);
@@ -72,36 +73,29 @@ function DeleteDialog({ id, onClose }: { id: string; onClose: () => void }) {
       onCancel={(e) => {
         if (pending) e.preventDefault();
       }}
-      className="m-auto w-full max-w-sm rounded bg-white p-4 text-neutral-900 backdrop:bg-black/50 dark:bg-neutral-900 dark:text-neutral-100"
+      className="confirm"
     >
-      <div className="flex flex-col gap-3">
-        <h2 id={titleId} className="text-lg font-semibold">
-          ลบบันทึกนี้?
-        </h2>
-        {error ? (
-          <p role="alert" className="text-red-600">
-            {error}
-          </p>
-        ) : null}
-        <div className="flex gap-2">
-          <button
-            type="button"
-            disabled={pending}
-            className="rounded bg-red-700 px-4 py-2 font-medium text-white disabled:opacity-60"
-            onClick={() =>
-              start(async () => {
-                const r = await deletePracticeLog(id);
-                if (r.ok) onClose();
-                else setError(r.message ?? null);
-              })
-            }
-          >
-            ลบ
-          </button>
-          <button ref={cancelRef} type="button" disabled={pending} className={BTN} onClick={() => dialogRef.current?.close()}>
-            ยกเลิก
-          </button>
-        </div>
+      <h2 id={titleId}>ลบบันทึกนี้?</h2>
+      <p>“{title}” จะหายไปถาวร และนาทีของครั้งนี้จะถูกหักออกจากสถิติ</p>
+      {error ? <p role="alert" className="err">{error}</p> : null}
+      <div className="row-actions">
+        <button
+          type="button"
+          disabled={pending}
+          className="btn btn-danger"
+          onClick={() =>
+            start(async () => {
+              const r = await deletePracticeLog(id);
+              if (r.ok) onClose();
+              else setError(r.message ?? null);
+            })
+          }
+        >
+          ลบ
+        </button>
+        <button ref={cancelRef} type="button" disabled={pending} className="btn btn-line" onClick={() => dialogRef.current?.close()}>
+          ยกเลิก
+        </button>
       </div>
     </dialog>
   );
@@ -111,30 +105,40 @@ function Row({ log, today, lessons }: Shared & { log: PracticeLog }) {
   const [editing, setEditing] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const deleteBtnRef = useRef<HTMLButtonElement>(null);
+  const title = practiceTitle(log);
+  const feeling = feelingLabel(log.feeling);
   return (
-    <li className="rounded border border-neutral-300 p-3 dark:border-neutral-700">
+    <li className={`entry${editing ? ' editing' : ''}`}>
       {editing ? (
         <EditRow log={log} today={today} lessons={lessons} onDone={() => setEditing(false)} />
       ) : (
-        <div className="flex flex-col gap-1">
-          <p className="font-medium">
-            <time dateTime={log.practicedOn}>{log.practicedOn}</time> · {log.minutes} นาที · {activityLabel(log.activity)}
-          </p>
-          {log.lessonTitle ? <p className="text-sm">บทเรียน: {log.lessonTitle}</p> : null}
-          {log.note ? <p className="whitespace-pre-wrap break-words text-sm">{log.note}</p> : null}
-          <div className="flex gap-2 pt-1">
-            <button type="button" className={BTN} onClick={() => setEditing(true)}>
-              แก้ไข
-            </button>
-            <button ref={deleteBtnRef} type="button" className={BTN} onClick={() => setDeleting(true)}>
-              ลบ
-            </button>
+        <>
+          <div className="entry-text">
+            <h4>{title}</h4>
+            <p className="entry-meta">
+              <span>{activityLabel(log.activity)}</span>
+              {log.lessonTitle ? <span>บทเรียน {log.lessonTitle}</span> : null}
+              {feeling ? <span className={`feel tone-${log.feeling}`}>{feeling}</span> : null}
+            </p>
+            {log.note ? <p className="entry-note">{log.note}</p> : null}
+            <div className="entry-actions">
+              <button type="button" className="link-btn" onClick={() => setEditing(true)}>
+                แก้ไข
+              </button>
+              <button ref={deleteBtnRef} type="button" className="link-btn danger" onClick={() => setDeleting(true)}>
+                ลบ
+              </button>
+            </div>
           </div>
-        </div>
+          <p className="entry-mins">
+            <b>{log.minutes}</b> นาที
+          </p>
+        </>
       )}
       {deleting ? (
         <DeleteDialog
           id={log.id}
+          title={title}
           onClose={() => {
             setDeleting(false);
             deleteBtnRef.current?.focus();
@@ -145,13 +149,90 @@ function Row({ log, today, lessons }: Shared & { log: PracticeLog }) {
   );
 }
 
-export function PracticeList({ logs, today, lessons }: Shared & { logs: PracticeLog[] }) {
-  if (logs.length === 0) return <p>ยังไม่มีบันทึกการฝึก</p>;
+function hoursText(minutes: number): string {
+  if (minutes < 60) return `${minutes} นาที`;
+  const h = Math.floor(minutes / 60);
+  const m = minutes % 60;
+  return `${h} ชม.${m ? ` ${m} นาที` : ''}`;
+}
+
+export function PracticeList({
+  logs,
+  today,
+  lessons,
+  totals,
+}: Shared & { logs: PracticeLog[]; totals: { sessions: number; minutes: number } }) {
+  const [query, setQuery] = useState('');
+  const q = useDeferredValue(query.trim().toLowerCase());
+  const shown = q
+    ? logs.filter((l) =>
+        [l.topic, l.note, l.lessonTitle, activityLabel(l.activity), feelingLabel(l.feeling), l.practicedOn]
+          .filter(Boolean)
+          .some((s) => s!.toLowerCase().includes(q)),
+      )
+    : logs;
+  const days: { date: string; logs: PracticeLog[] }[] = [];
+  for (const l of shown) {
+    const last = days[days.length - 1];
+    if (last?.date === l.practicedOn) last.logs.push(l);
+    else days.push({ date: l.practicedOn, logs: [l] });
+  }
+
   return (
-    <ul className="flex flex-col gap-3">
-      {logs.map((l) => (
-        <Row key={l.id} log={l} today={today} lessons={lessons} />
-      ))}
-    </ul>
+    <section className="panel journal" aria-labelledby="history">
+      <div className="journal-head">
+        <div>
+          <h2 id="history">บันทึกทั้งหมด</h2>
+          <p className="totals" data-testid="practice-totals">
+            ซ้อมมาแล้ว {totals.sessions} ครั้ง รวม {hoursText(totals.minutes)}
+          </p>
+        </div>
+        {logs.length > 0 ? (
+          <label className="search">
+            <span className="sr-only">ค้นหาบันทึกการซ้อม</span>
+            <svg viewBox="0 0 20 20" aria-hidden="true">
+              <circle cx="8.5" cy="8.5" r="5.5" fill="none" stroke="currentColor" strokeWidth="1.8" />
+              <path d="M13 13l4 4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+            </svg>
+            <input type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="ค้นหา เช่น คอร์ด Am" />
+          </label>
+        ) : null}
+      </div>
+
+      {logs.length === 0 ? (
+        <div className="empty" data-testid="practice-empty">
+          <p className="empty-title">ยังไม่มีบันทึก</p>
+          <p>ไปที่หน้าบันทึกการฝึก จับเวลาซ้อมสัก 10 นาที แล้วจดไว้ ครั้งแรกจะขึ้นที่นี่</p>
+        </div>
+      ) : (
+        <>
+          {/* Always mounted so screen readers announce the change when the result count updates. */}
+          <p className={`search-status${q ? '' : ' sr-only'}`} role="status">
+            {q ? (shown.length > 0 ? `พบ ${shown.length} รายการ` : `ไม่พบบันทึกที่มีคำว่า “${query.trim()}”`) : ''}
+          </p>
+          <div className="days">
+            {days.map((d) => {
+              const sum = d.logs.reduce((n, l) => n + l.minutes, 0);
+              return (
+                <section key={d.date} className="day" aria-labelledby={`day-${d.date}`}>
+                  <h3 id={`day-${d.date}`} className="day-head">
+                    <time dateTime={d.date}>{practiceDayLabel(d.date, today)}</time>
+                    {d.logs.length > 1 ? <span className="day-sum">รวม {sum} นาที</span> : null}
+                  </h3>
+                  <ul className="entries">
+                    {d.logs.map((l) => (
+                      <Row key={l.id} log={l} today={today} lessons={lessons} />
+                    ))}
+                  </ul>
+                </section>
+              );
+            })}
+          </div>
+          {totals.sessions > logs.length ? (
+            <p className="more">แสดง {logs.length} ครั้งล่าสุดจาก {totals.sessions} ครั้ง</p>
+          ) : null}
+        </>
+      )}
+    </section>
   );
 }

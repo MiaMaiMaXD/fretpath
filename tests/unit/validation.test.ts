@@ -25,9 +25,9 @@ describe('validation', () => {
     expect(prac({ practicedOn: '2026-10-18' }).practicedOn).toBeUndefined();
   });
   it('activity and note', () => {
-    expect(prac({ activity: '' }).activity).toBe('กรุณาเลือกหัวข้อที่ฝึก');
+    expect(prac({ activity: '' }).activity).toBe('กรุณาเลือกหมวดที่ฝึก');
     expect(prac({ note: 'ก'.repeat(500) }).note).toBeUndefined();
-    expect(prac({ note: 'ก'.repeat(501) }).note).toBe('บันทึกสั้นต้องไม่เกิน 500 ตัวอักษร');
+    expect(prac({ note: 'ก'.repeat(501) }).note).toBe('บันทึกช่วยจำต้องไม่เกิน 500 ตัวอักษร');
     expect(prac({ note: '😀'.repeat(500) }).note).toBeUndefined();
     expect(prac()).toEqual({});
   });

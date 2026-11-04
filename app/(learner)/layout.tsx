@@ -1,6 +1,8 @@
 import Link from 'next/link';
 import { BottomNav, HeaderTabs } from '@/components/app/AppNav';
 import { UserMenu } from '@/components/app/UserMenu';
+import { MiniPlayer } from '@/components/practice/MiniPlayer';
+import { PracticeSessionProvider } from '@/components/practice/PracticeSession';
 import { plexThai } from '@/lib/fonts';
 import { createClient } from '@/lib/supabase/server';
 import './learner.css';
@@ -28,7 +30,10 @@ export default async function LearnerLayout({ children }: { children: React.Reac
           <UserMenu name={name} avatarUrl={prof?.avatar_url ?? null} isAdmin={Boolean(isAdmin)} />
         </div>
       </header>
-      <div className="app-main wrap">{children}</div>
+      <PracticeSessionProvider>
+        <div className="app-main wrap">{children}</div>
+        <MiniPlayer />
+      </PracticeSessionProvider>
       <BottomNav isAdmin={Boolean(isAdmin)} />
     </div>
   );

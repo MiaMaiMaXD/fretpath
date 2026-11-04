@@ -1,68 +1,80 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
+import { formatClock, usePracticeTimer } from '@/components/practice/PracticeSession';
 import { minutesFromElapsed } from '@/lib/timer';
 
-function format(ms: number): string {
-  const total = Math.floor(ms / 1000);
-  const mm = Math.floor(total / 60);
-  const ss = total % 60;
-  return `${String(mm).padStart(2, '0')}:${String(ss).padStart(2, '0')}`;
-}
+const LONG_MS = 3 * 60 * 60 * 1000;
 
-const BTN = 'rounded border border-neutral-400 px-3 py-1 disabled:opacity-50';
-
-/** Elapsed time comes from timestamps (startedAt + accumulatedMs), never from counting ticks. */
-export function PracticeTimer({ onUse }: { onUse: (minutes: number) => void }) {
-  const [startedAt, setStartedAt] = useState<number | null>(null);
-  const [accumulatedMs, setAccumulatedMs] = useState(0);
-  const [, setTick] = useState(0);
-
-  // The interval only triggers a re-render; the displayed time is derived from Date.now().
-  useEffect(() => {
-    if (startedAt === null) return;
-    const t = setInterval(() => setTick((n) => n + 1), 250);
-    return () => clearInterval(t);
-  }, [startedAt]);
-
-  // eslint-disable-next-line react-hooks/purity
-  const elapsed = accumulatedMs + (startedAt === null ? 0 : Date.now() - startedAt);
-  const running = startedAt !== null;
+/** Stage timer on /practice. State lives in the session store, so it keeps running on other pages. */
+export function PracticeTimer({ onFinish, week }: { onFinish: (minutes: number) => void; week: React.ReactNode }) {
+  const { running, elapsed, start, pause, reset } = usePracticeTimer();
+  const [used, setUsed] = useState<string | null>(null);
+  const [mm, ss] = formatClock(elapsed);
+  const kicker = running ? 'กำลังจับเวลา' : elapsed > 0 ? 'พักเวลาไว้' : 'พร้อมซ้อมแล้วกดเริ่มได้เลย';
 
   return (
-    <section aria-label="ตัวจับเวลา" className="flex flex-col gap-2 rounded border border-neutral-300 p-3 dark:border-neutral-700">
-      <p className="font-mono text-3xl">{format(elapsed)}</p>
-      <div className="flex flex-wrap gap-2">
+    <section aria-label="ตัวจับเวลา" className={`stage-timer${running ? ' is-running' : ''}`}>
+      <p className="kicker">
+        <span className="rec" aria-hidden="true" />
+        {kicker}
+      </p>
+      <p className="clock" data-testid="timer-display">
+        {mm}
+        <span className="colon">:</span>
+        {ss}
+      </p>
+      <div className="stage-actions">
         {running ? (
-          <button
-            type="button"
-            className={BTN}
-            onClick={() => {
-              setAccumulatedMs(accumulatedMs + Date.now() - startedAt);
-              setStartedAt(null);
-            }}
-          >
-            หยุด
+          <button type="button" className="btn btn-amber btn-big" onClick={pause}>
+            พักเวลา
           </button>
         ) : (
-          <button type="button" className={BTN} onClick={() => setStartedAt(Date.now())}>
-            เริ่ม
+          <button
+            type="button"
+            className="btn btn-amber btn-big"
+            onClick={() => {
+              setUsed(null);
+              start();
+            }}
+          >
+            {elapsed > 0 ? 'จับเวลาต่อ' : 'เริ่มจับเวลา'}
           </button>
         )}
         <button
           type="button"
-          className={BTN}
+          className="btn btn-ghost btn-big"
+          disabled={elapsed < 1000}
           onClick={() => {
-            setStartedAt(null);
-            setAccumulatedMs(0);
+            pause();
+            const m = minutesFromElapsed(elapsed);
+            onFinish(m);
+            setUsed(
+              elapsed > LONG_MS
+                ? `จับเวลาไว้นานกว่า 3 ชั่วโมง ลืมหยุดหรือเปล่า? ใส่ ${m} นาทีไว้ให้ ตรวจตัวเลขก่อนบันทึก`
+                : `ใส่ ${m} นาทีในใบบันทึกแล้ว`,
+            );
           }}
         >
-          รีเซ็ต
+          จบรอบ แล้วจดบันทึก
         </button>
-        <button type="button" className={BTN} disabled={elapsed <= 0} onClick={() => onUse(minutesFromElapsed(elapsed))}>
-          ใช้เวลานี้
-        </button>
+        {elapsed > 0 && !running ? (
+          <button
+            type="button"
+            className="btn btn-quiet"
+            onClick={() => {
+              reset();
+              setUsed(null);
+            }}
+          >
+            รีเซ็ต
+          </button>
+        ) : null}
       </div>
+      <p className="timer-status" role="status">
+        {used}
+      </p>
+      <div className="stage-week">{week}</div>
     </section>
   );
 }

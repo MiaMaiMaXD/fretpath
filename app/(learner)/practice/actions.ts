@@ -4,7 +4,7 @@ import { revalidatePath } from 'next/cache';
 import type { ActionState } from '@/lib/action-state';
 import { bangkokToday } from '@/lib/bangkok';
 import { errorCodeFrom, thaiError } from '@/lib/errors';
-import { ACTIVITIES } from '@/lib/practice-activities';
+import { ACTIVITIES, FEELINGS } from '@/lib/practice-activities';
 import { createClient } from '@/lib/supabase/server';
 import { validatePractice } from '@/lib/validation';
 
@@ -20,12 +20,29 @@ function parse(formData: FormData) {
     activity: str(formData, 'activity'),
     note: str(formData, 'note'),
     lessonId: str(formData, 'lessonId'),
+    topic: str(formData, 'topic').trim(),
+    feeling: str(formData, 'feeling'),
   };
   const fieldErrors = validatePractice(values, bangkokToday());
   if (values.activity !== '' && !ACTIVITIES.some((a) => a.value === values.activity)) {
-    fieldErrors.activity = 'กรุณาเลือกหัวข้อที่ฝึก';
+    fieldErrors.activity = 'กรุณาเลือกหมวดที่ฝึก';
+  }
+  if (values.feeling !== '' && !FEELINGS.some((f) => f.value === values.feeling)) {
+    fieldErrors.feeling = 'กรุณาเลือกความรู้สึกจากรายการ';
   }
   return { values, fieldErrors };
+}
+
+function columns(values: ReturnType<typeof parse>['values']) {
+  return {
+    practiced_on: values.practicedOn,
+    minutes: Number(values.minutes),
+    activity: values.activity,
+    topic: values.topic === '' ? null : values.topic,
+    feeling: values.feeling === '' ? null : values.feeling,
+    note: values.note === '' ? null : values.note,
+    lesson_id: values.lessonId === '' ? null : values.lessonId,
+  };
 }
 
 function dbMessage(error: { message?: string; code?: string }): string {
@@ -35,6 +52,7 @@ function dbMessage(error: { message?: string; code?: string }): string {
 
 function refresh() {
   revalidatePath('/practice');
+  revalidatePath('/practice/history');
   revalidatePath('/dashboard');
 }
 
@@ -46,14 +64,7 @@ export async function createPracticeLog(_prev: ActionState, formData: FormData):
   const { data: auth } = await supabase.auth.getUser();
   if (!auth.user) return { ok: false, message: thaiError('NOT_AUTHENTICATED'), values };
 
-  const { error } = await supabase.from('practice_logs').insert({
-    user_id: auth.user.id,
-    practiced_on: values.practicedOn,
-    minutes: Number(values.minutes),
-    activity: values.activity,
-    note: values.note === '' ? null : values.note,
-    lesson_id: values.lessonId === '' ? null : values.lessonId,
-  });
+  const { error } = await supabase.from('practice_logs').insert({ user_id: auth.user.id, ...columns(values) });
   if (error) return { ok: false, message: dbMessage(error), values };
 
   refresh();
@@ -70,13 +81,7 @@ export async function updatePracticeLog(id: string, _prev: ActionState, formData
 
   const { error } = await supabase
     .from('practice_logs')
-    .update({
-      practiced_on: values.practicedOn,
-      minutes: Number(values.minutes),
-      activity: values.activity,
-      note: values.note === '' ? null : values.note,
-      lesson_id: values.lessonId === '' ? null : values.lessonId,
-    })
+    .update(columns(values))
     .eq('id', id)
     .eq('user_id', auth.user.id);
   if (error) return { ok: false, message: dbMessage(error), values };

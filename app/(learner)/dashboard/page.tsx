@@ -4,7 +4,7 @@ import { PracticeChart, ScoresChart, type PracticeDay, type ScoreRow } from '@/c
 import { bangkokLastDays, bangkokToday, bangkokWeekRange } from '@/lib/bangkok';
 import { chartSummary } from '@/lib/chart';
 import { getDashboard } from '@/lib/data/dashboard';
-import { activityLabel } from '@/lib/practice-activities';
+import { activityLabel, practiceTitle } from '@/lib/practice-activities';
 import { averageBestScore, dailyMinutes, lessonsProgress, nextLesson, weeklyMinutes } from '@/lib/stats';
 import './dashboard.css';
 
@@ -227,8 +227,11 @@ export default async function DashboardPage() {
                     <time dateTime={l.practicedOn}>{l.practicedOn}</time>
                   </td>
                   <td className="what">
-                    {activityLabel(l.activity)}
-                    {l.lessonTitle ? <small>{l.lessonTitle}</small> : null}
+                    {practiceTitle(l)}
+                    <small>
+                      {activityLabel(l.activity)}
+                      {l.lessonTitle ? ` · ${l.lessonTitle}` : ''}
+                    </small>
                   </td>
                   <td className="num mins">{l.minutes} นาที</td>
                   <td className="note">{l.note?.trim() || <span className="none">—</span>}</td>

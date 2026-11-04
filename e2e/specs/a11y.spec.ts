@@ -34,3 +34,26 @@ test('TC-SEC-18b admin lesson editor has no serious axe violations @regression',
     await deleteCourse(courseId);
   }
 });
+
+test('TC-SEC-18c practice page (empty and with logs) has no serious axe violations @regression', async ({ memberPage, member, memberDb }) => {
+  await memberPage.goto('/practice');
+  await memberPage.waitForLoadState('networkidle');
+  expect(await serious(memberPage), 'practice empty').toEqual([]);
+
+  const seed = await memberDb.from('practice_logs').insert({
+    user_id: member.id,
+    practiced_on: new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Bangkok' }).format(new Date()),
+    minutes: 30,
+    activity: 'chords',
+    topic: 'เปลี่ยนคอร์ด G - C',
+    feeling: 'great',
+    note: 'ใช้ Anchor Finger',
+  });
+  expect(seed.error).toBeNull();
+  await memberPage.reload();
+  await memberPage.waitForLoadState('networkidle');
+  expect(await serious(memberPage), 'practice with logs').toEqual([]);
+  await memberPage.goto('/practice/history');
+  await memberPage.waitForLoadState('networkidle');
+  expect(await serious(memberPage), 'practice history').toEqual([]);
+});

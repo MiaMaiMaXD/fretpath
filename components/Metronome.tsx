@@ -1,64 +1,51 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { useAudioSupported } from '@/components/StringPlayer';
-import { BEATS_PER_BAR, MAX_BPM, MIN_BPM, beatIntervalMs, clampBpm, scheduleClicks } from '@/lib/audio/metronome';
-import { getAudioContext } from '@/lib/audio/strings';
+import { useState } from 'react';
+import { useMetronome } from '@/components/practice/PracticeSession';
+import { BEATS_PER_BAR, MAX_BPM, MIN_BPM } from '@/lib/audio/metronome';
 
-const LOOKAHEAD_MS = 100;
-const TICK_MS = 25;
-const BTN = 'rounded border border-neutral-400 px-3 py-1 disabled:opacity-50';
+const STEP = 5;
 
-/** Click timing comes from the AudioContext clock; the 25 ms interval only schedules the next 100 ms of clicks. */
+const TEMPOS = [
+  { bpm: 60, label: 'ช้า' },
+  { bpm: 80, label: 'ฝึกเปลี่ยนคอร์ด' },
+  { bpm: 100, label: 'ปานกลาง' },
+  { bpm: 120, label: 'เพลงเร็ว' },
+];
+
+/** Stage metronome on /practice; the engine lives in PracticeSessionProvider so it keeps clicking across pages. */
 export function Metronome() {
-  const supported = useAudioSupported();
-  const [bpm, setBpm] = useState(100);
-  const [draft, setDraft] = useState('100');
-  const [running, setRunning] = useState(false);
-  const bpmRef = useRef(bpm);
-  const timer = useRef<ReturnType<typeof setInterval> | null>(null);
-
-  const stop = useCallback(() => {
-    if (timer.current !== null) clearInterval(timer.current);
-    timer.current = null;
-    setRunning(false);
-  }, []);
-
-  useEffect(() => stop, [stop]);
-
-  function commit(n: number) {
-    const v = clampBpm(n);
-    bpmRef.current = v;
-    setBpm(v);
-    setDraft(String(v));
+  const { supported, bpm, setBpm, running, beat, start, stop } = useMetronome();
+  const [draft, setDraft] = useState(String(bpm));
+  // keep the text box in step when the tempo changes elsewhere (buttons, slider, mini player)
+  const [shown, setShown] = useState(bpm);
+  if (shown !== bpm) {
+    setShown(bpm);
+    setDraft(String(bpm));
   }
 
-  function start() {
-    const ctx = getAudioContext();
-    if (!ctx || timer.current !== null) return;
-    let nextTime = ctx.currentTime + 0.05;
-    let beat = 0;
-    const pump = () => {
-      // after a throttled/backgrounded tab, skip missed beats instead of firing them all at once
-      if (nextTime < ctx.currentTime) nextTime = ctx.currentTime + 0.05;
-      const horizon = ctx.currentTime + LOOKAHEAD_MS / 1000;
-      while (nextTime < horizon) {
-        scheduleClicks(ctx, bpmRef.current, nextTime, 1, beat);
-        nextTime += beatIntervalMs(bpmRef.current) / 1000;
-        beat = (beat + 1) % BEATS_PER_BAR;
-      }
-    };
-    pump();
-    timer.current = setInterval(pump, TICK_MS);
-    setRunning(true);
+  function commit(n: number) {
+    setDraft(String(setBpm(n)));
   }
 
   return (
-    <section aria-label="เมโทรนอม" className="flex flex-col gap-2 rounded border border-neutral-300 p-3 dark:border-neutral-700">
-      <h2 className="text-xl font-semibold">เมโทรนอม</h2>
-      <div className="flex flex-wrap items-center gap-3">
-        <label className="flex items-center gap-2">
-          <span>จังหวะ (BPM)</span>
+    <section aria-label="เมโทรนอม" className={`stage-metro${running ? ' is-running' : ''}`}>
+      <div className="metro-top">
+        <p className="kicker">เมโทรนอม</p>
+        {running ? (
+          <button type="button" className="metro-toggle on" onClick={stop}>
+            หยุดเสียงเคาะ
+          </button>
+        ) : (
+          <button type="button" className="metro-toggle" disabled={!supported} onClick={start}>
+            เปิดเสียงเคาะ
+          </button>
+        )}
+      </div>
+
+      <div className="pulse">
+        <label className={`ring${beat === 0 ? ' hit' : ''}`}>
+          <span className="sr-only">จังหวะ (BPM)</span>
           <input
             type="number"
             min={MIN_BPM}
@@ -68,37 +55,48 @@ export function Metronome() {
               setDraft(e.target.value);
               const n = e.target.valueAsNumber;
               if (Number.isFinite(n)) {
-                const v = clampBpm(n);
-                bpmRef.current = v;
-                setBpm(v);
+                const v = setBpm(n);
+                setShown(v);
               }
             }}
             onBlur={() => commit(Number(draft))}
-            className="w-24 rounded border border-neutral-400 px-2 py-1"
           />
+          <small aria-hidden="true">BPM</small>
         </label>
-        <label className="flex flex-1 items-center gap-2">
-          <span className="sr-only">จังหวะ (BPM)</span>
-          <input
-            type="range"
-            min={MIN_BPM}
-            max={MAX_BPM}
-            value={bpm}
-            onChange={(e) => commit(Number(e.target.value))}
-            className="min-w-40 flex-1"
-          />
-        </label>
+        <div className="beat-bars" aria-hidden="true">
+          {Array.from({ length: BEATS_PER_BAR }, (_, i) => (
+            <span key={i} className={`${i === 0 ? 'accent' : ''}${beat === i ? ' lit' : ''}`} />
+          ))}
+        </div>
       </div>
-      {running ? (
-        <button type="button" className={`${BTN} w-fit`} onClick={stop}>
-          หยุดเมโทรนอม
+
+      <div className="metro-slider">
+        <button type="button" className="step" aria-label={`ลดจังหวะ ${STEP} BPM`} onClick={() => commit(bpm - STEP)} disabled={bpm <= MIN_BPM}>
+          −
         </button>
-      ) : (
-        <button type="button" className={`${BTN} w-fit`} disabled={!supported} onClick={start}>
-          เริ่มเมโทรนอม
+        <input
+          type="range"
+          className="metro-range"
+          aria-label="จังหวะ (BPM)"
+          min={MIN_BPM}
+          max={MAX_BPM}
+          value={bpm}
+          style={{ '--fill': `${((bpm - MIN_BPM) / (MAX_BPM - MIN_BPM)) * 100}%` } as React.CSSProperties}
+          onChange={(e) => commit(Number(e.target.value))}
+        />
+        <button type="button" className="step" aria-label={`เพิ่มจังหวะ ${STEP} BPM`} onClick={() => commit(bpm + STEP)} disabled={bpm >= MAX_BPM}>
+          +
         </button>
-      )}
-      {!supported ? <p role="status">เบราว์เซอร์นี้ไม่รองรับเสียง</p> : null}
+      </div>
+
+      <div className="tempos" role="group" aria-label="ความเร็วสำเร็จรูป">
+        {TEMPOS.map((t) => (
+          <button key={t.bpm} type="button" aria-pressed={bpm === t.bpm} onClick={() => commit(t.bpm)}>
+            <b>{t.bpm}</b> {t.label}
+          </button>
+        ))}
+      </div>
+      {!supported ? <p role="status" className="no-audio">เบราว์เซอร์นี้เล่นเสียงไม่ได้</p> : null}
     </section>
   );
 }

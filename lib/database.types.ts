@@ -131,14 +131,14 @@ isOneToOne: false
                   ]
                 },"practice_logs": {
                   Row: {
-                    "activity": string,"created_at": string,"id": string,"lesson_id": string | null,"minutes": number,"note": string | null,"practiced_on": string,"updated_at": string,"user_id": string
+                    "activity": string,"created_at": string,"feeling": string | null,"id": string,"lesson_id": string | null,"minutes": number,"note": string | null,"practiced_on": string,"topic": string | null,"updated_at": string,"user_id": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "activity": string,"created_at"?: string,"id"?: string,"lesson_id"?: string | null,"minutes": number,"note"?: string | null,"practiced_on": string,"updated_at"?: string,"user_id": string
+                    "activity": string,"created_at"?: string,"feeling"?: string | null,"id"?: string,"lesson_id"?: string | null,"minutes": number,"note"?: string | null,"practiced_on": string,"topic"?: string | null,"updated_at"?: string,"user_id": string
                   }
                   Update: {
-                    "activity"?: string,"created_at"?: string,"id"?: string,"lesson_id"?: string | null,"minutes"?: number,"note"?: string | null,"practiced_on"?: string,"updated_at"?: string,"user_id"?: string
+                    "activity"?: string,"created_at"?: string,"feeling"?: string | null,"id"?: string,"lesson_id"?: string | null,"minutes"?: number,"note"?: string | null,"practiced_on"?: string,"topic"?: string | null,"updated_at"?: string,"user_id"?: string
                   }
                   Relationships: [
                     {
