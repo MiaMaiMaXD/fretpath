@@ -32,3 +32,18 @@ test('TC-PATH-18 locked redirect shows notice and no horizontal overflow @regres
   await page.goto('/path?locked=nope');
   await expect(path.notice()).toHaveCount(0);
 });
+
+test('TC-PATH-19 neck shows 22 frets with planned lessons as coming soon, and a fret jumps to its row @regression', async ({ page }) => {
+  const path = new PathPage(page);
+  await path.goto();
+  const neck = page.getByTestId('fret-neck');
+  await expect(neck.locator('.fret')).toHaveCount(22);
+  await expect(page.getByTestId('lesson-soon')).toHaveCount(17);
+  await expect(page.getByRole('heading', { name: 'ช่วงที่ 4 · ทั่วคอกีตาร์' })).toBeVisible();
+  await expect(page.getByTestId('lesson-soon').first()).not.toContainText('ล็อก');
+  await expect(page.getByTestId('lesson-soon').getByRole('link')).toHaveCount(0);
+  await expect(path.card(SLUGS[4])).toHaveAttribute('id', 'fret-7');
+  await neck.getByRole('link', { name: /^เฟรต 7:/ }).click();
+  await expect(page).toHaveURL(/#fret-7$/);
+  await expect(path.card(SLUGS[4])).toBeInViewport();
+});
