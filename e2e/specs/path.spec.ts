@@ -41,8 +41,12 @@ test('TC-PATH-19 neck shows 22 frets with planned lessons as coming soon, and a 
   await expect(neck.locator('.fret')).toHaveCount(22);
   await expect(page.getByTestId('lesson-soon')).toHaveCount(22 - LESSON_COUNT);
   await expect(page.getByRole('heading', { name: 'ช่วงที่ 4 · ทั่วคอกีตาร์' })).toBeVisible();
-  await expect(page.getByTestId('lesson-soon').first()).not.toContainText('ล็อก');
-  await expect(page.getByTestId('lesson-soon').getByRole('link')).toHaveCount(0);
+  // Once every planned lesson is written there are no "coming soon" slots left to inspect.
+  if (LESSON_COUNT < 22) {
+    await expect(page.getByTestId('lesson-soon').first()).not.toContainText('ล็อก');
+    await expect(page.getByTestId('lesson-soon').getByRole('link')).toHaveCount(0);
+  }
+  await expect(path.card(COURSE_SLUGS[LESSON_COUNT - 1])).toHaveAttribute('id', `fret-${LESSON_COUNT - 1}`);
   await expect(path.card('f-chord-first-song')).toHaveAttribute('id', 'fret-7');
   await neck.getByRole('link', { name: /^เฟรต 7:/ }).click();
   await expect(page).toHaveURL(/#fret-7$/);
