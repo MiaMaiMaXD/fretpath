@@ -15,8 +15,10 @@
 .fp-dash .continue .kicker { color: #94a3b8; font-size: .95rem; margin: 0; }
 .fp-dash .continue h2 { margin: 2px 0 14px; font-size: 1.4rem; line-height: 1.4; font-weight: 700; }
 .fp-dash .progress { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
-.fp-dash .pips { display: flex; gap: 6px; list-style: none; margin: 0; padding: 0; }
-.fp-dash .pips li { width: 34px; height: 8px; border-radius: 4px; background: #334155; }
+.fp-dash .continue > div { min-width: 0; }
+/* one pip per lesson; pips shrink so a long course (up to 22 lessons) still fits a phone screen */
+.fp-dash .pips { display: flex; gap: 6px; list-style: none; margin: 0; padding: 0; flex: 0 1 auto; min-width: 0; max-width: 100%; }
+.fp-dash .pips li { flex: 0 1 34px; min-width: 6px; height: 8px; border-radius: 4px; background: #334155; }
 .fp-dash .pips li.done { background: var(--amber); }
 .fp-dash .pips li.now { background: repeating-linear-gradient(90deg, var(--amber) 0 4px, #334155 4px 8px); }
 .fp-dash .progress span { color: #cbd5e1; font-size: .93rem; }
@@ -78,7 +80,7 @@
 @media (max-width: 560px) {
   .fp-dash .continue { grid-template-columns: 1fr; padding: 22px; }
   .fp-dash .continue .btn { width: 100%; }
-  .fp-dash .pips li { width: 26px; }
+  .fp-dash .pips li { flex-basis: 26px; }
   .fp-dash .stat .value { font-size: 1.6rem; }
   /* table rows become stacked cards: date + minutes on top, topic and note below */
   .fp-dash .log thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }

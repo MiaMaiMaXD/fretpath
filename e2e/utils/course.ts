@@ -1,4 +1,4 @@
-/** The guitar-basics course as seeded locally and in CI (guitar-basics.sql + guitar-basics-round1.sql), in course order. */
+/** The guitar-basics course as seeded locally and in CI (guitar-basics.sql + guitar-basics-round1.sql + guitar-basics-round2.sql), in course order. */
 export const COURSE_SLUGS = [
   'guitar-anatomy-tuning',
   'read-tab-chord-charts',
@@ -10,6 +10,11 @@ export const COURSE_SLUGS = [
   'f-chord-first-song',
   'seventh-sus-chords',
   'c-major-scale',
+  'building-triads',
+  'chords-in-a-key',
+  'capo-octave',
+  'fingerpicking-basics',
+  'power-chords-palm-mute',
 ] as const;
 
 export const LESSON_COUNT = COURSE_SLUGS.length;

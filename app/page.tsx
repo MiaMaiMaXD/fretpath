@@ -19,7 +19,7 @@ const PAINS = [
 
 /* Lessons written so far fill the first frets of the planned curriculum (lib/path-frets.ts).
    Raise this when a new content round is published. */
-const OPEN_LESSONS = 10;
+const OPEN_LESSONS = 15;
 const UNIT_BLURBS = [
   'ตั้งสาย อ่านแท็บ คอร์ดแรก Em Am C D เปลี่ยนคอร์ดให้ลื่น และนับจังหวะ 4/4',
   'ตัวโน้ต 12 ตัว ดีดขึ้นลง คอร์ด F แบบง่ายกับเพลงแรก คอร์ด 7 / sus และบันไดเสียง C',
