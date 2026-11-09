@@ -40,12 +40,12 @@ test('TC-LSN-06 chord lab shows fingering diagram for chosen chord @regression',
   memberDb,
   adminDb,
 }) => {
-  const l1 = await lessonIdBySlug(adminDb, 'guitar-anatomy-tuning');
-  const res = await memberDb.rpc('submit_quiz', {
-    p_lesson_id: l1,
-    p_answers: await buildAnswers(adminDb, l1, 5),
-  });
-  expect(res.error).toBeNull();
+  // first-chords is lesson 3: pass the two lessons before it
+  for (const slug of ['guitar-anatomy-tuning', 'read-tab-chord-charts']) {
+    const id = await lessonIdBySlug(adminDb, slug);
+    const res = await memberDb.rpc('submit_quiz', { p_lesson_id: id, p_answers: await buildAnswers(adminDb, id, 5) });
+    expect(res.error).toBeNull();
+  }
   await new LessonPage(memberPage).goto('first-chords');
   await memberPage.getByRole('button', { name: 'Am', exact: true }).click();
   await expect(memberPage.getByRole('img', { name: 'คอร์ด Am' })).toBeVisible();

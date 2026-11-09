@@ -4,6 +4,7 @@ import { ChordLab } from '@/components/ChordLab';
 import { LessonMarkdown } from '@/components/LessonMarkdown';
 import { StringPlayer } from '@/components/StringPlayer';
 import { YouTubeEmbed } from '@/components/YouTubeEmbed';
+import { showsChordLab } from '@/lib/chord-lab';
 import { getLessonForLearner } from '@/lib/data/lesson';
 
 export default async function LessonPage({ params }: { params: Promise<{ slug: string }> }) {
@@ -18,7 +19,7 @@ export default async function LessonPage({ params }: { params: Promise<{ slug: s
       {videoUrl ? <YouTubeEmbed url={videoUrl} title={lesson.title} /> : null}
       <LessonMarkdown source={contentMd} />
       <StringPlayer />
-      {lesson.sortOrder >= 2 && lesson.sortOrder <= 5 ? <ChordLab /> : null}
+      {showsChordLab(lesson.slug) ? <ChordLab /> : null}
       <Link href={`/lessons/${lesson.slug}/quiz`} className="self-start rounded border px-4 py-2 font-medium">
         ทำแบบทดสอบ
       </Link>

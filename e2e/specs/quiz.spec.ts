@@ -3,9 +3,10 @@ import { test, expect } from '../fixtures';
 import { QuizPage } from '../pages/QuizPage';
 import { PathPage } from '../pages/PathPage';
 import { buildAnswers, choiceTexts, lessonIdBySlug } from '../utils/quiz';
+import { COURSE_SLUGS, SECOND_LESSON } from '../utils/course';
 
 const L1 = 'guitar-anatomy-tuning';
-const LESSON_SLUGS = [L1, 'first-chords', 'open-chords-changes', 'strumming-4-4', 'f-chord-first-song'];
+const LESSON_SLUGS = COURSE_SLUGS;
 
 test('TC-QZ-19 unanswered questions are highlighted and nothing is submitted @regression', async ({
   memberPage,
@@ -46,7 +47,7 @@ test('TC-QZ-25 failing score shows review and retry, next lesson stays locked @s
   await expect(memberPage.getByRole('button', { name: 'สอบใหม่' })).toBeVisible();
   const path = new PathPage(memberPage);
   await path.goto();
-  expect(await path.lessonState('first-chords')).toBe('locked');
+  expect(await path.lessonState(SECOND_LESSON)).toBe('locked');
 });
 
 test('TC-QZ-21 passing score shows explanations and unlocks next lesson @smoke @regression', async ({
@@ -66,7 +67,7 @@ test('TC-QZ-21 passing score shows explanations and unlocks next lesson @smoke @
     await expect(items.nth(i).getByText('คำอธิบาย')).toBeVisible();
   }
   await memberPage.getByRole('link', { name: 'ไปบทถัดไป' }).click();
-  await expect(memberPage).toHaveURL(/\/lessons\/first-chords$/);
+  await expect(memberPage).toHaveURL(new RegExp(`/lessons/${SECOND_LESSON}$`));
 });
 
 test('TC-QZ-26 retake keeps best score on the path @regression', async ({ memberPage, memberDb, adminDb }) => {
@@ -88,7 +89,7 @@ test('TC-QZ-26 retake keeps best score on the path @regression', async ({ member
 });
 
 test('TC-QZ-27 last lesson shows course finished @regression', async ({ memberPage, memberDb, adminDb }) => {
-  for (const slug of LESSON_SLUGS.slice(0, 4)) {
+  for (const slug of LESSON_SLUGS.slice(0, -1)) {
     const id = await lessonIdBySlug(adminDb, slug);
     const r = await memberDb.rpc('submit_quiz', {
       p_lesson_id: id,
@@ -96,7 +97,7 @@ test('TC-QZ-27 last lesson shows course finished @regression', async ({ memberPa
     });
     expect(r.error).toBeNull();
   }
-  const last = LESSON_SLUGS[4];
+  const last = LESSON_SLUGS[LESSON_SLUGS.length - 1];
   const quiz = new QuizPage(memberPage);
   const answers = await buildAnswers(adminDb, await lessonIdBySlug(adminDb, last), 5);
   await quiz.goto(last);
@@ -163,6 +164,6 @@ test('TC-QZ-22 double click submits once @smoke @regression', async ({ memberPag
 });
 
 test('TC-QZ-28 locked quiz URL redirects to path @regression', async ({ memberPage }) => {
-  await memberPage.goto('/lessons/first-chords/quiz');
-  await expect(memberPage).toHaveURL(/\/path\?locked=first-chords$/);
+  await memberPage.goto(`/lessons/${SECOND_LESSON}/quiz`);
+  await expect(memberPage).toHaveURL(new RegExp(`/path\\?locked=${SECOND_LESSON}$`));
 });

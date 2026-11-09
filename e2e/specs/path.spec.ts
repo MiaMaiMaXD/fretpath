@@ -1,14 +1,15 @@
 import { test, expect, MEMBER_STATE } from '../fixtures';
 import { PathPage } from '../pages/PathPage';
+import { COURSE_SLUGS, LESSON_COUNT, SECOND_LESSON } from '../utils/course';
 
 test.use({ storageState: MEMBER_STATE });
 
-const SLUGS = ['guitar-anatomy-tuning', 'first-chords', 'open-chords-changes', 'strumming-4-4', 'f-chord-first-song'];
+const SLUGS = COURSE_SLUGS;
 
 test('TC-PATH-14 new learner sees lesson 1 unlocked and others locked @smoke @regression', async ({ page }) => {
   const path = new PathPage(page);
   await path.goto();
-  await expect(page.getByTestId(/^lesson-card-/)).toHaveCount(5);
+  await expect(page.getByTestId(/^lesson-card-/)).toHaveCount(LESSON_COUNT);
   expect(await path.lessonState(SLUGS[0])).toBe('unlocked');
   for (const s of SLUGS.slice(1)) expect(await path.lessonState(s)).toBe('locked');
   await expect(path.card(SLUGS[0]).getByText('เรียนได้')).toBeVisible();
@@ -25,7 +26,7 @@ test('TC-PATH-15 locked card has no link to content @regression', async ({ page 
 test('TC-PATH-18 locked redirect shows notice and no horizontal overflow @regression', async ({ page }) => {
   await page.setViewportSize({ width: 375, height: 800 });
   const path = new PathPage(page);
-  await page.goto('/path?locked=first-chords');
+  await page.goto(`/path?locked=${SECOND_LESSON}`);
   await expect(path.notice()).toHaveText('ต้องผ่านแบบทดสอบบท รู้จักส่วนประกอบของกีตาร์และการตั้งสาย ก่อน');
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth);
   expect(overflow).toBe(false);
@@ -38,12 +39,12 @@ test('TC-PATH-19 neck shows 22 frets with planned lessons as coming soon, and a 
   await path.goto();
   const neck = page.getByTestId('fret-neck');
   await expect(neck.locator('.fret')).toHaveCount(22);
-  await expect(page.getByTestId('lesson-soon')).toHaveCount(17);
+  await expect(page.getByTestId('lesson-soon')).toHaveCount(22 - LESSON_COUNT);
   await expect(page.getByRole('heading', { name: 'ช่วงที่ 4 · ทั่วคอกีตาร์' })).toBeVisible();
   await expect(page.getByTestId('lesson-soon').first()).not.toContainText('ล็อก');
   await expect(page.getByTestId('lesson-soon').getByRole('link')).toHaveCount(0);
-  await expect(path.card(SLUGS[4])).toHaveAttribute('id', 'fret-7');
+  await expect(path.card('f-chord-first-song')).toHaveAttribute('id', 'fret-7');
   await neck.getByRole('link', { name: /^เฟรต 7:/ }).click();
   await expect(page).toHaveURL(/#fret-7$/);
-  await expect(path.card(SLUGS[4])).toBeInViewport();
+  await expect(path.card('f-chord-first-song')).toBeInViewport();
 });

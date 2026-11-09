@@ -5,19 +5,19 @@ import { OPEN_STRINGS, getAudioContext } from '@/lib/audio/strings';
 
 // Strings are indexed 0 (string 6, low E) … 5 (string 1, high E).
 // frets: -1 = muted, 0 = open, n = fret number. fingers: 1–4, 0 = none.
-type ChordKey = 'Em' | 'C' | 'G' | 'D' | 'open';
+type ChordKey = 'G' | 'D' | 'Em' | 'C' | 'open';
 const CHORDS: Record<ChordKey, { frets: number[]; fingers: number[]; note: string }> = {
-  Em: { frets: [0, 2, 2, 0, 0, 0], fingers: [0, 2, 3, 0, 0, 0], note: 'Em — คอร์ดที่ง่ายที่สุด ใช้แค่ 2 นิ้ว เป็นคอร์ดแรกในบทที่ 2' },
-  C: { frets: [-1, 3, 2, 0, 1, 0], fingers: [0, 3, 2, 0, 1, 0], note: 'C — ไม่ดีดสาย 6 ระวังนิ้ว 3 แตะสาย 4 จนเสียงบอด' },
   G: { frets: [3, 2, 0, 0, 0, 3], fingers: [2, 1, 0, 0, 0, 3], note: 'G — ดีดได้ทั้ง 6 สาย เป็นหนึ่งในคอร์ดที่ใช้บ่อยที่สุด' },
   D: { frets: [-1, -1, 0, 2, 3, 2], fingers: [0, 0, 0, 1, 3, 2], note: 'D — ดีดแค่ 4 สายล่าง เสียงสว่าง ใช้คู่กับ G บ่อยมาก' },
+  Em: { frets: [0, 2, 2, 0, 0, 0], fingers: [0, 2, 3, 0, 0, 0], note: 'Em — คอร์ดที่ง่ายที่สุด ใช้แค่ 2 นิ้ว เป็นคอร์ดแรกในบทที่ 3' },
+  C: { frets: [-1, 3, 2, 0, 1, 0], fingers: [0, 3, 2, 0, 1, 0], note: 'C — ไม่ดีดสาย 6 ระวังนิ้ว 3 แตะสาย 4 จนเสียงบอด' },
   open: { frets: [0, 0, 0, 0, 0, 0], fingers: [0, 0, 0, 0, 0, 0], note: 'สายเปล่า E A D G B E — ใช้ฟังตอนตั้งสายในบทที่ 1' },
 };
 const BUTTONS: { key: ChordKey; label: string }[] = [
-  { key: 'Em', label: 'Em' },
-  { key: 'C', label: 'C' },
   { key: 'G', label: 'G' },
   { key: 'D', label: 'D' },
+  { key: 'Em', label: 'Em' },
+  { key: 'C', label: 'C' },
   { key: 'open', label: 'สายเปล่า' },
 ];
 
@@ -28,7 +28,10 @@ const TOP = 40;
 const BOTTOM = 210;
 const FRETS = 5;
 const fretPos = (n: number) => 1 - Math.pow(2, -n / 12);
-const fretX = (n: number) => NUT + ((END - NUT) * fretPos(n)) / fretPos(FRETS);
+// Rounded so the server and the browser render identical SVG coordinates: Math.pow can differ in the
+// last bits between Node and the browser, which breaks hydration.
+const round2 = (v: number) => Math.round(v * 100) / 100;
+const fretX = (n: number) => round2(NUT + ((END - NUT) * fretPos(n)) / fretPos(FRETS));
 const stringY = (i: number) => TOP + ((BOTTOM - TOP) * i) / 5;
 const NAMES = OPEN_STRINGS.map((s) => s.note[0]);
 const noteFreq = (i: number, fret: number) => OPEN_STRINGS[i].hz * Math.pow(2, fret / 12);
@@ -71,7 +74,7 @@ function play(freq: number, when = 0, gain = 0.32) {
 }
 
 export function TryFretboard({ labelledBy }: { labelledBy: string }) {
-  const [current, setCurrent] = useState<ChordKey>('Em');
+  const [current, setCurrent] = useState<ChordKey>('G');
   const lines = useRef<(SVGLineElement | null)[]>([]);
   const scroller = useRef<HTMLDivElement>(null);
   const chord = CHORDS[current];

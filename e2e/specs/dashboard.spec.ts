@@ -3,12 +3,13 @@ import { DashboardPage } from '../pages/DashboardPage';
 import { ProfilePage } from '../pages/ProfilePage';
 import { PracticePage } from '../pages/PracticePage';
 import { buildAnswers, lessonIdBySlug, bangkokDate } from '../utils/quiz';
+import { LESSON_COUNT, SECOND_LESSON } from '../utils/course';
 
 test('TC-DSH-01 new learner dashboard shows zero state @regression', async ({ memberPage }) => {
   const dash = new DashboardPage(memberPage);
   await dash.goto();
   await expect(memberPage.getByRole('heading', { level: 1 })).toBeVisible();
-  await expect(dash.stat('lessons')).toContainText('0 / 5 บท');
+  await expect(dash.stat('lessons')).toContainText(`0 / ${LESSON_COUNT} บท`);
   await expect(dash.stat('avg-score')).toContainText('—');
   await expect(dash.stat('week-minutes')).toContainText('0 นาที');
   await expect(dash.stat('week-minutes')).toContainText('ยังไม่ตั้งเป้าหมาย');
@@ -38,9 +39,9 @@ test('TC-DSH-03 passing a quiz updates lessons count and average @regression', a
   expect(res.error).toBeNull();
   const dash = new DashboardPage(memberPage);
   await dash.goto();
-  await expect(dash.stat('lessons')).toContainText('1 / 5 บท');
+  await expect(dash.stat('lessons')).toContainText(`1 / ${LESSON_COUNT} บท`);
   await expect(dash.stat('avg-score')).toContainText('80%');
-  await expect(dash.continueButton()).toHaveAttribute('href', '/lessons/first-chords');
+  await expect(dash.continueButton()).toHaveAttribute('href', `/lessons/${SECOND_LESSON}`);
   // lessons not attempted read as "ยังไม่สอบ", not as a 0% score
   await expect(memberPage.getByRole('img', { name: /^คะแนนสูงสุดรายบท: บท 1 80 %, บท 2 ยังไม่สอบ/ })).toBeVisible();
 });
