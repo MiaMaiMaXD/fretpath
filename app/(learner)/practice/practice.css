@@ -38,12 +38,7 @@
 .fp-prac .stage {
   position: relative; overflow: hidden; isolation: isolate;
   display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: 40px;
-  background: var(--stage); color: #fff; border-radius: 20px; padding: 36px 40px 60px;
-}
-/* six strings across the foot of the stage */
-.fp-prac .stage::after {
-  content: ''; position: absolute; z-index: -1; left: 0; right: 0; bottom: 14px; height: 40px; opacity: .2;
-  background: repeating-linear-gradient(180deg, transparent 0 9px, #cbd5e1 9px 10px);
+  background: var(--stage); color: #fff; border-radius: 20px; padding: 36px 40px;
 }
 .fp-prac .kicker { display: flex; align-items: center; gap: 8px; margin: 0; color: #94a3b8; font-size: .95rem; }
 .fp-prac .rec { width: 8px; height: 8px; border-radius: 50%; background: #475569; }
@@ -93,8 +88,14 @@
 .fp-prac .metro-range { flex: 1; min-width: 0; margin: 0; appearance: none; -webkit-appearance: none; height: 4px; border-radius: 2px; background: linear-gradient(90deg, var(--amber-hi) var(--fill), #334155 var(--fill)); cursor: pointer; }
 .fp-prac .metro-range::-webkit-slider-thumb { -webkit-appearance: none; width: 18px; height: 18px; border-radius: 50%; background: var(--amber-hi); border: 3px solid var(--stage); }
 .fp-prac .metro-range::-moz-range-thumb { width: 14px; height: 14px; border-radius: 50%; background: var(--amber-hi); border: 3px solid var(--stage); }
-.fp-prac .tempos { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 14px; }
-.fp-prac .tempos button { border: 1px solid #475569; background: transparent; color: #cbd5e1; border-radius: 8px; padding: 3px 10px; font-size: .82rem; }
+.fp-prac .tempos { display: flex; gap: 6px; margin-top: 14px; }
+/* all four presets on one line; the boxes share the width, labels never break */
+.fp-prac .tempos button { flex: 1 1 auto; white-space: nowrap; border: 1px solid #475569; background: transparent; color: #cbd5e1; border-radius: 8px; padding: 3px 8px; font-size: .82rem; }
+/* when the metronome box is too narrow for one line (tablet, phone), use an even 2 × 2 grid instead of a ragged wrap */
+.fp-prac .stage-metro { container-type: inline-size; }
+@container (max-width: 380px) {
+  .fp-prac .tempos { display: grid; grid-template-columns: 1fr 1fr; }
+}
 .fp-prac .tempos button:hover { border-color: #cbd5e1; color: #fff; }
 .fp-prac .tempos button[aria-pressed='true'] { border-color: var(--amber-hi); color: var(--amber-hi); }
 .fp-prac .no-audio { margin: 10px 0 0; color: #fca5a5; font-size: .86rem; }
@@ -221,11 +222,11 @@
 /* ---------------------------------------------------------------- responsive */
 @media (max-width: 960px) {
   .fp-prac .room { grid-template-columns: minmax(0, 1fr); grid-template-areas: 'stage' 'sheet' 'recent'; }
-  .fp-prac .stage { grid-template-columns: minmax(0, 1fr); gap: 24px; padding: 28px 24px 68px; }
+  .fp-prac .stage { grid-template-columns: minmax(0, 1fr); gap: 24px; padding: 28px 24px; }
   .fp-prac .recent { position: static; }
 }
 @media (max-width: 560px) {
-  .fp-prac .stage { padding: 22px 18px 64px; border-radius: 16px; }
+  .fp-prac .stage { padding: 22px 18px; border-radius: 16px; }
   .fp-prac .clock { font-size: 4.2rem; margin-bottom: 18px; }
   .fp-prac .btn-big { padding: 11px 18px; font-size: .96rem; }
   .fp-prac .stage-metro { padding: 16px; }

@@ -9,7 +9,7 @@ export function RecentPractice({ logs, today, total }: { logs: PracticeLog[]; to
       <h2 id="recent-title">ซ้อมล่าสุด</h2>
       {logs.length === 0 ? (
         <p className="recent-empty" data-testid="practice-empty">
-          ยังไม่มีบันทึก ซ้อมรอบแรกเสร็จแล้วจดไว้ จะขึ้นที่นี่
+          ยังไม่มีบันทึก
         </p>
       ) : (
         <ul>
