@@ -151,7 +151,7 @@ export default async function DashboardPage() {
           ) : (
             <p className="sub">
               ยังไม่ตั้งเป้าหมาย ·{' '}
-              <Link href="/profile" className="link">
+              <Link href="/profile#goal" className="link">
                 ตั้งเป้าหมาย
               </Link>
             </p>

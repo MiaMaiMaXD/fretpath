@@ -20,8 +20,8 @@ test('TC-DSH-01 new learner dashboard shows zero state @regression', async ({ me
 
 test('TC-DSH-02 practice log changes weekly minutes and 7-day chart @smoke @regression', async ({ memberPage }) => {
   await new ProfilePage(memberPage).goto();
+  // save() waits for each section's own "saved" toast
   await new ProfilePage(memberPage).save({ displayName: 'ผู้เรียน', weeklyGoalMinutes: 120 });
-  await expect(memberPage.getByText('บันทึกแล้ว')).toBeVisible();
   const practice = new PracticePage(memberPage);
   await practice.goto();
   await practice.fill({ minutes: 45, activity: 'chords' });

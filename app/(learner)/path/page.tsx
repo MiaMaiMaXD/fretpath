@@ -35,7 +35,6 @@ export default async function PathPage({ searchParams }: { searchParams: Promise
       <div className="path-head">
         <div>
           <h1 className="title">เส้นทางเรียน: {path.course.title}</h1>
-          <p className="sub">ไล่จากหัวกีตาร์ไปปลายคอ ทีละเฟรต ทีละบท</p>
         </div>
         <p className="count" data-testid="path-progress">
           เรียนจบแล้ว <b>{progress.completed}</b> จาก {progress.total} บท

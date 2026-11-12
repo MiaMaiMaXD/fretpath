@@ -2,23 +2,28 @@
 
 import { useState } from 'react';
 import { updateAvatar } from '@/app/(learner)/profile/actions';
+import { CameraIcon } from '@/app/(learner)/profile/icons';
 import { createClient } from '@/lib/supabase/browser';
 
 const TYPES: Record<string, string> = { 'image/png': 'png', 'image/jpeg': 'jpg', 'image/webp': 'webp', 'image/gif': 'gif' };
 const MAX_BYTES = 1024 * 1024;
 const ERROR = 'อัปโหลดรูปไม่สำเร็จ (PNG, JPG, WEBP ไม่เกิน 1 MB)';
 
-type Props = { userId: string; avatarUrl: string | null };
+type Props = { userId: string; avatarUrl: string | null; initial: string };
 
-export function AvatarUpload({ userId, avatarUrl }: Props) {
+export function AvatarUpload({ userId, avatarUrl, initial }: Props) {
   const [url, setUrl] = useState<string | null>(avatarUrl);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [dragging, setDragging] = useState(false);
 
-  async function onPick(input: HTMLInputElement) {
+  function onPick(input: HTMLInputElement) {
     const file = input.files?.[0];
     input.value = '';
-    if (!file) return;
+    if (file) void upload(file);
+  }
+
+  async function upload(file: File) {
     setError(null);
     const ext = TYPES[file.type];
     if (!ext || file.size > MAX_BYTES) {
@@ -62,31 +67,50 @@ export function AvatarUpload({ userId, avatarUrl }: Props) {
   }
 
   return (
-    <div className="flex flex-col gap-2">
-      <div className="flex items-center gap-3">
+    <div className="avatar-col">
+      <label
+        className={dragging ? 'avatar-pick is-drag' : 'avatar-pick'}
+        aria-busy={busy}
+        onDragOver={(e) => {
+          e.preventDefault();
+          if (!busy) setDragging(true);
+        }}
+        onDragLeave={() => setDragging(false)}
+        onDrop={(e) => {
+          e.preventDefault();
+          setDragging(false);
+          const file = e.dataTransfer.files?.[0];
+          if (file && !busy) void upload(file);
+        }}
+      >
         {url ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={url} alt="รูปโปรไฟล์" width={64} height={64} className="h-16 w-16 rounded-full object-cover" />
-        ) : null}
-        <label className="inline-flex w-fit cursor-pointer items-center rounded border border-neutral-400 px-3 py-2 text-sm focus-within:ring-2">
-          {busy ? 'กำลังอัปโหลด…' : 'เปลี่ยนรูปโปรไฟล์'}
-          <input
-            type="file"
-            accept="image/png,image/jpeg,image/webp,image/gif"
-            className="sr-only"
-            disabled={busy}
-            aria-label="เปลี่ยนรูปโปรไฟล์"
-            onChange={(e) => void onPick(e.currentTarget)}
-          />
-        </label>
-        {url ? (
-          <button type="button" disabled={busy} onClick={() => void onRemove()} className="rounded border border-neutral-400 px-3 py-2 text-sm disabled:opacity-50">
-            ลบรูป
-          </button>
-        ) : null}
-      </div>
+          <img src={url} alt="รูปโปรไฟล์" width={112} height={112} className="avatar-img" />
+        ) : (
+          <span className="avatar-img avatar-initial" aria-hidden="true">
+            {initial}
+          </span>
+        )}
+        <span className="cam" aria-hidden="true">
+          {busy ? <span className="spin" /> : <CameraIcon />}
+        </span>
+        <input
+          type="file"
+          accept="image/png,image/jpeg,image/webp,image/gif"
+          className="sr-only"
+          disabled={busy}
+          aria-label="เปลี่ยนรูปโปรไฟล์"
+          title="คลิกหรือลากรูปมาวางเพื่อเปลี่ยน"
+          onChange={(e) => onPick(e.currentTarget)}
+        />
+      </label>
+      {url ? (
+        <button type="button" disabled={busy} onClick={() => void onRemove()} className="link-btn">
+          ลบรูป
+        </button>
+      ) : null}
       {error ? (
-        <p role="alert" className="text-sm text-red-600">
+        <p role="alert" className="field-err">
           {error}
         </p>
       ) : null}

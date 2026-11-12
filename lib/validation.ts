@@ -27,11 +27,27 @@ export function validateCredentials(input: { email: string; password: string }):
   return errors;
 }
 
+export const DISPLAY_NAME_MAX = 50;
+export const WEEKLY_GOAL_MAX = 5000;
+
+/** Length the way the server and the DB count it: code points, so Thai vowels and tone marks count too. */
+export const nameLength = len;
+
+export function validateDisplayName(displayName: string): string | undefined {
+  const n = len(displayName);
+  if (n < 1 || n > DISPLAY_NAME_MAX) return `ชื่อที่แสดงต้องยาว 1–${DISPLAY_NAME_MAX} ตัวอักษร`;
+}
+
+export function validateWeeklyGoal(weeklyGoalMinutes: string): string | undefined {
+  if (!intInRange(weeklyGoalMinutes, 0, WEEKLY_GOAL_MAX)) return `เป้าหมายต้องเป็นจำนวนเต็ม 0–${WEEKLY_GOAL_MAX} นาที`;
+}
+
 export function validateProfile(input: { displayName: string; weeklyGoalMinutes: string }): FieldErrors {
   const errors: FieldErrors = {};
-  const n = len(input.displayName);
-  if (n < 1 || n > 50) errors.displayName = 'ชื่อที่แสดงต้องยาว 1–50 ตัวอักษร';
-  if (!intInRange(input.weeklyGoalMinutes, 0, 5000)) errors.weeklyGoalMinutes = 'เป้าหมายต้องเป็นจำนวนเต็ม 0–5000 นาที';
+  const name = validateDisplayName(input.displayName);
+  if (name) errors.displayName = name;
+  const goal = validateWeeklyGoal(input.weeklyGoalMinutes);
+  if (goal) errors.weeklyGoalMinutes = goal;
   return errors;
 }
 

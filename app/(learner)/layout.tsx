@@ -5,6 +5,7 @@ import { MiniPlayer } from '@/components/practice/MiniPlayer';
 import { PracticeSessionProvider } from '@/components/practice/PracticeSession';
 import { plexThai } from '@/lib/fonts';
 import { createClient } from '@/lib/supabase/server';
+import { LogoMark } from '@/components/LogoMark';
 import './learner.css';
 
 export default async function LearnerLayout({ children }: { children: React.ReactNode }) {
@@ -20,10 +21,7 @@ export default async function LearnerLayout({ children }: { children: React.Reac
       <header className="app-header">
         <div className="wrap">
           <Link href="/dashboard" className="logo" aria-label="FretPath ภาพรวมการเรียน">
-            <svg viewBox="0 0 26 26" aria-hidden="true">
-              <path d="M13 2 4 9.5v9L13 24l9-5.5v-9z" fill="none" stroke="#e38b12" strokeWidth="2.2" strokeLinejoin="round" />
-              <path d="M9 11h8M9 15h8" stroke="#fff" strokeWidth="2" strokeLinecap="round" />
-            </svg>
+            <LogoMark />
             FretPath
           </Link>
           <HeaderTabs isAdmin={Boolean(isAdmin)} />

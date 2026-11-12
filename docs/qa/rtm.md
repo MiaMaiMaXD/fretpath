@@ -15,8 +15,8 @@
 | FR-01.1 | M | TC-AUTH-01, TC-AUTH-02, TC-PATH-17 | ทำแล้ว (อัตโนมัติ) |
 | FR-01.2 | M | TC-AUTH-01, TC-AUTH-03, TC-PATH-17, TC-AUTH-11, TC-AUTH-14, TC-AUTH-17, TC-PRD-05 | ทำแล้ว (อัตโนมัติ); ยืนยันบน production ด้วย TC-PRD-05 (Manual) |
 | FR-01.3 | M | TC-AUTH-04, TC-AUTH-05, TC-AUTH-07, TC-AUTH-08, TC-PRD-03, TC-PRD-04 | ทำแล้ว (อัตโนมัติ) |
-| FR-01.4 | M | TC-AUTH-06, TC-AUTH-13, TC-PRD-05 | ทำแล้ว (อัตโนมัติ); ยืนยันบน production ด้วย TC-PRD-05 (Manual) |
-| FR-01.5 | M | TC-AUTH-09, TC-AUTH-10 | ทำแล้ว (อัตโนมัติ) |
+| FR-01.4 | M | TC-AUTH-06, TC-AUTH-13, TC-AUTH-22, TC-PRD-05 | ทำแล้ว (อัตโนมัติ); ยืนยันบน production ด้วย TC-PRD-05 (Manual) |
+| FR-01.5 | M | TC-AUTH-09, TC-AUTH-10, TC-AUTH-19, TC-AUTH-20, TC-AUTH-21 | ทำแล้ว (อัตโนมัติ) |
 | FR-01.6 | M | TC-AUTH-01, TC-PATH-03, TC-PATH-14, TC-PATH-17, TC-PATH-19 | ทำแล้ว (อัตโนมัติ) ทั้งทริกเกอร์ DB และขั้นตอนสมัครผ่านหน้าเว็บ |
 | FR-01.7 | S | TC-AUTH-15, TC-AUTH-18 | มี TC (บางส่วนยังไม่ automate): TC-AUTH-15 ตรวจกรณีปิดปุ่ม (อัตโนมัติ); TC-AUTH-18 ล็อกอินด้วย Google จริงบน production เป็น Manual (OAuth ต้องใช้บัญชีและหน้า consent จริง) |
 | FR-01.8 | C | TC-AUTH-12, TC-AUTH-16, TC-SEC-23 | ทำแล้ว (อัตโนมัติ) |

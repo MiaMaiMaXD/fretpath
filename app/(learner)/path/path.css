@@ -78,7 +78,7 @@
 .fp-path .lesson-row.soon .no { background: transparent; border: 2px dashed #94a3b8; color: var(--muted); }
 .fp-path .lesson-row.soon .row-title { color: var(--muted); font-weight: 500; }
 .fp-path .row-state.soon { color: var(--muted); font-weight: 500; background: var(--tint); border-radius: 999px; padding: 1px 10px; font-size: .8rem; }
-.fp-path .lesson-row:target .row-inner { animation: fp-path-flash 1.2s ease-out; }
+.fp-path .lesson-row:target .row-inner, .fp-path .lesson-row.is-flash .row-inner { animation: fp-path-flash 1.2s ease-out; }
 @keyframes fp-path-flash { from { background: #fde9c4; } }
 
 /* ---------------------------------------------------------------- side */
@@ -108,7 +108,7 @@
   .fp-path .units-bar span.on { color: inherit; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .fp-path .fret.now .stone, .fp-path .lesson-row:target .row-inner { animation: none; }
+  .fp-path .fret.now .stone, .fp-path .lesson-row:target .row-inner, .fp-path .lesson-row.is-flash .row-inner { animation: none; }
   .fp-path .row-inner { transition: none; }
 }
 html:has(.fp-path) { scroll-behavior: smooth; }

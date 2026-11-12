@@ -36,7 +36,7 @@ export default async function PracticePage() {
       </>
     ) : (
       <p data-testid="practice-week">
-        สัปดาห์นี้ซ้อมไป <b>{week}</b> นาที <Link href="/profile">ตั้งเป้าหมาย</Link>
+        สัปดาห์นี้ซ้อมไป <b>{week}</b> นาที <Link href="/profile#goal">ตั้งเป้าหมาย</Link>
       </p>
     );
 
