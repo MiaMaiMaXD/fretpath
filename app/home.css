@@ -38,7 +38,7 @@
 .fp-home .site-header { background: var(--night); color: #fff; position: sticky; top: 0; z-index: 10; }
 .fp-home .site-header .wrap { display: flex; align-items: center; gap: 24px; height: 68px; }
 .fp-home .logo { font-weight: 700; font-size: 1.45rem; text-decoration: none; letter-spacing: -.01em; display: flex; align-items: center; gap: .45em; }
-.fp-home .logo svg { width: 26px; height: 26px; }
+.fp-home .logo .logo-mark { width: auto; height: 30px; display: block; }
 .fp-home .nav { display: flex; gap: 22px; margin-left: 12px; }
 .fp-home .nav a { text-decoration: none; color: #cbd5e1; font-size: .95rem; }
 .fp-home .nav a:hover { color: #fff; }

@@ -4,6 +4,7 @@ import { preload } from 'react-dom';
 import { TryFretboard } from '@/components/home/TryFretboard';
 import { CURRICULUM, UNITS } from '@/lib/path-frets';
 import { plexThai } from '@/lib/fonts';
+import { LogoMark } from '@/components/LogoMark';
 import './home.css';
 
 export const metadata: Metadata = {
@@ -51,10 +52,7 @@ export default function Home() {
       <header className="site-header">
         <div className="wrap">
           <Link href="/" className="logo" data-testid="home-logo" aria-label="FretPath หน้าแรก">
-            <svg viewBox="0 0 26 26" aria-hidden="true">
-              <path d="M13 2 4 9.5v9L13 24l9-5.5v-9z" fill="none" stroke="#e38b12" strokeWidth="2.2" strokeLinejoin="round" />
-              <path d="M9 11h8M9 15h8" stroke="#fff" strokeWidth="2" strokeLinecap="round" />
-            </svg>
+            <LogoMark />
             FretPath
           </Link>
           <nav className="nav" aria-label="เมนูหลัก">
