@@ -5,7 +5,7 @@ import { PathPage } from '../pages/PathPage';
 import { QuizPage } from '../pages/QuizPage';
 import { PracticePage } from '../pages/PracticePage';
 import { DashboardPage } from '../pages/DashboardPage';
-import { latestLinkFor } from '../utils/mailpit';
+import { LoginPage } from '../pages/LoginPage';
 import { deleteUserByEmail } from '../utils/supabaseAdmin';
 import { buildAnswers, choiceTexts, lessonIdBySlug } from '../utils/quiz';
 import { SECOND_LESSON } from '../utils/course';
@@ -22,11 +22,11 @@ test('TC-PATH-17 signup → lesson 1 unlocked → fail → lesson 2 locked → p
     const signup = new SignupPage(page);
     await signup.goto();
     await signup.signup(email, 'Passw0rd!');
-    await expect(signup.successMessage()).toBeVisible();
-    await page.goto(await latestLinkFor(email));
-    await page.getByRole('button', { name: 'ยืนยันและเข้าสู่ระบบ' }).click();
+    await signup.confirmWithCode(email);
+    await page.getByRole('link', { name: 'กลับเข้าสู่หน้าเข้าสู่ระบบ' }).click();
+    await new LoginPage(page).login(email, 'Passw0rd!');
     await expect(page).toHaveURL((u) => u.pathname === '/dashboard');
-    await expect(page.getByRole('heading', { level: 1, name: /สวัสดี|ยินดีต้อนรับ/ })).toBeVisible(); // the confirm URL itself carries next=/dashboard; wait for the action to land before navigating away
+    await expect(page.getByRole('heading', { level: 1, name: /สวัสดี|ยินดีต้อนรับ/ })).toBeVisible();
 
     const path = new PathPage(page);
     await path.goto();

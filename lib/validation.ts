@@ -57,6 +57,17 @@ export function validateNewPassword(input: { password: string; confirm: string }
   return errors;
 }
 
+export const EMAIL_REQUIRED = 'กรุณากรอกอีเมล';
+export const EMAIL_INVALID = 'อีเมลไม่ถูกต้อง';
+
+/** Signup: the email (required, valid format) plus the same rules as a new password, with its confirmation. */
+export function validateSignup(input: { email: string; password: string; confirm: string }): FieldErrors {
+  const errors = validateNewPassword(input);
+  if (input.email === '') errors.email = EMAIL_REQUIRED;
+  else if (!isValidEmail(input.email)) errors.email = EMAIL_INVALID;
+  return errors;
+}
+
 export const DISPLAY_NAME_MAX = 50;
 export const WEEKLY_GOAL_MAX = 5000;
 

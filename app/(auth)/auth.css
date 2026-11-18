@@ -79,6 +79,9 @@
 .fp-auth .forgot-form { display: flex; flex-direction: column; gap: 16px; }
 .fp-auth .auth-heading-form { margin-bottom: 24px; }
 .fp-auth .reset-form { display: flex; flex-direction: column; gap: 16px; }
+.fp-auth .signup-form { display: flex; flex-direction: column; gap: 16px; }
+.fp-auth .signup-form button[type='submit'] { margin-top: 24px; }
+.fp-auth .brand-word { color: var(--link); font-weight: 700; }
 
 /* Password changed: check icon, heading, one line, and a link styled as the amber pill */
 .fp-auth .auth-card-done { padding-top: 64px; padding-bottom: 32px; align-items: center; text-align: center; }

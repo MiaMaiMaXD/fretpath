@@ -6,7 +6,7 @@
 
 ## Supabase (hosted)
 
-- [ ] **เทมเพลตอีเมล** (Confirm signup และ Reset password): คัดลอกจาก `supabase/templates` ลิงก์ยืนยันสมัครต้องใช้ `{{ .TokenHash }}` ชี้ไปที่ `/auth/confirm` (ไม่ใช่ `{{ .ConfirmationURL }}`) ส่วน Reset password ส่งรหัส OTP `{{ .Token }}` (ไม่มีลิงก์) และต้องอัปเดตก่อน deploy หน้า OTP; Email OTP Length = 6
+- [ ] **เทมเพลตอีเมล** (Confirm signup และ Reset password): คัดลอกจาก `supabase/templates` ทั้ง 2 อันส่งรหัส OTP `{{ .Token }}` (ไม่มีลิงก์) และต้องอัปเดตก่อน deploy หน้า OTP ของแต่ละขั้นตอน; Email OTP Length = 6
 - [ ] **URL Configuration**: ตั้ง `site_url` เป็นโดเมน production และเพิ่ม `https://<domain>/**` ใน Redirect URLs (allow-list) ตามขั้นตอนใน [supabase.md](supabase.md)
 - [ ] **Auth**: เปิด `enable_confirmations` (ยืนยันอีเมลก่อนใช้งาน) และตั้งรหัสผ่านขั้นต่ำ 8 ตัวอักษร ให้ตรงกับ `config.toml`
 - [ ] **Custom SMTP**: ใช้ผู้ให้บริการอีเมลที่มีแพ็กเกจฟรี เพราะตัวส่งอีเมลในตัวของ Supabase จำกัดจำนวนการส่งต่อชั่วโมงต่ำมาก
@@ -17,4 +17,4 @@
 
 - [ ] ตั้ง `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` และ `NEXT_PUBLIC_SITE_URL` ในช่วง build (build จะ throw ถ้าไม่มี Supabase URL)
 - [x] HSTS: ตั้ง header ในโค้ดแล้ว (`next.config.ts`) ไม่ต้องตั้งเพิ่ม ตรวจหลัง deploy ตาม [vercel.md](vercel.md)
-- [x] หน้ากลางยืนยัน (confirm interstitial) ทำแล้วที่ `/auth/confirm` เพื่อกันตัวสแกนอีเมลใช้ token ล่วงหน้า; เหลือแค่ตั้งเทมเพลตอีเมลให้ชี้ไปที่ `/auth/confirm` (ดูหัวข้อ Supabase ด้านบน)
+- [x] หน้ากลางยืนยัน `/auth/confirm` ยังอยู่สำหรับลิงก์ยืนยันแบบเก่าที่ส่งไปก่อนเปลี่ยนเป็นรหัส OTP

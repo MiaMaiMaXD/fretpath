@@ -2,21 +2,24 @@ import { randomUUID } from 'node:crypto';
 import { test, expect } from '../fixtures';
 import { LoginPage } from '../pages/LoginPage';
 import { SignupPage } from '../pages/SignupPage';
-import { latestLinkFor, latestOtpFor } from '../utils/mailpit';
+import { latestOtpFor } from '../utils/mailpit';
 import { adminClient, deleteUserByEmail } from '../utils/supabaseAdmin';
 
 const newEmail = () => `qa+${randomUUID()}@fretpath.test`;
 
-test('TC-AUTH-01 signup, confirm email, land on dashboard with lesson 1 unlocked @smoke @regression', async ({ page }) => {
+test('TC-AUTH-01 signup, confirm the emailed code, log in to the dashboard with lesson 1 unlocked @smoke @regression', async ({ page }) => {
   const email = newEmail();
   try {
     const signup = new SignupPage(page);
     await signup.goto();
     await signup.signup(email, 'Passw0rd!');
-    await expect(signup.successMessage()).toBeVisible();
+    await signup.confirmWithCode(email);
+    await expect(page.getByRole('heading', { name: 'สมัครสมาชิกสำเร็จ' })).toBeVisible();
 
-    await page.goto(await latestLinkFor(email));
-    await page.getByRole('button', { name: 'ยืนยันและเข้าสู่ระบบ' }).click();
+    // Signed out on success, so the button really opens /login.
+    await page.getByRole('link', { name: 'กลับเข้าสู่หน้าเข้าสู่ระบบ' }).click();
+    await expect(page).toHaveURL((u) => u.pathname === '/login');
+    await new LoginPage(page).login(email, 'Passw0rd!');
     await expect(page).toHaveURL((u) => u.pathname === '/dashboard');
     await expect(page.getByRole('heading', { level: 1, name: /สวัสดี|ยินดีต้อนรับ/ })).toBeVisible();
 
@@ -42,25 +45,24 @@ test('TC-AUTH-01 signup, confirm email, land on dashboard with lesson 1 unlocked
   }
 });
 
-test('TC-AUTH-02 password shorter than 8 shows Thai error under field @regression', async ({ page }) => {
+test('TC-AUTH-02 password shorter than 8 is flagged under the field while typing and blocks signup @regression', async ({ page }) => {
   const signup = new SignupPage(page);
   await signup.goto();
-  const email = newEmail();
-  await signup.signup(email, '1234567');
-  await expect(page.getByText('รหัสผ่านต้องยาวอย่างน้อย 8 ตัวอักษร')).toBeVisible();
-  await expect(page.getByLabel('รหัสผ่าน', { exact: true })).toHaveAccessibleDescription(
-    'รหัสผ่านต้องยาวอย่างน้อย 8 ตัวอักษร',
-  );
-  await expect(page.getByLabel('อีเมล')).toHaveValue(email);
+  const password = page.getByLabel('รหัสผ่าน', { exact: true });
+  await page.getByLabel('อีเมล').fill(newEmail());
+  await password.fill('f1p9r2');
+  await expect(password).toHaveAccessibleDescription('รหัสผ่านควรมีอย่างน้อย 8 ตัว');
+  await page.getByLabel('ยืนยันรหัสผ่าน', { exact: true }).fill('f1p9r2');
+  await expect(page.getByRole('button', { name: 'สมัครสมาชิก', exact: true })).toBeDisabled();
 });
 
-test('TC-AUTH-03 unconfirmed account cannot log in @regression', async ({ page }) => {
+test('TC-AUTH-03 unconfirmed account cannot log in; the login page sends a new code @regression', async ({ page }) => {
   const email = newEmail();
   try {
     const signup = new SignupPage(page);
     await signup.goto();
     await signup.signup(email, 'Passw0rd!');
-    await expect(signup.successMessage()).toBeVisible();
+    const first = await latestOtpFor(email);
 
     const login = new LoginPage(page);
     await login.goto();
@@ -68,13 +70,12 @@ test('TC-AUTH-03 unconfirmed account cannot log in @regression', async ({ page }
     await expect(page.getByText('กรุณายืนยันอีเมลก่อนเข้าสู่ระบบ')).toBeVisible();
     await expect(page).toHaveURL(/\/login/);
 
-    // The unconfirmed notice offers a resend; it sends a second confirmation email.
-    const first = await latestLinkFor(email);
     // Local GoTrue allows one confirmation email per address per second (auth.email.max_frequency).
     await page.waitForTimeout(1500);
-    await page.getByRole('button', { name: 'ส่งลิงก์ยืนยันอีกครั้ง' }).click();
-    await expect(page.getByText('ถ้าบัญชีนี้ยังไม่ได้ยืนยัน เราได้ส่งลิงก์ไปแล้ว')).toBeVisible();
-    await expect.poll(() => latestLinkFor(email), { timeout: 10_000 }).not.toBe(first);
+    await page.getByRole('button', { name: 'ส่งรหัสยืนยันอีเมล' }).click();
+    await expect(page).toHaveURL((u) => u.pathname === '/signup/verify');
+    await expect.poll(() => latestOtpFor(email, { not: first }), { timeout: 10_000 }).not.toBe(first);
+    await signup.confirmWithCode(email);
   } finally {
     await deleteUserByEmail(email);
   }
@@ -343,4 +344,62 @@ test('TC-AUTH-08 expired session returns to original page after login @smoke @re
   const login = new LoginPage(page);
   await login.login(member.email, member.password);
   await expect(page).toHaveURL(/\/practice$/);
+});
+
+test('TC-AUTH-30 signup checks passwords while typing and the email format only when submitted @regression', async ({ page }) => {
+  await page.goto('/signup');
+  const email = page.getByLabel('อีเมล');
+  const password = page.getByLabel('รหัสผ่าน', { exact: true });
+  const confirm = page.getByLabel('ยืนยันรหัสผ่าน', { exact: true });
+  const submit = page.getByRole('button', { name: 'สมัครสมาชิก', exact: true });
+  const msg = (t: string) => page.getByText(t, { exact: true });
+  await expect(submit).toBeDisabled();
+
+  // Case 1 (part 1): a malformed email is NOT flagged while typing.
+  await email.fill('FretPath67gmail.com');
+  await page.waitForTimeout(800);
+  await expect(msg('อีเมลไม่ถูกต้อง')).toBeHidden();
+
+  // Case 8: confirmation first, password still empty.
+  await confirm.fill('f7');
+  await expect(msg('กรุณากรอกรหัสผ่าน')).toBeVisible();
+  await expect(msg('รหัสผ่านไม่ตรงกัน')).toBeVisible();
+  await confirm.fill('');
+
+  // Cases 3–5: password rules, first problem wins.
+  await password.fill('f1p 9');
+  await expect(msg('รหัสผ่านห้ามมีช่องว่าง')).toBeVisible();
+  await password.fill('f1p9r2');
+  await expect(msg('รหัสผ่านควรมีอย่างน้อย 8 ตัว')).toBeVisible();
+  await password.fill('f1p9r2a64');
+  await expect(msg('รหัสผ่านควรมีตัวอักษรพิมพ์ใหญ่ พิมพ์เล็ก และตัวเลข')).toBeVisible();
+
+  // Case 9: valid password, confirmation empty — no warning yet, still disabled.
+  await password.fill('f1p9r2A64');
+  await expect(password).not.toHaveAttribute('aria-invalid', 'true');
+  await expect(msg('รหัสผ่านไม่ตรงกัน')).toBeHidden();
+  await expect(submit).toBeDisabled();
+
+  // Case 7: mismatch while typing, then fixed.
+  await confirm.fill('f2');
+  await expect(msg('รหัสผ่านไม่ตรงกัน')).toBeVisible();
+  await confirm.fill('f1p9r2A64');
+  await expect(msg('รหัสผ่านไม่ตรงกัน')).toBeHidden();
+  await expect(submit).toBeEnabled();
+
+  // Case 1 (part 2): pressing "สมัครสมาชิก" with the malformed email flags it, sends nothing, and blocks until edited.
+  await submit.click();
+  await expect(msg('อีเมลไม่ถูกต้อง')).toBeVisible();
+  await expect(email).toHaveAttribute('aria-invalid', 'true');
+  await expect(page).toHaveURL((u) => u.pathname === '/signup');
+  await expect(submit).toBeDisabled();
+  await email.fill('fretpath67@gmail.com');
+  await expect(msg('อีเมลไม่ถูกต้อง')).toBeHidden();
+  await expect(submit).toBeEnabled();
+
+  // Case 10: both passwords in, email emptied.
+  await email.fill('');
+  await expect(msg('กรุณากรอกอีเมล')).toBeVisible();
+  await expect(email).toHaveAttribute('aria-invalid', 'true');
+  await expect(submit).toBeDisabled();
 });

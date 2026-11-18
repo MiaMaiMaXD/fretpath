@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { isValidEmail, newPasswordError, validateCredentials, validateNewPassword, validatePractice, validateProfile } from '@/lib/validation';
+import { isValidEmail, newPasswordError, validateCredentials, validateNewPassword, validatePractice, validateProfile, validateSignup } from '@/lib/validation';
 
 const prac = (o: Partial<Parameters<typeof validatePractice>[0]> = {}) =>
   validatePractice({ practicedOn: '2026-10-19', minutes: '10', activity: 'chords', note: '', ...o }, '2026-10-19');
@@ -22,6 +22,17 @@ describe('validation', () => {
     expect(validateNewPassword({ password: 'f1p9r2A64', confirm: 'f1p9r2A64' })).toEqual({});
     expect(validateNewPassword({ password: 'f1p9r2A64', confirm: 'f2' }).confirm).toBe('รหัสผ่านไม่ตรงกัน');
     expect(validateNewPassword({ password: '', confirm: 'f7' })).toEqual({ password: 'กรุณากรอกรหัสผ่าน', confirm: 'รหัสผ่านไม่ตรงกัน' });
+  });
+
+  it('validateSignup: email required and well-formed, plus the new-password rules', () => {
+    const ok = { email: 'fretpath67@gmail.com', password: 'f1p9r2A64', confirm: 'f1p9r2A64' };
+    expect(validateSignup(ok)).toEqual({});
+    expect(validateSignup({ ...ok, email: '' }).email).toBe('กรุณากรอกอีเมล');
+    expect(validateSignup({ ...ok, email: 'FretPath67gmail.com' }).email).toBe('อีเมลไม่ถูกต้อง');
+    expect(validateSignup({ ...ok, password: 'f1p9r2a64', confirm: 'f1p9r2a64' }).password).toBe(
+      'รหัสผ่านควรมีตัวอักษรพิมพ์ใหญ่ พิมพ์เล็ก และตัวเลข',
+    );
+    expect(validateSignup({ ...ok, confirm: 'f2' }).confirm).toBe('รหัสผ่านไม่ตรงกัน');
   });
 
   it('isValidEmail (live check on the login page)', () => {
