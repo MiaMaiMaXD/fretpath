@@ -5,7 +5,7 @@ export function GoogleButton() {
   if (process.env.NEXT_PUBLIC_GOOGLE_AUTH_ENABLED !== 'true') return null;
   return (
     <form action={signInWithGoogle}>
-      <button type="submit" className="w-full rounded border px-4 py-2">
+      <button type="submit" className="btn-google w-full rounded border px-4 py-2">
         เข้าสู่ระบบด้วย Google
       </button>
     </form>

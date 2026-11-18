@@ -76,7 +76,7 @@ npx supabase db push
 1. ไปที่ **Authentication** > **URL Configuration**
 2. **Site URL**: `https://<domain>`
 3. **Redirect URLs** กด Add URL ทีละบรรทัด
-   - `https://<domain>/**` (**จำเป็น** แอปส่งลิงก์ที่มี query เช่น `/auth/callback?next=/dashboard` และ `?next=/reset-password` ถ้ามีเฉพาะรายการที่ไม่มี query อาจไม่ตรงกัน แล้ว Supabase จะถอยไปใช้ Site URL แทน ตรงกับ `additional_redirect_urls` ใน `supabase/config.toml`)
+   - `https://<domain>/**` (**จำเป็น** แอปส่งลิงก์ที่มี query เช่น `/auth/callback?next=/dashboard` และ `?next=/forgot-password/new-password` ถ้ามีเฉพาะรายการที่ไม่มี query อาจไม่ตรงกัน แล้ว Supabase จะถอยไปใช้ Site URL แทน ตรงกับ `additional_redirect_urls` ใน `supabase/config.toml`)
    - `https://<domain>/auth/callback`
    - `https://<domain>/auth/confirm`
 4. กด **Save**
@@ -107,7 +107,10 @@ npx supabase db push
 
 ข้อกำหนดของเนื้อหา (ต้องคัดลอกทั้งไฟล์ตามเดิม ห้ามแก้ลิงก์):
 
-- ลิงก์ต้องอยู่ในรูป `{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=signup&next=/dashboard` (ยืนยันอีเมล) และ `{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=recovery&next=/reset-password` (ตั้งรหัสผ่านใหม่)
+- ยืนยันอีเมล: ลิงก์ต้องอยู่ในรูป `{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=signup&next=/dashboard`
+- ตั้งรหัสผ่านใหม่: **ส่งเป็นรหัส OTP 6 หลัก ไม่มีลิงก์** เนื้อหาต้องมี `{{ .Token }}` อยู่ในแท็กที่มี `data-otp` ตามไฟล์ (เทสต์ E2E อ่านรหัสจากแท็กนี้) ผู้ใช้กรอกรหัสที่หน้า `/forgot-password/otp`
+- ที่ **Authentication > Providers > Email** ตรวจว่า **Email OTP Length = 6** (ต้องตรงกับ `otp_length` ใน `config.toml` และช่องกรอก 6 ช่อง) ส่วน **Email OTP Expiration** ปล่อยค่าเดิม (3600 วินาที) เพราะค่านี้ใช้กับลิงก์ยืนยันตอนสมัครด้วย แอปบังคับให้รหัสรีเซ็ตใช้ได้ 3 นาทีเอง (`lib/otp.ts`)
+- **ต้องเปลี่ยนเทมเพลต Reset Password ก่อนหรือพร้อมกับ deploy โค้ดหน้า OTP** ถ้าเทมเพลตบน production ยังเป็นแบบลิงก์ ผู้ใช้จะไม่ได้รหัสไปกรอก
 - **ห้ามใช้ `{{ .ConfirmationURL }}`** เพราะจะไม่ผ่านหน้า `/auth/confirm`
 - `{{ .SiteURL }}` คือค่า Site URL จากขั้นที่ 5 ดังนั้นขั้นที่ 5 ต้องถูกต้องก่อน
 - ผู้ใช้จะเห็นหน้ากลาง `/auth/confirm` ที่มีปุ่ม "ยืนยันและเข้าสู่ระบบ" (กันตัวสแกนอีเมลใช้ลิงก์ไปก่อน) จึงเปิดลิงก์จากเครื่องอื่นได้

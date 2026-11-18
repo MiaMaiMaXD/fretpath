@@ -24,6 +24,14 @@ type Props = {
   maxCount?: number;
   /** textarea only: change to remount (re-sync the counter) after a successful save */
   resetKey?: number;
+  /** Keep the label for screen readers only (the placeholder shows the hint visually). */
+  hideLabel?: boolean;
+  /** input only: shown inside the right edge of the input (e.g. a show-password toggle). Mark decorative content aria-hidden yourself. */
+  adornment?: React.ReactNode;
+  /** Shown on the same row as the error message, pushed to the right (e.g. a "forgot password" link). */
+  footer?: React.ReactNode;
+  /** Extra class on the wrapper, for page-scoped styling. */
+  className?: string;
 };
 
 const CONTROL = 'rounded border border-neutral-400 bg-transparent px-3 py-2';
@@ -45,13 +53,34 @@ export function Field({
   maxCount,
   resetKey = 0,
   maxLength,
+  hideLabel = false,
+  adornment,
+  footer,
+  className,
 }: Props) {
   const id = `${idPrefix}${name}`;
   const errorId = `${id}-error`;
   const describedBy = error ? errorId : undefined;
+  const input = () => (
+    <input
+      id={id}
+      defaultValue={defaultValue}
+      name={name}
+      type={type}
+      autoComplete={autoComplete}
+      required={required}
+      max={max}
+      inputMode={inputMode}
+      placeholder={placeholder}
+      maxLength={maxLength}
+      aria-invalid={error ? true : undefined}
+      aria-describedby={describedBy}
+      className={CONTROL}
+    />
+  );
   return (
-    <div className="flex flex-col gap-1">
-      <label htmlFor={id} className="text-sm font-medium">
+    <div className={`flex flex-col gap-1${className ? ` ${className}` : ''}`}>
+      <label htmlFor={id} className={hideLabel ? 'sr-only' : 'text-sm font-medium'}>
         {label}
       </label>
       {as === 'textarea' ? (
@@ -83,24 +112,24 @@ export function Field({
             </option>
           ))}
         </select>
+      ) : adornment ? (
+        <div className="field-control">
+          {input()}
+          <span className="field-adornment">{adornment}</span>
+        </div>
       ) : (
-        <input
-          id={id}
-          defaultValue={defaultValue}
-          name={name}
-          type={type}
-          autoComplete={autoComplete}
-          required={required}
-          max={max}
-          inputMode={inputMode}
-          placeholder={placeholder}
-          maxLength={maxLength}
-          aria-invalid={error ? true : undefined}
-          aria-describedby={describedBy}
-          className={CONTROL}
-        />
+        input()
       )}
-      {error ? (
+      {footer ? (
+        <div className="field-foot">
+          {error ? (
+            <p id={errorId} className="text-sm text-red-600">
+              {error}
+            </p>
+          ) : null}
+          {footer}
+        </div>
+      ) : error ? (
         <p id={errorId} className="text-sm text-red-600">
           {error}
         </p>

@@ -1,10 +1,16 @@
+import { AuthCard } from '../AuthCard';
 import { ForgotForm } from '../forms';
 
 export default function ForgotPasswordPage() {
   return (
-    <main className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-center gap-4 p-4">
-      <h1 className="text-2xl font-semibold">ลืมรหัสผ่าน</h1>
+    <AuthCard backHref="/login" backLabel="กลับไปหน้าเข้าสู่ระบบ" className="auth-card-plain">
+      <h1 className="auth-heading">ลืมรหัสผ่าน?</h1>
+      <p className="auth-lede">
+        กรุณากรอกอีเมลของคุณ ทางเราจะส่งลิงก์ตั้งรหัสผ่านใหม่
+        <br />
+        ไปทางอีเมลของคุณ
+      </p>
       <ForgotForm />
-    </main>
+    </AuthCard>
   );
 }

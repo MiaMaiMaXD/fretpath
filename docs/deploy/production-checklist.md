@@ -6,7 +6,7 @@
 
 ## Supabase (hosted)
 
-- [ ] **เทมเพลตอีเมล** (Confirm signup และ Reset password): คัดลอกจาก `supabase/templates` ลิงก์ต้องใช้ `{{ .TokenHash }}` ชี้ไปที่ `/auth/confirm` (ไม่ใช่ `{{ .ConfirmationURL }}`) จนกว่าจะตั้งค่านี้ `emailRedirectTo` / `redirectTo` ในโค้ดเป็นเพียงค่าสำรอง
+- [ ] **เทมเพลตอีเมล** (Confirm signup และ Reset password): คัดลอกจาก `supabase/templates` ลิงก์ยืนยันสมัครต้องใช้ `{{ .TokenHash }}` ชี้ไปที่ `/auth/confirm` (ไม่ใช่ `{{ .ConfirmationURL }}`) ส่วน Reset password ส่งรหัส OTP `{{ .Token }}` (ไม่มีลิงก์) และต้องอัปเดตก่อน deploy หน้า OTP; Email OTP Length = 6
 - [ ] **URL Configuration**: ตั้ง `site_url` เป็นโดเมน production และเพิ่ม `https://<domain>/**` ใน Redirect URLs (allow-list) ตามขั้นตอนใน [supabase.md](supabase.md)
 - [ ] **Auth**: เปิด `enable_confirmations` (ยืนยันอีเมลก่อนใช้งาน) และตั้งรหัสผ่านขั้นต่ำ 8 ตัวอักษร ให้ตรงกับ `config.toml`
 - [ ] **Custom SMTP**: ใช้ผู้ให้บริการอีเมลที่มีแพ็กเกจฟรี เพราะตัวส่งอีเมลในตัวของ Supabase จำกัดจำนวนการส่งต่อชั่วโมงต่ำมาก

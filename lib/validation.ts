@@ -20,10 +20,40 @@ function isRealDate(s: string): boolean {
   return !Number.isNaN(d.getTime()) && d.toISOString().slice(0, 10) === s;
 }
 
+/** Same email shape check the server uses; safe to run in the browser while the user types. */
+export function isValidEmail(email: string): boolean {
+  return EMAIL_RE.test(email.trim());
+}
+
 export function validateCredentials(input: { email: string; password: string }): FieldErrors {
   const errors: FieldErrors = {};
   if (!EMAIL_RE.test(input.email)) errors.email = 'รูปแบบอีเมลไม่ถูกต้อง';
   if (len(input.password) < 8) errors.password = 'รหัสผ่านต้องยาวอย่างน้อย 8 ตัวอักษร';
+  return errors;
+}
+
+export const PASSWORD_MISMATCH = 'รหัสผ่านไม่ตรงกัน';
+export const PASSWORD_REQUIRED = 'กรุณากรอกรหัสผ่าน';
+
+/**
+ * Rules for a NEW password (reset page), checked in order so only the first problem shows:
+ * no whitespace, at least 8 characters, and upper-case, lower-case and a digit.
+ */
+export function newPasswordError(password: string): string | undefined {
+  if (password === '') return PASSWORD_REQUIRED;
+  if (/\s/.test(password)) return 'รหัสผ่านห้ามมีช่องว่าง';
+  if (len(password) < 8) return 'รหัสผ่านควรมีอย่างน้อย 8 ตัว';
+  if (!/[A-Z]/.test(password) || !/[a-z]/.test(password) || !/[0-9]/.test(password)) {
+    return 'รหัสผ่านควรมีตัวอักษรพิมพ์ใหญ่ พิมพ์เล็ก และตัวเลข';
+  }
+  return undefined;
+}
+
+export function validateNewPassword(input: { password: string; confirm: string }): FieldErrors {
+  const errors: FieldErrors = {};
+  const passwordError = newPasswordError(input.password);
+  if (passwordError) errors.password = passwordError;
+  if (input.confirm !== input.password) errors.confirm = PASSWORD_MISMATCH;
   return errors;
 }
 

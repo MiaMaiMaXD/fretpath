@@ -1,6 +1,6 @@
 import { test, expect } from '../fixtures';
 import { ProfilePage } from '../pages/ProfilePage';
-import { latestLinkFor } from '../utils/mailpit';
+import { latestOtpFor } from '../utils/mailpit';
 import { adminClient } from '../utils/supabaseAdmin';
 
 const profileRow = async (id: string) =>
@@ -115,14 +115,14 @@ test('TC-AUTH-21 database rejects names over 50 characters even through the API 
   }
 });
 
-test('TC-AUTH-22 password row emails a reset link to the signed-in address @regression', async ({ memberPage, member }) => {
+test('TC-AUTH-22 password row emails a reset code to the signed-in address and opens the OTP page @regression', async ({ memberPage, member }) => {
   const profile = new ProfilePage(memberPage);
   await profile.goto();
   await expect(memberPage.getByTestId('profile-google')).toHaveCount(0);
   await memberPage.getByRole('button', { name: 'เปลี่ยนรหัสผ่าน' }).click();
   const dlg = memberPage.getByRole('dialog', { name: 'เปลี่ยนรหัสผ่าน' });
   await expect(dlg).toContainText(member.email);
-  await dlg.getByRole('button', { name: 'ส่งลิงก์' }).click();
-  await expect(profile.toast()).toHaveText(/ส่งลิงก์แล้ว/);
-  expect(await latestLinkFor(member.email, { contains: 'type=recovery' })).toContain('next=/reset-password');
+  await dlg.getByRole('button', { name: 'ส่งรหัส' }).click();
+  await expect(memberPage).toHaveURL((u) => u.pathname === '/forgot-password/verify');
+  expect(await latestOtpFor(member.email)).toMatch(/^\d{6}$/);
 });

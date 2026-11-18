@@ -17,6 +17,9 @@ test('TC-SEC-18 home, login and path have no serious axe violations @regression'
   await page.goto('/login');
   await page.waitForLoadState('networkidle');
   expect(await serious(page), 'login').toEqual([]);
+  await page.goto('/forgot-password/success');
+  await page.waitForLoadState('networkidle');
+  expect(await serious(page), 'password changed').toEqual([]);
 
   await memberPage.goto('/path');
   await memberPage.waitForLoadState('networkidle');

@@ -1,0 +1,234 @@
+/* Login page, from the "Property 1=Login" mockup. Every rule is scoped under .fp-auth.
+   Plain (unlayered) CSS, so it wins over the Tailwind utilities the shared form components carry. */
+
+.fp-auth {
+  --night: #0f172a;
+  --card: #1e293b;
+  --amber: #d97706;
+  --amber-hi: #ea8a0c;
+  --link: #f5a524;
+  --slate: #64748b;
+  --slate-hi: #56657a;
+  --input-line: #ece4db;
+  --error: #f87171;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 16px;
+  background: var(--night);
+  font-family: var(--font-plex-thai), 'Noto Sans Thai', system-ui, sans-serif;
+}
+
+.fp-auth .auth-card {
+  position: relative;
+  width: 100%;
+  max-width: 572px;
+  background: var(--card);
+  color: #fff;
+  border-radius: 14px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, .35);
+  padding: 36px 64px 36px;
+  display: flex;
+  flex-direction: column;
+}
+.fp-auth :focus-visible { outline: 3px solid var(--link); outline-offset: 3px; }
+
+.fp-auth .auth-back {
+  position: absolute;
+  top: 32px;
+  left: 64px;
+  color: #fff;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  margin: -8px 0 0 -12px;
+  border-radius: 999px;
+}
+.fp-auth .auth-back:hover { background: rgba(255, 255, 255, .08); }
+
+.fp-auth .auth-logo { display: flex; justify-content: center; }
+.fp-auth .auth-logo .logo-mark { height: 80px; width: auto; display: block; }
+
+.fp-auth .auth-title {
+  margin: 20px 0 24px;
+  text-align: center;
+  font-size: 2rem;
+  font-weight: 600;
+  line-height: 1.3;
+}
+.fp-auth .auth-title span { display: block; font-size: 1.4rem; font-weight: 500; }
+
+.fp-auth .auth-alert {
+  margin: 0 0 16px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  background: rgba(252, 165, 165, .12);
+  color: var(--error);
+  font-size: .9rem;
+}
+
+/* Plain card (no logo): forgot password. The heading sits under the back arrow. */
+.fp-auth .auth-card-plain { padding-top: 72px; }
+.fp-auth .auth-heading { margin: 0; text-align: center; font-size: 1.5rem; font-weight: 600; line-height: 1.4; }
+.fp-auth .auth-lede { margin: 24px 0 24px; text-align: center; font-size: 1rem; font-weight: 500; line-height: 1.5; }
+
+/* Form */
+.fp-auth .login-form { display: flex; flex-direction: column; gap: 16px; }
+.fp-auth .forgot-form { display: flex; flex-direction: column; gap: 16px; }
+.fp-auth .auth-heading-form { margin-bottom: 24px; }
+.fp-auth .reset-form { display: flex; flex-direction: column; gap: 16px; }
+
+/* Password changed: check icon, heading, one line, and a link styled as the amber pill */
+.fp-auth .auth-card-done { padding-top: 64px; padding-bottom: 32px; align-items: center; text-align: center; }
+.fp-auth .done-icon { color: var(--link); margin-bottom: 40px; }
+.fp-auth .done-lede { margin: 16px 0 56px; font-size: 1rem; line-height: 1.5; color: #e2e8f0; }
+.fp-auth .btn-primary-link {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  min-height: 46px;
+  border-radius: 999px;
+  padding: 8px 20px;
+  background: var(--amber);
+  color: #fff;
+  font-size: 19px;
+  font-weight: 700;
+  text-decoration: none;
+  transition: background-color .15s;
+}
+.fp-auth .btn-primary-link:hover { background: var(--amber-hi); }
+.fp-auth .reset-form button[type='submit'] { margin-top: 48px; }
+.fp-auth .forgot-form button[type='submit'] { margin-top: 48px; }
+.fp-auth input:not([type='hidden']) {
+  width: 100%;
+  height: 48px;
+  padding: 0 14px;
+  border: 2px solid var(--input-line);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--night);
+  font: inherit;
+  font-size: 1rem;
+}
+.fp-auth input::placeholder { color: #64748b; }
+.fp-auth input:focus { outline: none; border-color: var(--link); box-shadow: 0 0 0 3px rgba(245, 165, 36, .35); }
+.fp-auth input[aria-invalid='true'] { border-color: #f87171; }
+.fp-auth input[aria-invalid='true']:focus { border-color: #f87171; box-shadow: 0 0 0 3px rgba(248, 113, 113, .35); }
+.fp-auth .field-control { position: relative; }
+.fp-auth .field-control input { padding-right: 44px; }
+.fp-auth .field-adornment {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+}
+/* Show/hide password: the lock turns amber while the password is visible */
+.fp-auth button.pw-toggle {
+  width: 36px;
+  min-height: 0;
+  height: 36px;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 6px;
+  background: transparent;
+  color: #64748b;
+}
+.fp-auth button.pw-toggle:hover { background: #f1f5f9; }
+.fp-auth button.pw-toggle[aria-pressed='true'] { color: var(--amber); }
+
+/* Error (left) and "forgot password" (right) share one row under the password */
+.fp-auth .field-foot { display: flex; align-items: baseline; gap: 12px; margin-bottom: 8px; }
+.fp-auth .field-foot p { margin: 0; }
+
+.fp-auth .forgot-link {
+  margin-left: auto;
+  white-space: nowrap;
+  color: var(--link);
+  font-size: .85rem;
+  text-decoration: none;
+}
+.fp-auth .forgot-link:hover { text-decoration: underline; }
+
+/* Field errors and form messages on the dark card */
+.fp-auth .text-red-600 { color: var(--error); }
+.fp-auth .text-green-700 { color: #86efac; }
+
+/* Buttons: the primary label is 19px bold ("large text"), which keeps white on the mockup amber AA-legible */
+.fp-auth button {
+  width: 100%;
+  min-height: 46px;
+  border: 0;
+  border-radius: 999px;
+  padding: 8px 20px;
+  font: inherit;
+  font-weight: 600;
+  color: #fff;
+  cursor: pointer;
+  transition: background-color .15s;
+}
+.fp-auth button:disabled { cursor: default; }
+.fp-auth button[type='submit']:disabled { background: #414f63; color: #8f949d; }
+.fp-auth button[type='submit'] { margin-top: 8px; background: var(--amber); font-size: 19px; font-weight: 700; }
+.fp-auth button[type='submit']:hover:not(:disabled) { background: var(--amber-hi); }
+.fp-auth button.btn-google { margin-top: 8px; background: var(--slate); font-size: 1rem; font-weight: 600; }
+.fp-auth button.btn-google:hover { background: var(--slate-hi); }
+.fp-auth button.btn-resend { background: transparent; box-shadow: inset 0 0 0 2px rgba(255, 255, 255, .35); font-size: .95rem; }
+
+.fp-auth .auth-switch { margin: 16px 0 0; font-size: 1rem; }
+.fp-auth .auth-switch a { color: var(--link); font-weight: 700; text-decoration: none; margin-left: .35em; }
+.fp-auth .auth-switch a:hover { text-decoration: underline; }
+
+@media (max-width: 520px) {
+  .fp-auth { padding: 16px; }
+  .fp-auth .auth-card { padding: 28px 20px; }
+  .fp-auth .auth-back { top: 24px; left: 20px; }
+  .fp-auth .auth-logo .logo-mark { height: 64px; }
+  .fp-auth .auth-title { font-size: 1.7rem; }
+}
+
+/* OTP page */
+.fp-auth .otp-sub { margin: 4px 0 0; text-align: center; font-weight: 600; }
+.fp-auth .otp-form { display: flex; flex-direction: column; align-items: center; }
+.fp-auth .otp-expiry { margin: 8px 0 24px; color: #94a3b8; font-size: .95rem; font-variant-numeric: tabular-nums; }
+.fp-auth .otp-boxes { display: flex; gap: 16px; justify-content: center; }
+.fp-auth input.otp-box {
+  width: 56px;
+  height: 88px;
+  padding: 0;
+  border: 2px solid var(--input-line);
+  border-radius: 10px;
+  text-align: center;
+  font-size: 2.25rem;
+  font-weight: 600;
+  color: #000;
+  caret-color: var(--link);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, .25);
+}
+.fp-auth input.otp-box:focus { border-color: var(--link); box-shadow: 0 0 0 3px rgba(245, 165, 36, .35); }
+.fp-auth .otp-boxes.is-invalid input.otp-box { border-color: #ef4444; }
+.fp-auth .otp-boxes.is-invalid input.otp-box:focus { box-shadow: 0 0 0 3px rgba(239, 68, 68, .35); }
+.fp-auth .otp-error { margin: 14px 0 0; color: var(--error); font-size: .9rem; }
+.fp-auth .otp-resend { margin: 14px 0 0; font-size: 1rem; }
+.fp-auth button.link-btn {
+  width: auto;
+  min-height: 0;
+  padding: 0;
+  border-radius: 4px;
+  background: none;
+  color: var(--link);
+  font-size: inherit;
+  font-weight: 700;
+}
+.fp-auth button.link-btn:not(:disabled):hover { text-decoration: underline; }
+.fp-auth .otp-notice { margin: 4px 0 0; min-height: 1.5em; font-size: .9rem; color: #86efac; }
+.fp-auth .otp-form button[type='submit'] { margin-top: 24px; }
+
+@media (max-width: 520px) {
+  .fp-auth .otp-boxes { gap: 8px; }
+  .fp-auth input.otp-box { width: 44px; height: 64px; font-size: 1.75rem; }
+}

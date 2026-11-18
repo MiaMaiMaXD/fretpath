@@ -1,10 +1,38 @@
 import { describe, expect, it } from 'vitest';
-import { validateCredentials, validatePractice, validateProfile } from '@/lib/validation';
+import { isValidEmail, newPasswordError, validateCredentials, validateNewPassword, validatePractice, validateProfile } from '@/lib/validation';
 
 const prac = (o: Partial<Parameters<typeof validatePractice>[0]> = {}) =>
   validatePractice({ practicedOn: '2026-10-19', minutes: '10', activity: 'chords', note: '', ...o }, '2026-10-19');
 
 describe('validation', () => {
+  it('newPasswordError (reset page), first problem wins', () => {
+    expect(newPasswordError('')).toBe('กรุณากรอกรหัสผ่าน');
+    expect(newPasswordError('f1p 9')).toBe('รหัสผ่านห้ามมีช่องว่าง');
+    expect(newPasswordError('f1p9r2A 64')).toBe('รหัสผ่านห้ามมีช่องว่าง');
+    expect(newPasswordError('f1p9r2')).toBe('รหัสผ่านควรมีอย่างน้อย 8 ตัว');
+    expect(newPasswordError('f1p9r2A')).toBe('รหัสผ่านควรมีอย่างน้อย 8 ตัว');
+    expect(newPasswordError('f1p9r2a64')).toBe('รหัสผ่านควรมีตัวอักษรพิมพ์ใหญ่ พิมพ์เล็ก และตัวเลข');
+    expect(newPasswordError('F1P9R2A64')).toBe('รหัสผ่านควรมีตัวอักษรพิมพ์ใหญ่ พิมพ์เล็ก และตัวเลข');
+    expect(newPasswordError('fpRabcdef')).toBe('รหัสผ่านควรมีตัวอักษรพิมพ์ใหญ่ พิมพ์เล็ก และตัวเลข');
+    expect(newPasswordError('f1p9r2A6')).toBeUndefined();
+    expect(newPasswordError('NewPassw0rd!')).toBeUndefined();
+  });
+
+  it('validateNewPassword checks the confirmation', () => {
+    expect(validateNewPassword({ password: 'f1p9r2A64', confirm: 'f1p9r2A64' })).toEqual({});
+    expect(validateNewPassword({ password: 'f1p9r2A64', confirm: 'f2' }).confirm).toBe('รหัสผ่านไม่ตรงกัน');
+    expect(validateNewPassword({ password: '', confirm: 'f7' })).toEqual({ password: 'กรุณากรอกรหัสผ่าน', confirm: 'รหัสผ่านไม่ตรงกัน' });
+  });
+
+  it('isValidEmail (live check on the login page)', () => {
+    expect(isValidEmail('fretpath67@gmail.com')).toBe(true);
+    expect(isValidEmail('  fretpath67@gmail.com ')).toBe(true);
+    expect(isValidEmail('FretPath67gmail.com')).toBe(false);
+    expect(isValidEmail('a@b')).toBe(false);
+    expect(isValidEmail('a b@c.co')).toBe(false);
+    expect(isValidEmail('')).toBe(false);
+  });
+
   it('credentials', () => {
     expect(validateCredentials({ email: 'a@b.co', password: '1234567' }).password).toBe('รหัสผ่านต้องยาวอย่างน้อย 8 ตัวอักษร');
     expect(validateCredentials({ email: 'a@b.co', password: '12345678' })).toEqual({});
