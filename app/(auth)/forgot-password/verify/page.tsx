@@ -1,10 +1,11 @@
 import { redirect } from 'next/navigation';
-import { readResetOtpWindow } from '@/lib/reset-otp';
+import { readOtpWindow } from '@/lib/reset-otp';
+import { resendResetOtp, verifyResetOtp } from '../../actions';
 import { AuthCard } from '../../AuthCard';
-import { OtpForm } from './OtpForm';
+import { OtpForm } from '../../OtpForm';
 
 export default async function ResetOtpPage() {
-  const otpWindow = await readResetOtpWindow();
+  const otpWindow = await readOtpWindow('reset');
   // Only reachable after asking for a code on /forgot-password (or the profile page).
   if (!otpWindow) redirect('/forgot-password');
   return (
@@ -13,7 +14,7 @@ export default async function ResetOtpPage() {
         กรอกรหัส OTP
       </h1>
       <p className="otp-sub">ส่งรหัส OTP ไปยังอีเมลของคุณ</p>
-      <OtpForm expiresIn={otpWindow.expiresIn} resendIn={otpWindow.resendIn} />
+      <OtpForm expiresIn={otpWindow.expiresIn} resendIn={otpWindow.resendIn} verify={verifyResetOtp} resend={resendResetOtp} />
     </AuthCard>
   );
 }

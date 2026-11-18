@@ -1,12 +1,12 @@
 import { signInWithGoogle } from '@/app/(auth)/actions';
 
 /** Rendered only when Google sign-in is configured (NEXT_PUBLIC_GOOGLE_AUTH_ENABLED=true). */
-export function GoogleButton() {
+export function GoogleButton({ label = 'เข้าสู่ระบบด้วย Google' }: { label?: string }) {
   if (process.env.NEXT_PUBLIC_GOOGLE_AUTH_ENABLED !== 'true') return null;
   return (
     <form action={signInWithGoogle}>
       <button type="submit" className="btn-google w-full rounded border px-4 py-2">
-        เข้าสู่ระบบด้วย Google
+        {label}
       </button>
     </form>
   );

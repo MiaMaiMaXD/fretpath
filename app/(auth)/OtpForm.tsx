@@ -11,7 +11,6 @@ import {
   formatClock,
   otpDigits,
 } from '@/lib/otp';
-import { resendResetOtp, verifyResetOtp } from '../../actions';
 
 const initial: ActionState = { ok: false };
 const EMPTY = Array.from({ length: OTP_LENGTH }, () => '');
@@ -20,8 +19,19 @@ const EMPTY = Array.from({ length: OTP_LENGTH }, () => '');
  * Six one-digit boxes. Focus starts in the first box; typing moves right, Backspace on an empty box moves left,
  * pasting or one-time-code autofill spreads the digits. The code is checked only when the user presses "ถัดไป".
  */
-export function OtpForm({ expiresIn, resendIn }: { expiresIn: number; resendIn: number }) {
-  const [state, action, pending] = useActionState(verifyResetOtp, initial);
+export function OtpForm({
+  expiresIn,
+  resendIn,
+  verify,
+  resend: resendAction,
+}: {
+  expiresIn: number;
+  resendIn: number;
+  /** Server action that checks the code and redirects on success (password reset or signup). */
+  verify: (prev: ActionState, formData: FormData) => Promise<ActionState>;
+  resend: () => Promise<{ ok: boolean; message?: string }>;
+}) {
+  const [state, action, pending] = useActionState(verify, initial);
   const [digits, setDigits] = useState<string[]>(EMPTY);
   const [submitted, setSubmitted] = useState<string | null>(null);
   const boxes = useRef<(HTMLInputElement | null)[]>([]);
@@ -76,7 +86,7 @@ export function OtpForm({ expiresIn, resendIn }: { expiresIn: number; resendIn: 
     update(next, from + incoming.length);
   }
 
-  function onChange(i: number, raw: string) {
+  function onChange(i: number, raw: string, inserted: string | null) {
     const typed = raw.replace(/\D/g, '');
     if (typed.length === 0) {
       const next = [...digits];
@@ -86,6 +96,9 @@ export function OtpForm({ expiresIn, resendIn }: { expiresIn: number; resendIn: 
     }
     // A full code (one-time-code autofill) fills from the start; otherwise keep the newest digit typed.
     if (typed.length === OTP_LENGTH) return fill(0, typed);
+    // One key typed into a box that already holds a digit: take exactly that key. Going by the value alone
+    // breaks when the caret sits before the old digit ("10"), which would push the old digit into the next box.
+    if (typed.length > 1 && inserted !== null && /^\d$/.test(inserted)) return fill(i, inserted);
     if (typed.length > 1) {
       const previous = digits[i];
       const fresh = typed.startsWith(previous) ? typed.slice(previous.length) : typed;
@@ -95,6 +108,13 @@ export function OtpForm({ expiresIn, resendIn }: { expiresIn: number; resendIn: 
   }
 
   function onKeyDown(i: number, e: React.KeyboardEvent<HTMLInputElement>) {
+    // A digit key always replaces this box and moves on. Left to the browser, typing the digit the box already
+    // holds changes nothing, fires no change event, and the next digit would land in the same box.
+    if (/^\d$/.test(e.key) && !e.ctrlKey && !e.metaKey && !e.altKey) {
+      e.preventDefault();
+      fill(i, e.key);
+      return;
+    }
     if (e.key === 'Backspace' && digits[i] === '' && i > 0) {
       e.preventDefault();
       const next = [...digits];
@@ -112,7 +132,7 @@ export function OtpForm({ expiresIn, resendIn }: { expiresIn: number; resendIn: 
 
   function resend() {
     startResend(async () => {
-      const res = await resendResetOtp();
+      const res = await resendAction();
       if (res.ok) {
         setClock({ expiresIn: OTP_TTL_SECONDS, resendIn: OTP_RESEND_SECONDS, since: elapsed });
         setDigits(EMPTY);
@@ -143,7 +163,7 @@ export function OtpForm({ expiresIn, resendIn }: { expiresIn: number; resendIn: 
               boxes.current[i] = el;
             }}
             value={d}
-            onChange={(e) => onChange(i, e.target.value)}
+            onChange={(e) => onChange(i, e.target.value, (e.nativeEvent as InputEvent).data ?? null)}
             onKeyDown={(e) => onKeyDown(i, e)}
             onPaste={(e) => {
               e.preventDefault();

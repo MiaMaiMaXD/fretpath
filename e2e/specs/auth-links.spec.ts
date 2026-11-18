@@ -2,31 +2,30 @@ import { randomUUID } from 'node:crypto';
 import { test, expect, watchCsp } from '../fixtures';
 import { LoginPage } from '../pages/LoginPage';
 import { SignupPage } from '../pages/SignupPage';
-import { latestLinkFor, latestOtpFor } from '../utils/mailpit';
+import { latestOtpFor, mailCountFor } from '../utils/mailpit';
 import { deleteUserByEmail } from '../utils/supabaseAdmin';
 
 const newEmail = () => `qa+${randomUUID()}@fretpath.test`;
 
-test('TC-AUTH-11 confirmation link works in a fresh browser context @smoke @regression', async ({ page, browser }) => {
+test('TC-AUTH-11 signup code: a wrong code is rejected, retyping the right code over it confirms, no CSP errors @smoke @regression', async ({ page }) => {
   const email = newEmail();
-  const fresh = await browser.newContext(); // no cookies: simulates opening the mail on another device
-  const csp = watchCsp(fresh);
+  const csp = watchCsp(page.context());
   try {
     const signup = new SignupPage(page);
     await signup.goto();
     await signup.signup(email, 'Passw0rd!');
-    await expect(signup.successMessage()).toBeVisible();
+    const code = await latestOtpFor(email);
 
-    const link = await latestLinkFor(email);
-    expect(link).toContain('/auth/confirm?token_hash=');
-    const other = await fresh.newPage();
-    await other.goto(link);
-    await other.getByRole('button', { name: 'ยืนยันและเข้าสู่ระบบ' }).click();
-    await expect(other).toHaveURL((u) => u.pathname === '/dashboard');
-    await expect(other.getByRole('heading', { level: 1, name: /สวัสดี|ยินดีต้อนรับ/ })).toBeVisible();
+    await page.getByLabel('รหัส OTP หลักที่ 1 จาก 6').focus();
+    // Wrong only in the last digit, so typing the real code afterwards re-types the same digit into five boxes.
+    await page.keyboard.type(code.slice(0, 5) + ((Number(code[5]) + 1) % 10));
+    await page.getByRole('button', { name: 'ถัดไป' }).click();
+    await expect(page.getByText('รหัส OTP ไม่ถูกต้อง')).toBeVisible();
+    await expect(page).toHaveURL((u) => u.pathname === '/signup/verify');
+
+    await signup.confirmWithCode(email);
     expect(csp, 'CSP violations in console').toEqual([]);
   } finally {
-    await fresh.close();
     await deleteUserByEmail(email);
   }
 });
@@ -81,30 +80,17 @@ test('TC-AUTH-14 tampered token_hash goes to login with Thai message @security @
   await expect(page).toHaveURL(/\/login\?error=link/);
 });
 
-test('TC-AUTH-17 opening the link alone does not consume the token @security @regression', async ({ page, browser }) => {
-  const email = newEmail();
-  const fresh = await browser.newContext();
-  try {
-    const signup = new SignupPage(page);
-    await signup.goto();
-    await signup.signup(email, 'Passw0rd!');
-    await expect(signup.successMessage()).toBeVisible();
-
-    const link = await latestLinkFor(email);
-    // Email scanner: plain GET, no JS, no form submit.
-    const scan = await fresh.request.get(link);
-    expect(scan.status()).toBe(200);
-    expect(await scan.text()).toContain('ยืนยันและเข้าสู่ระบบ');
-
-    const other = await fresh.newPage();
-    await other.goto(link);
-    await other.getByRole('button', { name: 'ยืนยันและเข้าสู่ระบบ' }).click();
-    await expect(other).toHaveURL((u) => u.pathname === '/dashboard');
-    await expect(other.getByRole('heading', { level: 1, name: /สวัสดี|ยินดีต้อนรับ/ })).toBeVisible();
-  } finally {
-    await fresh.close();
-    await deleteUserByEmail(email);
-  }
+test('TC-AUTH-17 signing up with an existing account looks like a new signup and sends no email @security @regression', async ({ page, member }) => {
+  const before = await mailCountFor(member.email);
+  const signup = new SignupPage(page);
+  await signup.goto();
+  await signup.signup(member.email, 'Passw0rd!');
+  // Same code page as a brand-new address: nothing says the account exists.
+  await expect(page.getByRole('heading', { name: 'กรอกรหัส OTP' })).toBeVisible();
+  await expect(page.getByText(/มีอีเมลนี้อยู่แล้ว|already/i)).toHaveCount(0);
+  // Give the mail server time to deliver anything, then check nothing was sent.
+  await page.waitForTimeout(2000);
+  expect(await mailCountFor(member.email)).toBe(before);
 });
 
 test('TC-AUTH-15 Google button hidden when not configured @regression', async ({ page }) => {

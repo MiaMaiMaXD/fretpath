@@ -36,7 +36,7 @@ export async function latestLinkFor(
 }
 
 /**
- * Polls Mailpit for the newest reset-code mail to `email` (the recovery template marks the code with data-otp)
+ * Polls Mailpit for the newest code mail to `email` (the recovery and confirmation templates mark the code with data-otp)
  * and returns the 6-digit code. Pass `not` to wait for a code different from one already used (after a resend).
  */
 export async function latestOtpFor(email: string, opts: { not?: string; timeoutMs?: number } = {}): Promise<string> {
@@ -62,5 +62,13 @@ export async function latestOtpFor(email: string, opts: { not?: string; timeoutM
     }
     await new Promise((r) => setTimeout(r, 500));
   }
-  throw new Error(`latestOtpFor: no reset code for ${email}`);
+  throw new Error(`latestOtpFor: no code mail for ${email}`);
+}
+
+/** How many mails Mailpit holds for `email` right now (to prove that nothing new was sent). */
+export async function mailCountFor(email: string): Promise<number> {
+  const res = await fetch(`${mailpitUrl()}/api/v1/search?query=${encodeURIComponent(`to:"${email}"`)}`);
+  if (!res.ok) throw new Error(`mailCountFor: Mailpit answered ${res.status}`);
+  const { messages } = (await res.json()) as Search;
+  return messages?.length ?? 0;
 }

@@ -1,20 +1,27 @@
 'use client';
 
 import Link from 'next/link';
-import { startTransition, useActionState, useState } from 'react';
+import { useActionState, useState, useTransition } from 'react';
 import { Field } from '@/components/Field';
 import { FormMessage } from '@/components/FormMessage';
 import { SubmitButton } from '@/components/SubmitButton';
 import { keepValuesSubmit } from '@/components/useKeepValuesSubmit';
 import type { ActionState } from '@/lib/action-state';
-import { PASSWORD_MISMATCH, PASSWORD_REQUIRED, isValidEmail, newPasswordError } from '@/lib/validation';
-import { requestPasswordReset, resendConfirmation, signIn, signUp, updatePassword } from './actions';
+import {
+  EMAIL_INVALID,
+  EMAIL_REQUIRED,
+  PASSWORD_MISMATCH,
+  PASSWORD_REQUIRED,
+  isValidEmail,
+  newPasswordError,
+} from '@/lib/validation';
+import { confirmPendingSignup, requestPasswordReset, signIn, signUp, updatePassword } from './actions';
 
 const initial: ActionState = { ok: false };
 
 type Creds = { email: string; password: string };
 
-const EMAIL_ERROR = 'อีเมลไม่ถูกต้อง';
+const EMAIL_ERROR = EMAIL_INVALID;
 
 export function LoginForm({ next }: { next: string }) {
   const [state, action, pending] = useActionState(signIn, initial);
@@ -130,42 +137,108 @@ function LockIcon() {
   );
 }
 
+/** Login with an unconfirmed account: email a fresh code and go to the signup code page. */
 function ResendConfirmation({ email }: { email: string }) {
-  const [state, action, pending] = useActionState(resendConfirmation, initial);
-  // A button inside the login form cannot nest a <form>; submit the action directly.
+  const [pending, start] = useTransition();
+  // A button inside the login form cannot nest a <form>; call the action directly.
   return (
-    <div className="flex flex-col gap-2">
-      <button
-        type="button"
-        disabled={pending}
-        className="btn-resend rounded border border-neutral-400 px-4 py-2 disabled:opacity-60"
-        onClick={() => {
-          const data = new FormData();
-          data.set('email', email);
-          startTransition(() => action(data));
-        }}
-      >
-        ส่งลิงก์ยืนยันอีกครั้ง
-      </button>
-      <FormMessage state={state} />
-    </div>
+    <button type="button" disabled={pending} className="btn-resend" onClick={() => start(() => confirmPendingSignup(email))}>
+      ส่งรหัสยืนยันอีเมล
+    </button>
   );
 }
 
+/**
+ * Email, password and confirmation (the server checks again):
+ * - email format only when "สมัครสมาชิก" is pressed, like the login page; the message stays until the email is edited.
+ *   "กรุณากรอกอีเมล" shows while typing once both passwords are in but the email is empty.
+ * - password rules and the confirmation are checked while typing, exactly as on the new-password page
+ * An address that already has an account is never flagged here or on the server: every valid signup goes on to the code page.
+ */
 export function SignupForm() {
   const [state, action, pending] = useActionState(signUp, initial);
+  const [values, setValues] = useState({ email: state.values?.email ?? '', password: '', confirm: '' });
+  const [show, setShow] = useState({ password: false, confirm: false });
+  // A malformed email caught when "สมัครสมาชิก" was pressed (checked in the browser, never sent).
+  const [rejectedEmail, setRejectedEmail] = useState<string | null>(null);
+
+  const sync = (e: React.SyntheticEvent<HTMLFormElement>) => {
+    const f = e.currentTarget;
+    const get = (name: string) => (f.elements.namedItem(name) as HTMLInputElement | null)?.value ?? '';
+    setValues({ email: get('email'), password: get('password'), confirm: get('confirm') });
+  };
+
+  const email = values.email.trim();
+  const emailFormatError = rejectedEmail !== null && rejectedEmail === values.email ? EMAIL_INVALID : undefined;
+  const emailMissing = email === '' && values.password !== '' && values.confirm !== '' ? EMAIL_REQUIRED : undefined;
+  const serverEmailError = values.email === state.values?.email ? state.fieldErrors?.email : undefined;
+  const emailError = emailFormatError ?? emailMissing ?? serverEmailError;
+
+  const rule = newPasswordError(values.password);
+  const passwordError = values.password === '' ? (values.confirm !== '' ? PASSWORD_REQUIRED : undefined) : rule;
+  const confirmError = values.confirm !== '' && values.confirm !== values.password ? PASSWORD_MISMATCH : undefined;
+  const canSubmit = email !== '' && !emailFormatError && !rule && values.confirm === values.password;
+
   return (
-    <form onSubmit={keepValuesSubmit(action)} className="flex flex-col gap-4">
-      <Field name="email" label="อีเมล" type="email" autoComplete="email" error={state.fieldErrors?.email} defaultValue={state.values?.email} />
+    <form
+      onSubmit={(e) => {
+        const input = e.currentTarget.elements.namedItem('email') as HTMLInputElement | null;
+        if (!isValidEmail(input?.value ?? '')) {
+          e.preventDefault();
+          setRejectedEmail(input?.value ?? '');
+          input?.focus();
+          return;
+        }
+        keepValuesSubmit(action)(e);
+      }}
+      onInput={sync}
+      onChange={sync}
+      noValidate
+      className="signup-form"
+    >
+      <Field
+        name="email"
+        label="อีเมล"
+        type="email"
+        autoComplete="email"
+        placeholder="กรอกอีเมล"
+        hideLabel
+        error={emailError}
+        defaultValue={state.values?.email}
+      />
       <Field
         name="password"
         label="รหัสผ่าน"
-        type="password"
+        type={show.password ? 'text' : 'password'}
         autoComplete="new-password"
-        error={state.fieldErrors?.password}
+        placeholder="กรอกรหัสผ่าน"
+        hideLabel
+        error={passwordError ?? state.fieldErrors?.password}
+        adornment={
+          <PasswordToggle controls="password" shown={show.password} onToggle={() => setShow((s) => ({ ...s, password: !s.password }))} />
+        }
       />
-      <FormMessage state={state} />
-      <SubmitButton pending={pending}>สมัครสมาชิก</SubmitButton>
+      <Field
+        name="confirm"
+        label="ยืนยันรหัสผ่าน"
+        type={show.confirm ? 'text' : 'password'}
+        autoComplete="new-password"
+        placeholder="ยืนยันรหัสผ่าน"
+        hideLabel
+        error={confirmError ?? state.fieldErrors?.confirm}
+        adornment={
+          <PasswordToggle
+            controls="confirm"
+            label="แสดงยืนยันรหัสผ่าน"
+            shown={show.confirm}
+            onToggle={() => setShow((s) => ({ ...s, confirm: !s.confirm }))}
+          />
+        }
+      />
+      <FormMessage state={state.fieldErrors ? { ok: false } : state} />
+      <SubmitButton pending={pending} disabled={!canSubmit}>
+        สมัครสมาชิก
+      </SubmitButton>
     </form>
   );
 }
