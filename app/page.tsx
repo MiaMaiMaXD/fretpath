@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { preload } from 'react-dom';
+import { SectionLink } from '@/components/home/SectionLink';
 import { TryFretboard } from '@/components/home/TryFretboard';
 import { CURRICULUM, UNITS } from '@/lib/path-frets';
 import { plexThai } from '@/lib/fonts';
@@ -56,9 +57,9 @@ export default function Home() {
             FretPath
           </Link>
           <nav className="nav" aria-label="เมนูหลัก">
-            <a href="#path">เส้นทางการเรียน</a>
-            <a href="#how">เรียนยังไง</a>
-            <a href="#faq">คำถามที่พบบ่อย</a>
+            <SectionLink to="path">เส้นทางการเรียน</SectionLink>
+            <SectionLink to="how">เรียนยังไง</SectionLink>
+            <SectionLink to="faq">คำถามที่พบบ่อย</SectionLink>
           </nav>
           <div className="header-actions">
             <Link href="/login" className="login" data-testid="header-login">
@@ -89,9 +90,9 @@ export default function Home() {
                   <Link href="/signup" className="btn btn-primary" data-testid="hero-signup">
                     สมัครฟรี เริ่มบทที่ 1
                   </Link>
-                  <a href="#path" className="btn btn-ghost" data-testid="hero-see-path">
+                  <SectionLink to="path" className="btn btn-ghost" testId="hero-see-path">
                     ดูเส้นทางการเรียน
-                  </a>
+                  </SectionLink>
                 </div>
                 <ul className="assurances">
                   <li>ฟรีทั้งหมด</li>
@@ -130,7 +131,7 @@ export default function Home() {
 
         <section className="block path-sec" id="path" aria-labelledby="path-title">
           <div className="wrap">
-            <h2 id="path-title">จากศูนย์ ถึงเล่นทั่วคอกีตาร์ ใน {TOTAL_LESSONS} บท</h2>
+            <h2 id="path-title" tabIndex={-1}>จากศูนย์ ถึงเล่นทั่วคอกีตาร์ ใน {TOTAL_LESSONS} บท</h2>
             <p className="intro">
               แบ่งเป็น 4 ช่วง เปิดให้เรียนแล้ว {OPEN_LESSONS} บท แต่ละบทจบด้วยแบบทดสอบสั้น ๆ ทำได้ 60% ขึ้นไป
               บทถัดไปจะเปิดให้ทันที สอบใหม่ได้ไม่จำกัด
@@ -159,7 +160,7 @@ export default function Home() {
 
         <section className="block" id="how" aria-labelledby="how-title">
           <div className="wrap">
-            <h2 id="how-title">เรียน ทดสอบ แล้วฝึก</h2>
+            <h2 id="how-title" tabIndex={-1}>เรียน ทดสอบ แล้วฝึก</h2>
             <p className="intro">ทุกบทใช้จังหวะเดียวกัน คุณจะรู้เสมอว่าตอนนี้อยู่ตรงไหน และต้องทำอะไรต่อ</p>
             <div className="how">
               <figure>
@@ -207,7 +208,7 @@ export default function Home() {
 
         <section className="block faq-sec" id="faq" aria-labelledby="faq-title">
           <div className="wrap">
-            <h2 id="faq-title">คำถามที่พบบ่อย</h2>
+            <h2 id="faq-title" tabIndex={-1}>คำถามที่พบบ่อย</h2>
             <div className="faq" data-testid="faq">
               {FAQ.map(([q, a]) => (
                 <details key={q}>
@@ -232,8 +233,6 @@ export default function Home() {
 
       <footer>
         <div className="wrap">
-          <a href="#path">เส้นทางการเรียน</a>
-          <a href="#faq">คำถามที่พบบ่อย</a>
           <span className="copy">FretPath · โปรเจกต์จบการศึกษา</span>
         </div>
       </footer>

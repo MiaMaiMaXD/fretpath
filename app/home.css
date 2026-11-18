@@ -174,3 +174,7 @@
 @media (prefers-reduced-motion: reduce) {
   .fp-home .vibrate { animation: none; }
 }
+
+/* In-page jumps (SectionLink): land below the sticky 68px header; the focused heading needs no ring */
+.fp-home section[id] { scroll-margin-top: 68px; }
+.fp-home h2[tabindex='-1']:focus { outline: none; }
