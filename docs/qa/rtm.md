@@ -14,8 +14,8 @@
 |---|---|---|---|
 | FR-01.1 | M | TC-AUTH-01, TC-AUTH-02, TC-PATH-17 | ทำแล้ว (อัตโนมัติ) |
 | FR-01.2 | M | TC-AUTH-01, TC-AUTH-03, TC-PATH-17, TC-AUTH-11, TC-AUTH-14, TC-AUTH-17, TC-PRD-05 | ทำแล้ว (อัตโนมัติ); ยืนยันบน production ด้วย TC-PRD-05 (Manual) |
-| FR-01.3 | M | TC-AUTH-04, TC-AUTH-05, TC-AUTH-07, TC-AUTH-08, TC-PRD-03, TC-PRD-04 | ทำแล้ว (อัตโนมัติ) |
-| FR-01.4 | M | TC-AUTH-06, TC-AUTH-13, TC-AUTH-22, TC-PRD-05 | ทำแล้ว (อัตโนมัติ); ยืนยันบน production ด้วย TC-PRD-05 (Manual) |
+| FR-01.3 | M | TC-AUTH-04, TC-AUTH-05, TC-AUTH-07, TC-AUTH-08, TC-AUTH-23, TC-AUTH-24, TC-AUTH-25, TC-PRD-03, TC-PRD-04 | ทำแล้ว (อัตโนมัติ) |
+| FR-01.4 | M | TC-AUTH-06, TC-AUTH-13, TC-AUTH-22, TC-AUTH-26, TC-AUTH-27, TC-AUTH-28, TC-AUTH-29, TC-PRD-05 | ทำแล้ว (อัตโนมัติ); ยืนยันบน production ด้วย TC-PRD-05 (Manual) |
 | FR-01.5 | M | TC-AUTH-09, TC-AUTH-10, TC-AUTH-19, TC-AUTH-20, TC-AUTH-21 | ทำแล้ว (อัตโนมัติ) |
 | FR-01.6 | M | TC-AUTH-01, TC-PATH-03, TC-PATH-14, TC-PATH-17, TC-PATH-19 | ทำแล้ว (อัตโนมัติ) ทั้งทริกเกอร์ DB และขั้นตอนสมัครผ่านหน้าเว็บ |
 | FR-01.7 | S | TC-AUTH-15, TC-AUTH-18 | มี TC (บางส่วนยังไม่ automate): TC-AUTH-15 ตรวจกรณีปิดปุ่ม (อัตโนมัติ); TC-AUTH-18 ล็อกอินด้วย Google จริงบน production เป็น Manual (OAuth ต้องใช้บัญชีและหน้า consent จริง) |
@@ -53,7 +53,7 @@
 | FR-07.7 | M | TC-ADM-12, TC-ADM-13 | ทำแล้ว (อัตโนมัติ) |
 | FR-07.8 | S | TC-ADM-14 | ทำแล้ว (อัตโนมัติ) |
 | FR-07.9 | S | TC-ADM-16, TC-ADM-17 | ทำแล้ว (อัตโนมัติ) |
-| NFR-01 | M | TC-SEC-01, TC-SEC-02, TC-SEC-03, TC-SEC-04, TC-SEC-05, TC-SEC-06, TC-SEC-07, TC-SEC-08, TC-SEC-09, TC-SEC-10, TC-SEC-11, TC-SEC-12, TC-SEC-13, TC-SEC-14, TC-SEC-15, TC-SEC-16, TC-SEC-17, TC-PATH-09, TC-QZ-04, TC-AUTH-04, TC-AUTH-06, TC-AUTH-07, TC-PRC-05, TC-SEC-19, TC-SEC-20, TC-SEC-21, TC-SEC-22, TC-SEC-23, TC-SEC-24, TC-SEC-25, TC-AUTH-14, TC-AUTH-17, TC-PRD-02, TC-PRD-04, TC-OPS-03 | มี TC (บางส่วนยังไม่ automate): TC-SEC-15, TC-SEC-16 เป็น Manual; TC-SEC-17 automate แล้วโดย TC-SEC-19/21; ส่วน CSP/security headers ตรวจด้วย TC-SEC-24 และ guard ของ TC-SEC-25; บน production ตรวจ header ด้วย TC-PRD-02, ไม่มีบัญชี seed ด้วย TC-PRD-04, backup ไม่รั่วด้วย TC-OPS-03 |
+| NFR-01 | M | TC-SEC-01, TC-SEC-02, TC-SEC-03, TC-SEC-04, TC-SEC-05, TC-SEC-06, TC-SEC-07, TC-SEC-08, TC-SEC-09, TC-SEC-10, TC-SEC-11, TC-SEC-12, TC-SEC-13, TC-SEC-14, TC-SEC-15, TC-SEC-16, TC-SEC-17, TC-PATH-09, TC-QZ-04, TC-AUTH-04, TC-AUTH-24, TC-AUTH-06, TC-AUTH-07, TC-PRC-05, TC-SEC-19, TC-SEC-20, TC-SEC-21, TC-SEC-22, TC-SEC-23, TC-SEC-24, TC-SEC-25, TC-AUTH-14, TC-AUTH-17, TC-PRD-02, TC-PRD-04, TC-OPS-03 | มี TC (บางส่วนยังไม่ automate): TC-SEC-15, TC-SEC-16 เป็น Manual; TC-SEC-17 automate แล้วโดย TC-SEC-19/21; ส่วน CSP/security headers ตรวจด้วย TC-SEC-24 และ guard ของ TC-SEC-25; บน production ตรวจ header ด้วย TC-PRD-02, ไม่มีบัญชี seed ด้วย TC-PRD-04, backup ไม่รั่วด้วย TC-OPS-03 |
 | NFR-02 | M | TC-MOB-01, TC-MOB-01b, TC-MOB-02, TC-PATH-18, TC-SEC-18, TC-MOB-01c, TC-SEC-18b | ทำแล้ว (อัตโนมัติ) ที่ 375px (Pixel 7 = 412px ครอบคลุมโดยโปรเจกต์ `mobile`; ที่ 375px ใช้ `viewport` ใน spec) |
 | NFR-03 | M | TC-MOB-03 (Manual) และ spec ทั้งหมดที่รันในโปรเจกต์ `chromium`, `firefox`, `mobile` | มี TC (บางส่วนยังไม่ automate): Safari บน iPhone จริงไม่มีโปรเจกต์อัตโนมัติ (สเปก 6.3 ไม่รวม WebKit) → TC-MOB-03 เป็น Manual; CI รัน `chromium` เท่านั้น (Firefox/Pixel 7 รันในเครื่อง ผ่านครบ) |
 | NFR-04 | M | TC-AUTH-02, TC-AUTH-04, TC-AUTH-06, TC-LSN-03, TC-PATH-16, TC-PRC-03, TC-PRC-05, TC-QZ-19, TC-QZ-23 | มี TC (บางส่วนยังไม่ automate): ตรวจข้อความ Thai/error ที่ระบุในเทสต์แล้ว แต่ยังไม่มี TC ตรวจ copy ทั้งระบบ → ตรวจด้วยมือก่อนปิดโครงการ |

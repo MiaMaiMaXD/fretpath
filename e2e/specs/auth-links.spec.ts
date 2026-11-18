@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto';
 import { test, expect, watchCsp } from '../fixtures';
 import { LoginPage } from '../pages/LoginPage';
 import { SignupPage } from '../pages/SignupPage';
-import { latestLinkFor } from '../utils/mailpit';
+import { latestLinkFor, latestOtpFor } from '../utils/mailpit';
 import { deleteUserByEmail } from '../utils/supabaseAdmin';
 
 const newEmail = () => `qa+${randomUUID()}@fretpath.test`;
@@ -31,35 +31,41 @@ test('TC-AUTH-11 confirmation link works in a fresh browser context @smoke @regr
   }
 });
 
-test('TC-AUTH-13 password reset link works in a fresh browser context @regression', async ({ page, browser, member }) => {
-  const fresh = await browser.newContext();
-  const csp = watchCsp(fresh);
-  try {
-    await page.goto('/forgot-password');
-    await page.getByLabel('อีเมล').fill(member.email);
-    await page.getByRole('button', { name: 'ส่งลิงก์ตั้งรหัสผ่านใหม่' }).click();
-    await expect(page.getByText('ถ้ามีบัญชีนี้ เราได้ส่งลิงก์ไปแล้ว')).toBeVisible();
+test('TC-AUTH-13 password reset by OTP: wrong code rejected, right code (pasted) resets, no CSP errors @regression', async ({ page, member }) => {
+  const csp = watchCsp(page.context());
+  await page.goto('/forgot-password');
+  await page.getByLabel('อีเมล').fill(member.email);
+  await page.getByRole('button', { name: 'ถัดไป' }).click();
+  await expect(page).toHaveURL((u) => u.pathname === '/forgot-password/verify');
+  const code = await latestOtpFor(member.email);
 
-    const other = await fresh.newPage();
-    await other.goto(await latestLinkFor(member.email));
-    await expect(other.getByRole('heading', { name: 'ตั้งรหัสผ่านใหม่' })).toBeVisible();
-    await other.getByRole('button', { name: 'ยืนยันและเข้าสู่ระบบ' }).click();
-    await expect(other).toHaveURL((u) => u.pathname === '/reset-password');
-    await other.getByLabel('รหัสผ่านใหม่').fill('NewPassw0rd!');
-    await other.getByRole('button', { name: 'ตั้งรหัสผ่านใหม่' }).click();
-    await expect(other).toHaveURL((u) => u.pathname === '/dashboard');
+  const wrong = code === '000000' ? '111111' : '000000';
+  await page.keyboard.type(wrong);
+  await page.getByRole('button', { name: 'ถัดไป' }).click();
+  await expect(page.getByText('รหัส OTP ไม่ถูกต้อง')).toBeVisible();
 
-    await other.getByTestId('user-menu').locator('summary').click();
-    await other.getByRole('button', { name: 'ออกจากระบบ' }).click();
-    await expect(other).toHaveURL(/\/$/);
-    const login = new LoginPage(other);
-    await login.goto();
-    await login.login(member.email, 'NewPassw0rd!');
-    await expect(other).toHaveURL((u) => u.pathname === '/dashboard');
-    expect(csp, 'CSP violations in console').toEqual([]);
-  } finally {
-    await fresh.close();
-  }
+  // Paste the real code into the first box: it spreads across all six and is checked at once.
+  await page.getByLabel('รหัส OTP หลักที่ 1 จาก 6').focus();
+  await page.evaluate((c) => {
+    const dt = new DataTransfer();
+    dt.setData('text', c);
+    // Firefox drops clipboardData passed to the ClipboardEvent constructor, so attach it explicitly.
+    const ev = new ClipboardEvent('paste', { bubbles: true, cancelable: true });
+    Object.defineProperty(ev, 'clipboardData', { value: dt });
+    document.activeElement?.dispatchEvent(ev);
+  }, code);
+  await page.getByRole('button', { name: 'ถัดไป' }).click();
+  await expect(page).toHaveURL((u) => u.pathname === '/forgot-password/new-password');
+  await page.getByLabel('รหัสผ่านใหม่').fill('NewPassw0rd!');
+  await page.getByLabel('ยืนยันรหัสผ่าน', { exact: true }).fill('NewPassw0rd!');
+  await page.getByRole('button', { name: 'ยืนยัน', exact: true }).click();
+  await expect(page).toHaveURL((u) => u.pathname === '/forgot-password/success');
+  await page.getByRole('link', { name: 'กลับเข้าสู่หน้าเข้าสู่ระบบ' }).click();
+  await expect(page).toHaveURL((u) => u.pathname === '/login');
+  const login = new LoginPage(page);
+  await login.login(member.email, 'NewPassw0rd!');
+  await expect(page).toHaveURL((u) => u.pathname === '/dashboard');
+  expect(csp, 'CSP violations in console').toEqual([]);
 });
 
 test('TC-AUTH-14 tampered token_hash goes to login with Thai message @security @regression', async ({ page }) => {

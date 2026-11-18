@@ -5,7 +5,7 @@ import type { ActionState } from '@/lib/action-state';
 import { errorCodeFrom, thaiError } from '@/lib/errors';
 import { isOwnAvatarUrl } from '@/lib/avatar';
 import { createClient } from '@/lib/supabase/server';
-import { siteUrl } from '@/lib/site-url';
+import { writeResetOtp } from '@/lib/reset-otp';
 import { validateDisplayName, validateWeeklyGoal } from '@/lib/validation';
 
 async function saveProfileField(update: { display_name: string } | { weekly_goal_minutes: number }): Promise<ActionState> {
@@ -42,11 +42,11 @@ export async function sendMyPasswordReset(): Promise<ActionState> {
   const email = auth.user?.email;
   if (!email) return { ok: false, message: thaiError('NOT_AUTHENTICATED') };
 
-  const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: `${siteUrl()}/auth/callback?next=/reset-password`,
-  });
+  const { error } = await supabase.auth.resetPasswordForEmail(email);
   if (error) return { ok: false, message: thaiError(errorCodeFrom(error)) };
-  return { ok: true, message: 'ส่งลิงก์แล้ว — เช็กอีเมลของคุณ' };
+  // Same next step as "ลืมรหัสผ่าน": the client goes on to the OTP page.
+  await writeResetOtp(email);
+  return { ok: true, message: 'ส่งรหัส OTP แล้ว — เช็กอีเมลของคุณ' };
 }
 
 export async function updateAvatar(url: string | null): Promise<ActionState> {

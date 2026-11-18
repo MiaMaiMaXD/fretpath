@@ -3,7 +3,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import type { Database } from "@/lib/database.types";
 import { safeNextPath } from "@/lib/safe-next";
 
-const PROTECTED = ["/dashboard", "/path", "/lessons", "/practice", "/profile", "/reset-password"];
+const PROTECTED = ["/dashboard", "/path", "/lessons", "/practice", "/profile", "/forgot-password/new-password"];
 
 export async function proxy(request: NextRequest) {
   let response = NextResponse.next({ request });
