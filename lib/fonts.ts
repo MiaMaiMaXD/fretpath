@@ -5,4 +5,5 @@ export const plexThai = IBM_Plex_Sans_Thai({
   variable: '--font-plex-thai',
   weight: ['400', '500', '600', '700'],
   subsets: ['thai', 'latin'],
+  preload: false,
 });
