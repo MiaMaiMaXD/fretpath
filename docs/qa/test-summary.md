@@ -2,6 +2,8 @@
 
 เวอร์ชัน 1.0 (ร่างโดย Dev 2026-10-20) · อ้างอิงสเปก `docs/superpowers/specs/2026-10-19-fretpath-design.md` หัวข้อ 6.1 · เอกสารที่เกี่ยวข้อง: `test-plan.md`, `test-cases.md`, `rtm.md`, `ci.md`, `../demo.md`
 
+> **อัปเดต 2026-11-19:** เติมแล้ว — จำนวน TC (หัวข้อ 2), nightly ล่าสุด (3.3), ค่าถดถอยของ Lighthouse และการแก้ (6.1), defect #29 และ #30 (7) และสถานะเกณฑ์จบ (8) ที่ยังขาดคือ Manual TC-MOB-03 และการทดสอบ TC-PRD-05 ซ้ำกับ flow รหัส OTP
+>
 > **สถานะเอกสาร: ยังไม่ปิด** — ส่วนที่ทราบผลแล้ว (จำนวน TC, ผลรอบในเครื่อง, CI, ความครอบคลุม RTM) กรอกครบแล้ว ผลบน production รอบแรก (2026-10-20, `https://fretpath-six.vercel.app`) กรอกแล้วในหัวข้อ 3.3, 4 และ 6 ส่วนที่ยังไม่ได้ทดสอบ ช่องเหล่านั้นทำเครื่องหมายเป็น `<!-- รอผล: … -->` พร้อมบอกว่าต้องใส่อะไรและเอามาจากไหน ทีม/QA เติมใน Task 9 Step 6 แล้ว commit ผ่าน PR **ห้ามเดาตัวเลขหรือเขียนว่า "ผ่าน" ในช่องที่ยังไม่ได้รันจริง**
 
 ## 1. ขอบเขตและรอบการทดสอบ
@@ -12,19 +14,19 @@
 |---|---|---|---|---|
 | รอบในเครื่อง (Dev) | 2026-10-20 | Local: Supabase CLI (Docker) + seed, Next.js ในเครื่อง | pgTAP, Vitest, Playwright `chromium` (ทุกป้าย) | เสร็จ — ผลในหัวข้อ 3.1 |
 | CI ต่อ PR | ทุก PR / push ไป `main` | GitHub Actions + Supabase local | pgTAP, lint, typecheck, Vitest, build, Playwright `chromium` `@smoke`/`@security` | `main` เขียวล่าสุด 2026-10-20 — หัวข้อ 3.2; PR แผนที่ 4 (#6) success — หัวข้อ 3.2 |
-| Nightly `full-suite` | ทุกคืน 02:00 น. | GitHub Actions + Supabase local | Playwright ทุกป้ายบน `chromium`, `firefox`, `mobile` | 2026-10-20 ผ่าน 285/285 (flaky 1) — หัวข้อ 3.3 |
-| Nightly `production` | ทุกคืน 02:00 น. | Production (อ่านอย่างเดียว) | Playwright `--project=prod` (TC-PRD) แล้ว Lighthouse (TC-PERF-01) | 2026-10-20 ผ่าน — หัวข้อ 3.3 และ 6 |
+| Nightly `full-suite` | ทุกคืน 02:00 น. | GitHub Actions + Supabase local | Playwright ทุกป้ายบน `chromium`, `firefox`, `mobile` | 2026-10-20 ผ่าน 285/285 (flaky 1); ล่าสุด 2026-11-19 ผ่าน 339/339 (flaky 1) — หัวข้อ 3.3 |
+| Nightly `production` | ทุกคืน 02:00 น. | Production (อ่านอย่างเดียว) | Playwright `--project=prod` (TC-PRD) แล้ว Lighthouse (TC-PERF-01) | 2026-10-20 ผ่าน; Lighthouse ล้มเป็นระยะ 2026-11-12 ถึง 11-19 (defect #30) แก้แล้ว ล่าสุด 2026-11-19 ผ่าน — หัวข้อ 3.3 และ 6 |
 | ทดสอบด้วยมือ (Manual) | <!-- รอผล: วันที่ทำ --> | Local/Preview, production และอุปกรณ์จริง | Manual TC ทั้ง 11 ข้อ | <!-- รอผล: สรุปจากหัวข้อ 4 --> |
 
 ## 2. จำนวน Test Case
 
-ผลของ `npm run qa:stats` เมื่อ 2026-10-20 (สคริปต์ `scripts/tc-stats.mjs` อ่านตารางจริงใน `test-cases.md` และ `rtm.md`; พิมพ์ซ้ำได้ทุกเมื่อ ตัวเลขในหัวข้อนี้คือผลที่สคริปต์พิมพ์)
+ผลของ `npm run qa:stats` เมื่อ 2026-11-19 (สคริปต์ `scripts/tc-stats.mjs` อ่านตารางจริงใน `test-cases.md` และ `rtm.md`; พิมพ์ซ้ำได้ทุกเมื่อ ตัวเลขในหัวข้อนี้คือผลที่สคริปต์พิมพ์)
 
 ```text
-TC ทั้งหมด: 148
+TC ทั้งหมด: 161
 
 จำนวน TC ต่อพื้นที่:
-  TC-AUTH: 18
+  TC-AUTH: 30
   TC-LSN: 6
   TC-PATH: 19
   TC-QZ: 28
@@ -32,15 +34,15 @@ TC ทั้งหมด: 148
   TC-DSH: 6
   TC-ADM: 20
   TC-SEC: 26
-  TC-MOB: 5
+  TC-MOB: 6
   TC-PERF: 1
   TC-PRD: 6
   TC-OPS: 4
 
-Automated: 137 (ในนี้ automate เฉพาะบางส่วน ส่วนที่เหลือเป็น Manual: 3)
+Automated: 150 (ในนี้ automate เฉพาะบางส่วน ส่วนที่เหลือเป็น Manual: 3)
 Manual: 11
 
-ความสำคัญ: High 112 · Medium 34 · Low 2
+ความสำคัญ: High 117 · Medium 40 · Low 4
 
 requirement ทั้งหมด: 48 ข้อ; มี TC แล้ว 48 ข้อ
   M: 42/42 มี TC
@@ -49,7 +51,9 @@ requirement ทั้งหมด: 48 ข้อ; มี TC แล้ว 48 ข�
 requirement ระดับ M ที่ยังไม่มี TC: 0
 ```
 
-สรุป: 148 TC — Automated 137, Manual 11 (ใน Automated มี 3 ข้อที่ automate เฉพาะบางส่วน ส่วนที่เหลือเป็น Manual: TC-QZ-18, TC-QZ-20 ส่วน UI และ TC-OPS-04 ส่วนกู้คืนจริง)
+สรุป: 161 TC — Automated 150, Manual 11 (ใน Automated มี 3 ข้อที่ automate เฉพาะบางส่วน ส่วนที่เหลือเป็น Manual: TC-QZ-18, TC-QZ-20 ส่วน UI และ TC-OPS-04 ส่วนกู้คืนจริง)
+
+เทียบกับรอบ 2026-10-20 (148 TC): เพิ่ม 13 ข้อ ทั้งหมดเป็น Automated — TC-AUTH-19…30 (หน้าโปรไฟล์ใหม่และหน้า auth ที่ใช้รหัส OTP 6 หลัก, PR #21, #23, #25) และ TC-MOB-04 (เมนูหน้าแรกเลื่อนไปหัวข้อโดยไม่เติม `#hash`, PR #26)
 
 ## 3. อัตราผ่าน (Pass rate)
 
@@ -87,6 +91,8 @@ CI ตั้ง branch protection บน `main` แล้ว (ต้องผ่
 | `full-suite` — `mobile` (Pixel 7) | 95/95 | [39439843823](https://github.com/MiaMaiMaXD/fretpath/actions/runs/39439843823) | 2026-10-20 |
 | `production` — `prod` (TC-PRD-01…04, 06) | 5/5 | [39439843823](https://github.com/MiaMaiMaXD/fretpath/actions/runs/39439843823) | 2026-10-20 |
 | pgTAP / Unit | ดูหัวข้อ 3.1–3.2 (nightly ไม่รัน pgTAP/Unit แยก) | — | — |
+| `full-suite` — `chromium` / `firefox` / `mobile` | 113/113 ทุกโปรเจกต์ (firefox: TC-PRC-09 ผ่านเมื่อ retry = flaky) | [44484722787](https://github.com/MiaMaiMaXD/fretpath/actions/runs/44484722787) | 2026-11-19 |
+| `production` — `prod` (TC-PRD-01…04, 06) + Lighthouse | 5/5; Lighthouse ผ่าน (LCP 2311 ms) | [44484722787](https://github.com/MiaMaiMaXD/fretpath/actions/runs/44484722787) | 2026-11-19 |
 | `keep-alive` (TC-OPS-01) | ผ่าน (`/api/health` ตอบ `{"ok":true}`) | [39435088603](https://github.com/MiaMaiMaXD/fretpath/actions/runs/39435088603) | 2026-10-20 |
 | `backup` (TC-OPS-03 ส่วนอัตโนมัติ) | ผ่าน (restore check: schema 0 / data 0 error) | [39437226337](https://github.com/MiaMaiMaXD/fretpath/actions/runs/39437226337) | 2026-10-20 |
 
@@ -104,7 +110,7 @@ TC เหล่านี้ไม่มีเทสต์อัตโนมั�
 | TC-QZ-15 | การปัดแบบ half-up: 1/8 = 12.5 → 13 | Local (Supabase local) | 2026-10-23 | Dev | **ผ่าน** — บท 8 ข้อ ตอบถูก 1: `score_pct` = 13 | [สคริปต์](evidence/2026-10-23-manual-group-a.sql) |
 | TC-DSH-06 | กราฟคะแนนสูงสุดรายบทแสดงค่าตรงกับผลสอบ (FR-06.3) | Local (`npm run start`, Chromium ผ่าน Playwright) | 2026-10-23 | Dev | **ผ่าน (มีข้อสังเกต)** — สอบบท 1 = 100%, บท 2 = 60% แล้ว 40% (ต้องเก็บค่าสูงสุด): แท่งบท 1 = 100, บท 2 = 60 ตรงกับการ์ดใน `/path` ("คะแนนสูงสุด 100%" / "60%"); บทที่ยังไม่สอบไม่มีแท่ง; ข้อสังเกต: `aria-label` ของกราฟอ่านบทที่ยังไม่สอบเป็น "บท 3 0 %" แยกไม่ออกจากการสอบได้ 0% — **แก้แล้ว** ใน branch `fix/chart-untaken-label` ให้อ่านเป็น "บท 3 ยังไม่สอบ" (ดูหัวข้อ 9 ข้อ 10) | [dashboard](img/dsh-06-dashboard.png), [path](img/dsh-06-path.png) |
 | TC-MOB-03 | เส้นทางหลักและเสียงดีดสายบน Safari ของ iPhone จริง (NFR-03) | iPhone จริง | <!-- รอผล --> | <!-- รอผล --> | <!-- รอผล --> | <!-- รอผล: ภาพหน้าจอ/คลิป --> |
-| TC-PRD-05 | ลิงก์ยืนยันอีเมลและรีเซ็ตรหัสผ่านบน production ใช้ได้จากอีกอุปกรณ์ | Production + โทรศัพท์ | 2026-10-20 | ทีม | **ผ่าน** — สมัครบนคอม เปิดลิงก์ในโทรศัพท์ เห็นหน้า "ยืนยันและเข้าสู่ระบบ" เข้า Dashboard ได้ บท 1 ปลดล็อก; ลืมรหัสผ่าน: อีเมลไทยถึง ตั้งรหัสใหม่ได้ รหัสเก่าใช้ไม่ได้ | <!-- รอผล: ภาพหน้าจอ --> |
+| TC-PRD-05 | ลิงก์ยืนยันอีเมลและรีเซ็ตรหัสผ่านบน production ใช้ได้จากอีกอุปกรณ์ | Production + โทรศัพท์ | 2026-10-20 | ทีม | **ผ่าน** — สมัครบนคอม เปิดลิงก์ในโทรศัพท์ เห็นหน้า "ยืนยันและเข้าสู่ระบบ" เข้า Dashboard ได้ บท 1 ปลดล็อก; ลืมรหัสผ่าน: อีเมลไทยถึง ตั้งรหัสใหม่ได้ รหัสเก่าใช้ไม่ได้ — **ผลนี้เป็นของ flow แบบลิงก์เดิม** ตั้งแต่ PR #23/#25 (2026-11-18) สมัครและลืมรหัสผ่านเปลี่ยนเป็นรหัส OTP 6 หลักทางอีเมล ต้องทดสอบซ้ำ <!-- รอผล: ผลทดสอบ OTP บน production (สมัคร + ลืมรหัสผ่าน) วันที่ อุปกรณ์ --> | <!-- รอผล: ภาพหน้าจอ --> |
 | TC-AUTH-18 | ล็อกอินด้วย Google บน production | Production | 2026-10-23 | ทีม | **ผ่าน** — ปุ่ม "เข้าสู่ระบบด้วย Google" แสดงบน `/login`, CSP `form-action` มี Supabase และ `accounts.google.com`; ล็อกอินด้วยบัญชีใน Test users สำเร็จ (รอบแรกเด้งไป `/?code=…` เพราะ `NEXT_PUBLIC_SITE_URL` ใน Vercel ว่าง ตั้งค่าแล้ว redeploy จึงผ่าน) smoke test `--project=prod` หลังเปิด Google (2026-10-23) ผ่าน 5/5 (TC-PRD-01/02/03/04/06) | <!-- รอผล: ภาพหน้าจอ Dashboard --> |
 | TC-OPS-02 | GitHub ส่งอีเมลเมื่อ keep-alive ล้ม (รันด้วย input `url` ที่ไม่ใช่ FretPath) | GitHub Actions + กล่องอีเมล | 2026-10-20 | ทีม | **ผ่าน** — run keep-alive ที่ชี้ไป URL อื่นล้มตามคาด และได้รับอีเมลแจ้ง run ล้มจาก GitHub | [39445541276](https://github.com/MiaMaiMaXD/fretpath/actions/runs/39445541276) <!-- รอผล: ภาพอีเมล (ปิดข้อมูลส่วนตัว) --> |
 
@@ -144,28 +150,58 @@ TC เหล่านี้ไม่มีเทสต์อัตโนมั�
 
 **ผลบน production: ผ่าน NFR-07** — LCP/TTI 2298 ms ต่ำกว่าเกณฑ์ 3000 ms ค่าในเครื่องที่เกินน่าจะมาจากสภาพแวดล้อมเครื่องพัฒนา (`next start` บน Windows) เกณฑ์วัดบน production จึงไม่เปิด defect
 
+### 6.1 ค่าถดถอยหลังรีดีไซน์หน้าแรก และการแก้ (defect [#30](https://github.com/MiaMaiMaXD/fretpath/issues/30))
+
+ค่ามัธยฐาน LCP บน production จาก job summary ของ nightly:
+
+| ช่วง | commit | LCP (มัธยฐาน 3 รอบ) | ผล |
+|---|---|---|---|
+| 2026-10-20 ถึง 11-03 | ก่อนรีดีไซน์ (`7c1f7c5`, `545d3df`) | 1530–2146 ms | ผ่านทุกคืน |
+| 2026-11-03 ถึง 11-19 | หลังรีดีไซน์หน้าแรก PR #14–16 (`ac0c4b0` ขึ้นไป) | 2860–3056 ms | ล้มเป็นระยะ: 11-12 (3016), 11-15 (3015), 11-18 (3031), 11-19 (3056 ms) |
+| 2026-11-19 หลัง PR #28 | `725e44f` | **2311 ms** (TTI 2270, TBT 125, Accessibility 1.00) | **ผ่าน** ([44484722787](https://github.com/MiaMaiMaXD/fretpath/actions/runs/44484722787)) |
+
+**สาเหตุ** (ตรวจจากรายงาน Lighthouse ที่ CI อัปโหลด และทดลอง A/B ในเครื่อง):
+
+1. `app/loading.tsx` อยู่ที่ root จึงครอบหน้าแรกซึ่งเป็นหน้า static ด้วย HTML ที่ prerender ไว้ส่ง fallback ของหน้าโหลดก่อน แล้วซ่อนเนื้อหาจริงไว้ใน `<div hidden id="S:0">` รอ script ของ React (`$RC`) สลับให้แสดง รูป hero โหลดเสร็จใน < 0.1 วินาที แต่ "element render delay" ของ LCP 1–2 วินาที และเพราะ Lighthouse (โหมด simulate) นับทุก request ที่เริ่มก่อนจังหวะวาดนั้น ฟอนต์และ JS ทั้งหมดจึงถูกนับเข้า LCP
+2. ทุกหน้า preload ฟอนต์ 14 ไฟล์ (~191 KB): IBM Plex Sans Thai ทุกน้ำหนัก (เพิ่มใน PR #14) + Inter และ Noto Sans Thai จาก root layout ที่หน้าแรกไม่ได้ใช้
+
+**การแก้** (PR #28): ย้ายหน้าโหลดไปไว้ใน `app/(admin)/loading.tsx` (`(learner)` มีของตัวเองอยู่แล้ว) และตั้ง `preload: false` ให้ฟอนต์ทั้ง 3 ตระกูล — ฟอนต์ที่หน้าแรกโหลดลดจาก 191 KB เหลือ 68 KB
+
+| build (Lighthouse ในเครื่อง ตั้งค่าเดียวกับ `lighthouserc.json`) | LCP มัธยฐาน | รอบที่วัดได้ (ที่เหลือ NO_LCP) |
+|---|---|---|
+| ก่อนแก้ (`main` 123236a) | 3990 ms | 3/11 |
+| ปิด preload ฟอนต์อย่างเดียว | 3613 ms | 7/12 |
+| ปิด preload + ย้ายหน้าโหลดออกจาก root (PR #28) | 3095 ms | 10/12 |
+
+ค่าในเครื่องสูงกว่า CI ประมาณ 1 วินาทีเพราะต่างสภาพแวดล้อม แต่ส่วนที่ลดลง (~900 ms) ตรงกับส่วนที่เพิ่มขึ้นหลัง `ac0c4b0` และ nightly บน production ยืนยันผล
+
 บันทึกเดิม (ก่อนมีผล production): ค่าในเครื่องใกล้เส้น 3 วินาทีมาก ต้นเหตุที่สงสัยคือ render delay ของข้อความไทยที่รอ web font (ยังไม่ได้พิสูจน์) ค่าบน production (CDN ของ Vercel) ต่างจากในเครื่องได้ จึงให้รอบ nightly แรกบน production เป็นตัวตัดสิน NFR-07 — ถ้า TTI ยังเกิน ให้เปิด defect ตามเทมเพลต แล้วลองลดเวลาโหลดฟอนต์ก่อนพิจารณาปรับเกณฑ์
 
 ## 7. Defect (ตาม severity)
 
-ตรวจจาก GitHub Issues label `bug`: `gh issue list --label bug --state all` เมื่อ 2026-10-20 — **ไม่พบ issue ใดเลย (0)** ข้อบกพร่องที่พบระหว่างพัฒนาแผนที่ 1–4 ถูกแก้ใน PR ของแผนนั้น ๆ โดยตรง ไม่ได้เปิดเป็น issue
+ตรวจจาก GitHub Issues label `bug`: `gh issue list --label bug --state all` เมื่อ 2026-11-19 — **2 issue ปิดแล้วทั้งคู่ เปิดอยู่ 0** (รอบ 2026-10-20 ไม่พบ issue ใดเลย ข้อบกพร่องที่พบระหว่างพัฒนาแผนที่ 1–4 ถูกแก้ใน PR ของแผนนั้น ๆ โดยตรง ไม่ได้เปิดเป็น issue)
 
 | Severity | เปิดอยู่ | ปิดแล้ว | รวม |
 |---|---|---|---|
 | Critical | 0 | 0 | 0 |
 | High | 0 | 0 | 0 |
-| Medium | 0 | 0 | 0 |
+| Medium | 0 | 2 | 2 |
 | Low | 0 | 0 | 0 |
 
-<!-- รอผล: defect ที่พบบน production (จาก Manual TC หัวข้อ 4, nightly หัวข้อ 3.3 และ Lighthouse หัวข้อ 6) — เปิด GitHub Issue ด้วยเทมเพลต `.github/ISSUE_TEMPLATE/defect.yml` (label `bug`) แล้วรัน `gh issue list --label bug --state all` ใหม่ ปรับตารางข้างบนตามจำนวนจริงต่อ severity และใส่ลิงก์ issue ทุกข้อใต้ตาราง -->
+| Issue | Severity / Priority | พบที่ | สรุป | แก้ใน | สถานะ |
+|---|---|---|---|---|---|
+| [#29](https://github.com/MiaMaiMaXD/fretpath/issues/29) | Medium / P2 | Production, 2026-11-09 (TC-LSN-01) | ตาราง markdown ในบท building-triads และ chords-in-a-key แสดงเป็นข้อความดิบที่มี `\|` เพราะ `LessonMarkdown` ไม่มี GFM อยู่บน production ประมาณ 1 ชั่วโมง | PR #20 (`fe5c442`) เพิ่ม `remark-gfm` + unit test | ปิดแล้ว |
+| [#30](https://github.com/MiaMaiMaXD/fretpath/issues/30) | Medium / P2 | Nightly `production`, 2026-11-12 ถึง 11-19 (TC-PERF-01) | หน้าแรกเกินเกณฑ์ NFR-07: LCP/TTI มัธยฐาน 3015–3056 ms (รายละเอียดหัวข้อ 6.1) | PR #28 (`725e44f`) | ปิดแล้ว — nightly 2026-11-19 LCP 2311 ms |
+
+หมายเหตุ: ทั้งสองข้อพบบน production หลังรอบ 2026-10-20 issue เปิดย้อนหลังเมื่อ 2026-11-19 หลังแก้แล้ว เพื่อบันทึกตามเทมเพลต `.github/ISSUE_TEMPLATE/defect.yml` ส่วน defect ที่พบในเครื่องระหว่างพัฒนาก่อน merge ไม่ได้เปิดเป็น issue
 
 ## 8. ผลตรวจเกณฑ์จบการทดสอบ (Exit criteria, สเปก 6.1)
 
 | # | เกณฑ์ | สถานะ ณ 2026-10-20 | หลักฐาน / สิ่งที่ต้องทำ |
 |---|---|---|---|
 | 1 | ทุก requirement ระดับ M มี TC อย่างน้อย 1 ข้อใน RTM | **ผ่าน** | `npm run qa:stats`: "requirement ระดับ M ที่ยังไม่มี TC: 0" (M 42/42) |
-| 2 | TC ระดับ M ผ่าน 100% | **ยังไม่ตัดสิน** — ส่วนอัตโนมัติผ่านในเครื่อง/CI แล้ว แต่ส่วนที่ต้องใช้ production และ Manual ยังไม่มีผล | <!-- รอผล: ตัดสินเมื่อ (ก) nightly `production` เขียว (หัวข้อ 3.3, 6) และ (ข) Manual TC ที่ผูกกับ requirement ระดับ M ผ่านครบ (หัวข้อ 4): TC-SEC-15, SEC-16, QZ-08, QZ-11, QZ-13, QZ-15, DSH-06, MOB-03, PRD-05, OPS-02, OPS-03 (ส่วนตรวจ artifact ที่ดาวน์โหลดด้วยมือ), OPS-04 — เติม "ผ่าน/ไม่ผ่าน" พร้อมวันที่ (TC-AUTH-18 ผูกกับ FR-01.7 ระดับ S) --> |
-| 3 | ไม่มี defect Critical/High ที่ยังเปิดอยู่ | ณ 2026-10-20 เปิดอยู่ 0 (ไม่มี issue `bug`) — **ตัดสินจริงเมื่อจบการทดสอบ production** | <!-- รอผล: รัน `gh issue list --label bug --state open` ตอนปิดโครงการ แล้วเขียนผลและวันที่ --> |
+| 2 | TC ระดับ M ผ่าน 100% | **ยังไม่ตัดสิน** — (ก) nightly `production` เขียวแล้ว (2026-11-19 หลังแก้ #30, หัวข้อ 3.3 และ 6.1) และ `full-suite` ผ่านครบ 3 โปรเจกต์; (ข) Manual ยังขาด TC-MOB-03 และ TC-PRD-05 ต้องทดสอบซ้ำกับ flow รหัส OTP ใหม่ | <!-- รอผล: ตัดสินเมื่อ (ก) nightly `production` เขียว (หัวข้อ 3.3, 6) และ (ข) Manual TC ที่ผูกกับ requirement ระดับ M ผ่านครบ (หัวข้อ 4): TC-SEC-15, SEC-16, QZ-08, QZ-11, QZ-13, QZ-15, DSH-06, MOB-03, PRD-05, OPS-02, OPS-03 (ส่วนตรวจ artifact ที่ดาวน์โหลดด้วยมือ), OPS-04 — เติม "ผ่าน/ไม่ผ่าน" พร้อมวันที่ (TC-AUTH-18 ผูกกับ FR-01.7 ระดับ S) --> |
+| 3 | ไม่มี defect Critical/High ที่ยังเปิดอยู่ | ณ 2026-11-19 issue `bug` ทั้งหมด 2 ข้อ (Medium) ปิดแล้วทั้งคู่ เปิดอยู่ 0 (หัวข้อ 7) — **ตัดสินจริงเมื่อจบการทดสอบ production** | <!-- รอผล: รัน `gh issue list --label bug --state open` ตอนปิดโครงการ แล้วเขียนผลและวันที่ --> |
 
 สรุปการปิด: <!-- รอผล: เขียน 1–2 ประโยคว่า "ผ่านเกณฑ์จบทั้ง 3 ข้อ เมื่อวันที่ … โดย …" หรือระบุข้อที่ยังไม่ผ่านและแผนแก้ — ทำหลังเติมหัวข้อ 3.3, 4, 6, 7 ครบ -->
 
@@ -173,10 +209,10 @@ TC เหล่านี้ไม่มีเทสต์อัตโนมั�
 
 | # | รายการ | ผลกระทบ / สถานะ | ทางออก |
 |---|---|---|---|
-| 1 | **UI ตามต้นแบบ FretPath ยังไม่ได้ทำ** | หน้าเว็บทำงานครบตามฟังก์ชันแต่ยังไม่ได้ปรับดีไซน์ตามต้นแบบ | งานต่อ (นอกแผน) |
+| 1 | **UI ตามต้นแบบ FretPath ทำแล้วเกือบครบ** | ทำแล้ว (PR #14–#27): หน้าแรก, dashboard, เส้นทาง, บันทึกการฝึก, โปรไฟล์, หน้า auth ทั้งหมด และหน้าโหลด; หน้าแอดมินยังเป็นดีไซน์เดิม และหน้าแรกยังไม่มีส่วนแนะนำผู้สอน/อีเมลติดต่อ (รอข้อมูลจริงจากทีม) | งานต่อ (นอกแผน) |
 | 2 | **CSP แบบ nonce** | ตอนนี้ `script-src` ยังต้องมี `'unsafe-inline'` (ดู `next.config.ts`); TC-SEC-24/25 ตรวจ header และ guard แล้ว แต่ยังไม่เข้มสุด | งานต่อ (นอกแผน) |
 | 3 | **หน้าจัดการหลายคอร์ส (admin)** | หลังบ้านรองรับการทำงานกับคอร์สเดียว ("กีตาร์พื้นฐาน") | งานต่อ (นอกแผน) |
-| 4 | ~~Lighthouse TTI/LCP ใกล้หรือเกินเส้น 3 วินาที~~ **ปิดแล้ว** | ในเครื่อง TTI 3.1–3.3 วินาที แต่บน production (2026-10-20) LCP/TTI 2298 ms ผ่านเกณฑ์ | เฝ้าดูค่าใน job summary ของ nightly ทุกคืน |
+| 4 | ~~Lighthouse TTI/LCP ใกล้หรือเกินเส้น 3 วินาที~~ **ปิดแล้ว** | ในเครื่อง TTI 3.1–3.3 วินาที แต่บน production (2026-10-20) LCP/TTI 2298 ms ผ่านเกณฑ์; หลังรีดีไซน์หน้าแรกกลับมาเกินเป็นระยะ (defect #30) แก้ใน PR #28 แล้ว 2026-11-19 LCP 2311 ms | เฝ้าดูค่าใน job summary ของ nightly ทุกคืน; เมื่อเพิ่มฟอนต์หรือ `loading.tsx` ใหม่ ให้ตรวจว่าไม่ครอบหน้า static และไม่ preload ฟอนต์ที่หน้านั้นไม่ใช้ (หัวข้อ 6.1) |
 | 5 | ~~จำนวน schema error ใน restore-check ไม่เป็นเกณฑ์ตัดสิน~~ **ปิดแล้ว** | `scripts/backup-check.sh` ล้มเมื่อ schema/data error > 0, lessons < 1, users < 1 หรือ profiles ≠ users; backup run แรกบน production (2026-10-20) ได้ error 0 ทั้งสองส่วน | ถ้าภายหลังเจอ error ที่ไม่มีผล ผ่อนเกณฑ์ผ่าน `ALLOW_*` ตาม `docs/deploy/backup-restore.md` (ผ่าน PR) |
 | 6 | **ชื่อเมนูใน dashboard ของ Supabase/Vercel/Google ในคู่มือ deploy ยังไม่ได้ยืนยันกับหน้าจอจริง** | หน้าจอผู้ให้บริการเปลี่ยนได้; คู่มือใน `docs/deploy/*.md` ยังไม่เคยทำตามบนบัญชีจริง | ทีมแก้ชื่อเมนูในคู่มือเมื่อทำตามจริงครั้งแรก |
 | 7 | Safari บน iPhone ไม่มีเทสต์อัตโนมัติ | ความเสี่ยงเรื่องเสียงและเลย์เอาต์เฉพาะ WebKit | TC-MOB-03 (Manual) |
