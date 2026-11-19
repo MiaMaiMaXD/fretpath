@@ -288,34 +288,35 @@ TC-PRD-01…04 และ 06 อ่านอย่างเดียว ไม่
 | TC-PRD-02 | หน้าแรกแสดงภาษาไทยและมี security headers | NFR-01 | production ออนไลน์ | 1. เปิด `/`<br>2. ตรวจ response headers | เห็นหัวข้อ "FretPath"; CSP มี `frame-ancestors 'none'`; มี `Strict-Transport-Security` (max-age) เมื่อ base URL เป็น https | High | Security | EP | Automated | `e2e/prod/smoke.spec.ts` (`@prod`) |
 | TC-PRD-03 | ผู้ไม่ล็อกอินเข้า /admin และ /dashboard ไม่ได้ | FR-01.3, FR-07.1 | ไม่มี session | 1. เปิด `/admin`<br>2. เปิด `/dashboard` | ทั้งสองไปที่ `/login?next=…` | High | Security | Role-based | Automated | `e2e/prod/smoke.spec.ts` (`@prod`) |
 | TC-PRD-04 | บัญชี seed ไม่มีบน production | NFR-01, FR-01.3 | production ไม่เคยรัน `seed.sql` | 1. เปิด `/login` ล็อกอินด้วย `member@fretpath.test` ด้วยรหัสผ่านที่รู้กันของ seed (ครั้งเดียว) | แสดง "อีเมลหรือรหัสผ่านไม่ถูกต้อง" และอยู่ที่ `/login` | High | Security | Negative | Automated | `e2e/prod/smoke.spec.ts` (`@prod`; ข้ามเมื่อเป็น localhost) |
-| TC-PRD-05 | ลิงก์ยืนยันอีเมลและรีเซ็ตรหัสผ่านบน production ใช้ได้จากอุปกรณ์อื่น | FR-01.2, FR-01.4 | production ตั้ง SMTP, Site URL, Redirect URLs และเทมเพลตอีเมลตาม `docs/deploy/supabase.md` เสร็จแล้ว; อีเมลจริงที่รับได้ | 1. สมัครบนเว็บ production<br>2. เปิดอีเมลในโทรศัพท์หรืออีกเครื่อง กดลิงก์ แล้วกด "ยืนยันและเข้าสู่ระบบ"<br>3. ออกจากระบบ ขอ "ลืมรหัสผ่าน" เปิดลิงก์จากอีกเครื่อง ตั้งรหัสใหม่แล้วเข้าสู่ระบบ | ข้อ 2 เข้า Dashboard เห็นบท 1 ปลดล็อก; ข้อ 3 เข้าสู่ระบบด้วยรหัสใหม่ได้; ลิงก์ไม่ชี้ localhost | High | Positive | EP (อุปกรณ์เดียวกัน/อื่น) | Manual | ไม่มีเทสต์อัตโนมัติ — ต้องใช้กล่องอีเมลจริงและอุปกรณ์ที่สอง (ขั้นตอนใน `docs/deploy/vercel.md`); ระดับ local ดู TC-AUTH-11, TC-AUTH-13, TC-AUTH-17 |
+| TC-PRD-05 | รหัส OTP 6 หลักทางอีเมลบน production ใช้สมัครสมาชิกและตั้งรหัสผ่านใหม่ได้ | FR-01.2, FR-01.4 | production ตั้ง SMTP, Site URL และเทมเพลตอีเมล "Confirm signup" กับ "Reset Password" (ใช้ `{{ .Token }}`) และ Email OTP Length = 6 ตาม `docs/deploy/supabase.md` เสร็จแล้ว; อีเมลจริงที่รับได้ | 1. สมัครบนเว็บ production ที่ `/signup`<br>2. เปิดอีเมล นำรหัส 6 หลักไปกรอกที่ `/signup/verify` แล้วกด "ถัดไป"<br>3. ออกจากระบบ ขอ "ลืมรหัสผ่าน" ที่ `/forgot-password` กรอกรหัสจากอีเมลที่ `/forgot-password/verify` ตั้งรหัสใหม่ แล้วเข้าสู่ระบบด้วยรหัสใหม่ | ข้อ 1 อีเมลมีรหัส 6 หลัก (ไม่มีลิงก์); ข้อ 2 ไปหน้า `/signup/success` แล้วเข้าสู่ระบบด้วยบัญชีใหม่ได้ เห็น Dashboard และบท 1 ปลดล็อก; ข้อ 3 ไปหน้า `/forgot-password/success` และเข้าสู่ระบบด้วยรหัสใหม่ได้ | High | Positive | EP (สมัคร / ลืมรหัสผ่าน) | Manual | ไม่มีเทสต์อัตโนมัติบน production — ต้องใช้กล่องอีเมลจริงและบัญชีจริง; ระดับ local ดู TC-AUTH-06, TC-AUTH-13, TC-AUTH-27, TC-AUTH-28, TC-AUTH-30 (อ่านรหัสจาก Mailpit). เดิม (ถึง 2026-11-17) TC นี้ทดสอบลิงก์ในอีเมลจากอีกอุปกรณ์ เปลี่ยนเป็นรหัส OTP ตั้งแต่ PR #23/#25 |
 | TC-PRD-06 | รายการคอร์สสาธารณะมี "กีตาร์พื้นฐาน" | NFR-05, FR-03.1 | ตั้ง `PROD_SUPABASE_URL` และ `PROD_SUPABASE_ANON_KEY` แล้ว | 1. อ่านตาราง `courses` ด้วย anon key | ไม่มี error และรายชื่อมี "กีตาร์พื้นฐาน" (ยืนยันว่า `supabase db push` ลง migration และเนื้อหาเริ่มต้นแล้ว) | Medium | Smoke | EP | Automated | `e2e/prod/smoke.spec.ts` (`@prod`) |
 
 ---
 
-## 10. สรุปจำนวน TC (แผนที่ 1–4)
+## 10. สรุปจำนวน TC (แผนที่ 1–4 และงานหลังแผน ถึง 2026-11-19)
 
 | พื้นที่ | จำนวน TC | Automated แล้ว (pgTAP และ/หรือ e2e ที่ตั้งชื่อไว้) | ยังไม่ automate (Manual) |
 |---|---|---|---|
-| TC-AUTH (FR-01) | 18 | 17 (AUTH-01–17; AUTH-15 เฉพาะกรณีปิดปุ่ม Google) | 1 (AUTH-18 Manual: Google บน production) |
+| TC-AUTH (FR-01) | 30 | 29 (AUTH-01–17, 19–30; AUTH-15 เฉพาะกรณีปิดปุ่ม Google) | 1 (AUTH-18 Manual: Google บน production) |
 | TC-LSN (FR-02) | 6 | 6 (LSN-01–06) | 0 |
 | TC-PATH (FR-03) | 19 | 19 (PATH-01–19; PATH-02 ส่วน UI ฉบับร่างดู TC-ADM-04/18) | 0 |
 | TC-QZ (FR-04) | 28 | 24 (QZ-01–07, 09, 10, 12, 14, 16, 17, 19, 21–28 และ QZ-18, QZ-20 เฉพาะระดับ API/DB) | 4 (QZ-08, 11, 13, 15) |
 | TC-PRC (FR-05) | 9 | 9 (PRC-01 ระดับ DB; PRC-02–09 UI E2E) | 0 |
 | TC-DSH (FR-06) | 6 | 5 (DSH-01–05) | 1 (DSH-06 Manual) |
-| TC-MOB (NFR-02, NFR-03) | 5 | 4 (MOB-01, 01b, 01c, 02) | 1 (MOB-03 Manual บน iPhone จริง) |
+| TC-MOB (NFR-02, NFR-03) | 6 | 5 (MOB-01, 01b, 01c, 02, 04) | 1 (MOB-03 Manual บน iPhone จริง) |
 | TC-SEC (NFR-01, NFR-02) | 26 | 24 (SEC-01–14, 17, 18, 18b, 19–25) | 2 (SEC-15, 16 Manual) |
 | TC-ADM (FR-07) | 20 | 20 (ADM-01, 02 ระดับ DB; ADM-03–20 UI E2E + pgTAP) | 0 |
 | TC-PERF (NFR-07) | 1 | 1 (PERF-01 ใน nightly job `production`) | 0 |
 | TC-PRD (smoke production) | 6 | 5 (PRD-01–04, 06) | 1 (PRD-05 Manual: ลิงก์อีเมลข้ามอุปกรณ์) |
 | TC-OPS (NFR-05, NFR-06) | 4 | 3 (OPS-01, 03, 04 — OPS-04 ส่วน restore check ใน workflow) | 1 (OPS-02 Manual: อีเมลแจ้งล้ม) |
-| รวม | 148 | 137 | 11 |
+| รวม | 161 | 150 | 11 |
 
 หมายเหตุ
-- ตัวเลขทั้งหมดในหัวข้อนี้ตรวจกับ `npm run qa:stats` (รวมแถวนี้ 148 TC = Automated 137 + Manual 11; ใน Automated มี 3 TC ที่ automate เฉพาะบางส่วน — QZ-18, QZ-20, OPS-04 — ส่วนที่เหลือเป็น Manual)
+- ตัวเลขทั้งหมดในหัวข้อนี้ตรวจกับ `npm run qa:stats` (รวมแถวนี้ 161 TC = Automated 150 + Manual 11; ใน Automated มี 3 TC ที่ automate เฉพาะบางส่วน — QZ-18, QZ-20, OPS-04 — ส่วนที่เหลือเป็น Manual)
 - "Automated แล้ว" รวมเทสต์ pgTAP ใน `supabase/tests/`, Playwright ใน `e2e/api/` และ Playwright UI ใน `e2e/specs/`. TC-QZ-18 และ TC-QZ-20 เป็น Automated เฉพาะส่วน API/DB ส่วน UI ยังเป็น Manual
 - **การเปลี่ยนเลขจากเวอร์ชัน 1.0:** TC-PATH-14 เดิม (เผยแพร่คอร์สฟรีภายหลัง ระดับ DB) ถูกย้ายเป็น TC-PATH-19 เพราะ `e2e/specs/path.spec.ts` ใช้ TC-PATH-14 สำหรับ UI ผู้เรียนใหม่ (pgTAP ไม่ได้อ้างเลข TC)
 - **การเปลี่ยนเลขระหว่างแผนที่ 3:** TC-ADM-19 (เลื่อนคำถาม) และ TC-ADM-20 (ลบคำถาม) เดิมวางไว้เลขอื่น; TC-ADM-12/13/14 คือจัดลำดับ / ตรวจลำดับ / ตัวอย่าง; TC-AUTH-13 คือลิงก์ตั้งรหัสผ่านใหม่ใน context ใหม่ และ TC-AUTH-16 คือรูปโปรไฟล์ชนิดไฟล์ผิด
 - **TC ที่ทดแทนกัน:** TC-PATH-16 ทดแทน TC-PATH-08 (เปิดบทล็อกผ่าน URL) · TC-PATH-14 และ TC-PATH-17 ทดแทนการตรวจสถานะบนหน้า `/path` ของ TC-PATH-01 · TC-QZ-19/21/22/23 ใช้เลขเดิม (ชี้ไป `quiz.spec.ts`) · TC-QZ-25/26/27/28 เป็นเลขใหม่ · TC-SEC-19/21 ทำให้ TC-SEC-17 เป็น Automated
 - Safari บน iPhone ไม่มีโปรเจกต์อัตโนมัติ (TC-MOB-03 เป็น Manual). **แผนที่ 4:** NFR-05 (keep-alive) และ NFR-06 (backup) มี TC-OPS-01…04; Lighthouse (NFR-07) มี TC-PERF-01; smoke production คือ TC-PRD-01…06; เพิ่ม TC-AUTH-17 (เทสต์มีอยู่แล้วใน `auth-links.spec.ts`) และ TC-AUTH-18 (Google จริง, Manual). TC กลุ่ม OPS/PRD/AUTH-18 มีผลจริงได้หลังสร้าง production เท่านั้น — ผลอยู่ใน `test-summary.md`
+- **หลังแผนที่ 4 (ถึง 2026-11-19):** เพิ่ม 13 TC ที่เป็น Automated ทั้งหมด — TC-AUTH-19…22 (หน้าโปรไฟล์ใหม่, PR #21), TC-AUTH-23…29 (ล็อกอิน ลืมรหัสผ่านด้วยรหัส OTP 6 หลัก และตั้งรหัสใหม่, PR #23), TC-AUTH-30 (สมัครสมาชิกด้วยรหัส OTP, PR #25), TC-MOB-04 (เมนูหน้าแรกไม่เติม `#hash`, PR #26); TC-AUTH-06/09/10/13/17 เขียนขั้นตอนใหม่ให้ตรงกับ flow รหัส OTP และหน้าโปรไฟล์ใหม่
 - ใน CI รัน `@smoke` และ `@security` บน `chromium` เท่านั้น; `firefox` และ `mobile` (Pixel 7) รันชุด `@regression` เต็มในเครื่อง และรันเต็มทุกโปรเจกต์ใน nightly job `full-suite`
