@@ -126,8 +126,11 @@
 .fp-home .opt { display: flex; align-items: center; gap: 8px; border: 1px solid var(--line); border-radius: 6px; padding: 7px 10px; font-size: .85rem; color: var(--muted); }
 .fp-home .opt.ok { border-color: #16a34a; color: #166534; background: #f0fdf4; }
 .fp-home .bars { flex: 1; display: flex; align-items: flex-end; gap: 8px; padding-top: 8px; }
-.fp-home .bars span { flex: 1; background: var(--amber); border-radius: 4px 4px 0 0; opacity: .85; }
-.fp-home .bars span:nth-child(odd) { background: var(--night-2); }
+.fp-home .bars span { flex: 1; background: #d97706; border-radius: 4px 4px 0 0; }
+.fp-home .nowrap { white-space: nowrap; }
+.fp-home .bars span.low { background: #fbbf24; }
+.fp-home .goal-meter { height: 8px; border-radius: 4px; background: #e8edf3; overflow: hidden; }
+.fp-home .goal-meter i { display: block; height: 100%; background: #d97706; border-radius: 4px; }
 
 .fp-home .faq-sec { background: #fff; }
 .fp-home .faq { max-width: 780px; }
