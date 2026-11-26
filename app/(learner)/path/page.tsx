@@ -61,7 +61,7 @@ export default async function PathPage({ searchParams }: { searchParams: Promise
                 <div className="unit-head">
                   <h2 id={`unit-${u.from}`}>{u.name}</h2>
                   <small>
-                    เฟรต {u.from}–{u.to}
+                    บทที่ {u.from + 1}–{u.to + 1}
                     {real.length > 0 ? ` · จบ ${done}/${real.length}` : ''}
                     {soon > 0 ? ` · อีก ${soon} บทเร็ว ๆ นี้` : ''}
                   </small>
@@ -85,7 +85,7 @@ export default async function PathPage({ searchParams }: { searchParams: Promise
             {next ? (
               <>
                 <p className="k">
-                  {progress.completed === 0 ? 'เริ่มเรียน' : 'เรียนต่อจากเดิม'} · เฟรต {nextFret}
+                  {progress.completed === 0 ? 'เริ่มเรียน' : 'เรียนต่อจากเดิม'} · บทที่ {nextFret + 1}
                 </p>
                 <h2>{next.title}</h2>
                 <Link href={`/lessons/${next.slug}`} className="btn btn-amber">

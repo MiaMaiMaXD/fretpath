@@ -18,7 +18,7 @@ export function SubmitButton({
     <button
       type="submit"
       disabled={pending || disabled}
-      className="rounded bg-neutral-900 px-4 py-2 font-medium text-white disabled:opacity-60 dark:bg-neutral-100 dark:text-neutral-900"
+      className="fp-primary rounded bg-neutral-900 px-4 py-2 font-medium text-white disabled:opacity-60 dark:bg-neutral-100 dark:text-neutral-900"
     >
       {children}
     </button>

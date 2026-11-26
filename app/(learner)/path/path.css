@@ -1,6 +1,6 @@
 /* Learning path (design D): a guitar neck overview on top, the lesson map by unit below, and a
-   sticky "continue" card. Scoped under .fp-path. Light panels set their own colours so they read
-   correctly when the browser is in dark mode. */
+   sticky "continue" card. Scoped under .fp-path. The page is dark (slate-900); the lesson list and the
+   legend are white panels that set their own colours. */
 
 .fp-path {
   --tint: #f3f5f8;
@@ -14,8 +14,8 @@
 .fp-path .title { margin: 0; font-size: clamp(1.6rem, 3vw, 2rem); font-weight: 700; letter-spacing: -.015em; line-height: 1.25; overflow-wrap: break-word; }
 .fp-path .sub { margin: 2px 0 0; color: var(--muted); }
 .fp-path .path-head { display: flex; justify-content: space-between; align-items: end; gap: 8px 16px; flex-wrap: wrap; margin-bottom: 8px; }
-.fp-path .count { margin: 0; color: var(--muted); }
-.fp-path .count b { font-size: 1.6rem; color: var(--ink); }
+.fp-path .count { margin: 0; color: #94a3b8; }
+.fp-path .count b { font-size: 1.6rem; color: #fff; }
 .fp-path .notice { margin: 12px 0 0; padding: 12px 16px; border-radius: 12px; background: #fef3c7; color: #78350f; font-weight: 600; }
 .fp-path .btn { display: inline-flex; align-items: center; justify-content: center; font: inherit; font-weight: 600; border-radius: 10px; padding: 10px 18px; text-decoration: none; line-height: 1.4; }
 .fp-path .btn-amber { background: var(--amber); color: #1a1205; }
@@ -31,7 +31,7 @@
   background: repeating-linear-gradient(to bottom, transparent 0 calc((100% - 6px) / 5 - 1px), rgba(226, 232, 240, .38) 0 calc((100% - 6px) / 5));
 }
 .fp-path .fret { position: relative; height: 112px; border-right: 3px solid var(--fret-wire); display: flex; align-items: center; justify-content: center; color: #94a3b8; text-decoration: none; }
-.fp-path .fret.nut { border-right: 8px solid var(--nut); border-radius: 6px 0 0 6px; }
+.fp-path .neck .nut { height: 112px; border-right: 8px solid var(--nut); border-radius: 6px 0 0 6px; }
 .fp-path a.fret:hover { background: rgba(255, 255, 255, .06); }
 .fp-path .fret[aria-current='step'] { background: rgba(245, 165, 36, .12); }
 .fp-path .fret .no { position: absolute; top: -28px; font-weight: 700; font-size: .85rem; color: var(--muted); }
@@ -46,13 +46,14 @@
 .fp-path .inlay { position: absolute; bottom: -22px; display: flex; gap: 5px; }
 .fp-path .inlay i { width: 9px; height: 9px; border-radius: 50%; background: #c7ced9; }
 @keyframes fp-path-pulse { 50% { box-shadow: 0 0 0 11px rgba(245, 165, 36, .08); } }
-.fp-path .units-bar { display: grid; min-width: 1000px; margin-top: 32px; font-size: .82rem; color: var(--muted); }
-.fp-path .units-bar span { border-top: 2px solid var(--line-2); padding-top: 4px; margin-right: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.fp-path .units-bar span.on { border-color: var(--amber); color: var(--ink); font-weight: 600; }
+.fp-path .units-bar { display: grid; min-width: 1000px; margin-top: 32px; font-size: .82rem; color: #94a3b8; }
+.fp-path .units-bar span { border-top: 2px solid #475569; padding-top: 4px; margin-right: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fp-path .units-bar span.on { border-color: var(--amber); color: #fff; font-weight: 600; }
 
 /* ---------------------------------------------------------------- lesson map */
 .fp-path .path-grid { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 36px; align-items: start; }
 .fp-path .unit { margin-bottom: 28px; }
+.fp-path .lessons { background: var(--surface); color: var(--ink); border-radius: 16px; padding: 20px 22px 6px; }
 .fp-path .unit-head { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 12px; padding-bottom: 8px; border-bottom: 2px solid var(--ink); }
 .fp-path .unit-head h2 { margin: 0; font-size: 1.1rem; font-weight: 700; }
 .fp-path .unit-head small { color: var(--muted); font-size: .85rem; }
@@ -83,7 +84,7 @@
 
 /* ---------------------------------------------------------------- side */
 .fp-path .side { position: sticky; top: 88px; display: grid; gap: 16px; }
-.fp-path .next-card { background: var(--night); color: #fff; border-radius: 16px; padding: 18px 20px 20px; }
+.fp-path .next-card { background: var(--night-2); color: #fff; border-radius: 16px; padding: 18px 20px 20px; }
 .fp-path .next-card .k { margin: 0; color: #cbd5e1; font-size: .88rem; }
 .fp-path .next-card h2 { margin: 2px 0 14px; font-size: 1.15rem; line-height: 1.4; font-weight: 700; overflow-wrap: break-word; }
 .fp-path .legend-card { background: var(--surface); color: var(--ink); border: 1px solid var(--line-2); border-radius: 16px; padding: 16px 20px; }
@@ -101,11 +102,6 @@
   .fp-path .legend-card { display: none; }
   .fp-path .row-inner { grid-template-columns: 44px minmax(0, 1fr); gap: 10px; }
   .fp-path .row-state { grid-column: 2; justify-self: start; }
-}
-@media (prefers-color-scheme: dark) {
-  .fp-path .lessons { background: var(--surface); color: var(--ink); border-radius: 16px; padding: 16px 18px 4px; }
-  .fp-path .count b { color: inherit; }
-  .fp-path .units-bar span.on { color: inherit; }
 }
 @media (prefers-reduced-motion: reduce) {
   .fp-path .fret.now .stone, .fp-path .lesson-row:target .row-inner, .fp-path .lesson-row.is-flash .row-inner { animation: none; }

@@ -1,12 +1,14 @@
 import type { PathLesson } from '@/lib/path-state';
 
-/* The learning path drawn as a guitar neck: one lesson per fret, fret 0 (open strings) to fret 21.
-   For the guitar-basics course the planned 22-lesson curriculum fills the frets that have no lesson
-   yet, shown as "coming soon". Other courses simply place their lessons on frets 0, 1, 2, ... */
+/* The learning path drawn as a guitar neck: one lesson per fret. `FretSlot.fret` is a 0-based slot index;
+   learners see slot n as lesson n + 1 drawn on real fret n + 1 (fret 1 is the first after the nut), so
+   lesson numbers and inlay dots line up with a 22-fret guitar. For the guitar-basics course the planned
+   22-lesson curriculum fills the slots that have no lesson yet, shown as "coming soon". Other courses
+   simply place their lessons on slots 0, 1, 2, ... */
 
 export const FRET_COUNT = 22;
 
-/** Inlay positions on a real fretboard; 12 is the double dot. */
+/** Inlay positions on a real fretboard (fret numbers, = lesson numbers on the path); 12 is the double dot. */
 export const INLAYS: ReadonlySet<number> = new Set([3, 5, 7, 9, 12, 15, 17, 19, 21]);
 
 export type PathUnit = { name: string; from: number; to: number };
@@ -76,4 +78,9 @@ export function unitsFor(count: number): PathUnit[] {
   const units = UNITS.filter((u) => u.from < count).map((u) => ({ ...u, to: Math.min(u.to, count - 1) }));
   if (count > FRET_COUNT) units.push({ name: 'บทเพิ่มเติม', from: FRET_COUNT, to: count - 1 });
   return units;
+}
+
+/** Lesson id → the lesson number learners see (slot + 1): "บทที่ 1" on fret 1 to "บทที่ 22" on fret 22. */
+export function lessonNumbers(slots: FretSlot[]): Record<string, number> {
+  return Object.fromEntries(slots.flatMap((s) => (s.lesson ? [[s.lesson.id, s.fret + 1]] : [])));
 }

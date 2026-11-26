@@ -16,8 +16,9 @@ export class ProfilePage {
   goalInput() {
     return this.page.getByRole('textbox', { name: 'เป้าหมายการฝึกต่อสัปดาห์' });
   }
+  /** Visible text is "บันทึก"; a screen-reader-only word adds "เป้าหมาย" (browsers may put a space between). */
   goalSave() {
-    return this.page.getByRole('button', { name: 'บันทึกเป้าหมาย' });
+    return this.page.getByRole('button', { name: /^บันทึก ?เป้าหมาย$/ });
   }
   toast() {
     return this.page.getByTestId('profile-toast');

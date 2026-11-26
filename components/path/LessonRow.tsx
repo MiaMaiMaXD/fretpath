@@ -8,11 +8,11 @@ export function SoonRow({ plan, fret }: { plan: PlannedLesson; fret: number }) {
     <li id={`fret-${fret}`} className="lesson-row soon" data-testid="lesson-soon">
       <div className="row-inner">
         <span className="no" aria-hidden="true">
-          {fret}
+          {fret + 1}
         </span>
         <span className="row-main">
           <span className="row-title">
-            <span className="sr-only">เฟรต {fret}: </span>
+            <span className="sr-only">บทที่ {fret + 1}: </span>
             {plan.title}
           </span>
           <span className="row-summary">{plan.summary}</span>
@@ -32,11 +32,11 @@ export function LessonRow({ lesson, fret, current }: { lesson: PathLesson; fret:
   const body = (
     <>
       <span className="no" aria-hidden="true">
-        {fret}
+        {fret + 1}
       </span>
       <span className="row-main">
         <span className="row-title">
-          <span className="sr-only">เฟรต {fret}: </span>
+          <span className="sr-only">บทที่ {fret + 1}: </span>
           {lesson.title}
         </span>
         {lesson.summary ? <span className="row-summary">{lesson.summary}</span> : null}

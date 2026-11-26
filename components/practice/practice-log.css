@@ -1,0 +1,74 @@
+/* Practice sessions table (dashboard "latest" card and /practice/history), its inline edit form
+   and the delete confirmation. Scoped under .fp-log; colours are set here so it reads the same in
+   light and dark browser themes. */
+
+.fp-log {
+  --tint: #f3f5f8;
+  --line-2: #d5dce6;
+  --rule: #eadfcf;
+  color: var(--ink);
+  line-height: 1.6;
+}
+.fp-log button { font: inherit; cursor: pointer; }
+.fp-log button:disabled { cursor: not-allowed; opacity: .45; }
+
+.fp-log .log-table { width: 100%; border-collapse: collapse; }
+.fp-log th { text-align: left; font-size: .9rem; font-weight: 500; color: var(--muted); padding: 10px 12px 14px; border-bottom: 1px solid var(--rule); white-space: nowrap; }
+.fp-log th:first-child, .fp-log td:first-child { padding-left: 0; }
+.fp-log th.num, .fp-log td.num { text-align: right; }
+.fp-log td { padding: 16px 12px; border-bottom: 1px solid var(--rule); vertical-align: middle; overflow-wrap: anywhere; }
+.fp-log tbody tr:last-child td { border-bottom: 0; }
+.fp-log .date { width: 9.5em; color: var(--muted); font-weight: 600; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.fp-log .what > span, .fp-log .what > strong { display: block; }
+.fp-log .title { font-size: 1rem; font-weight: 600; line-height: 1.45; }
+.fp-log .meta { display: flex !important; flex-wrap: wrap; gap: 2px 10px; margin-top: 2px; font-size: .85rem; color: var(--muted); }
+.fp-log .cat { color: var(--amber-ink); font-weight: 600; }
+.fp-log .feel { display: inline-flex; align-items: center; gap: 5px; color: var(--tone); font-weight: 600; }
+.fp-log .feel::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.fp-log .note { margin-top: 4px; padding-left: 10px; border-left: 2px solid var(--amber-hi); font-size: .9rem; color: #3b4a5f; white-space: pre-wrap; }
+.fp-log .actions { display: flex !important; gap: 12px; margin-top: 4px; }
+.fp-log .link-btn { background: none; border: 0; padding: 2px 0; font-size: .85rem; font-weight: 600; color: var(--muted); text-decoration: underline; text-decoration-color: transparent; text-underline-offset: 3px; }
+.fp-log .link-btn:hover { color: var(--ink); text-decoration-color: currentColor; }
+.fp-log .link-btn.danger:hover { color: #b91c1c; }
+.fp-log .mins { width: 7em; color: var(--amber-ink); font-weight: 700; font-size: 1.05rem; white-space: nowrap; font-variant-numeric: tabular-nums; }
+
+/* inline edit: the row turns into a card holding the form */
+.fp-log tr.editing td { padding: 16px 0; }
+.fp-log .edit-form { background: #fff; border: 1px solid var(--rule); border-radius: 14px; padding: 18px 20px 20px; box-shadow: 0 6px 20px rgba(15, 23, 42, .08); }
+.fp-log .edit-form .fields { margin-bottom: 14px; }
+.fp-log .edit-form > p[role] { margin: 0 0 10px; }
+.fp-log .row-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+.fp-log .btn { display: inline-flex; align-items: center; justify-content: center; border-radius: 999px; padding: 8px 20px; font-size: .93rem; font-weight: 600; border: 1px solid transparent; line-height: 1.4; text-decoration: none; }
+.fp-log .btn-amber { background: var(--amber); color: #1a1205; }
+.fp-log .btn-amber:hover:not(:disabled) { background: var(--amber-hi); }
+.fp-log .btn-line { background: #fff; color: var(--ink); border-color: var(--line-2); }
+.fp-log .btn-line:hover:not(:disabled) { border-color: var(--ink); }
+.fp-log .btn-danger { background: #dc2626; color: #fff; }
+.fp-log .btn-danger:hover:not(:disabled) { background: #b91c1c; }
+.fp-log .btn-slate { background: #64748b; color: #fff; }
+.fp-log .btn-slate:hover:not(:disabled) { background: #475569; }
+
+/* delete confirmation */
+.fp-log .confirm { margin: auto; width: min(440px, calc(100% - 32px)); border: 0; border-radius: 18px; padding: 30px 28px 26px; background: #fff; color: var(--ink); text-align: center; box-shadow: 0 24px 60px rgba(15, 23, 42, .32); }
+.fp-log .confirm::backdrop { background: rgba(15, 23, 42, .6); }
+.fp-log .confirm-icon { display: block; margin: 0 auto; width: 44px; height: 44px; fill: none; stroke: #ef4444; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+.fp-log .confirm h2 { margin: 14px 0 6px; font-size: 1.15rem; font-weight: 700; }
+.fp-log .confirm p { margin: 0 0 22px; color: var(--muted); font-size: .95rem; overflow-wrap: anywhere; }
+.fp-log .confirm p b { color: #3b4a5f; }
+.fp-log .confirm .err { color: #b91c1c; margin-top: -10px; }
+.fp-log .confirm-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.fp-log .confirm-actions .btn { padding: 10px 16px; }
+
+/* phones: each row becomes a small card — date and minutes on top, topic below */
+@media (max-width: 560px) {
+  .fp-log thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  .fp-log tbody tr:not(.editing) { display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; padding: 14px 0; border-bottom: 1px solid var(--rule); }
+  .fp-log tbody tr:last-child { border-bottom: 0; }
+  .fp-log tbody tr:not(.editing) td { display: block; padding: 0; border: 0; width: auto; }
+  .fp-log .date { grid-column: 1; grid-row: 1; font-size: .9rem; }
+  .fp-log .mins { grid-column: 2; grid-row: 1; }
+  .fp-log .what { grid-column: 1 / -1; }
+  .fp-log tr.editing td { display: block; }
+  .fp-log .edit-form { padding: 16px 14px 18px; }
+}
