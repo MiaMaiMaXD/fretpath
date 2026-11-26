@@ -113,7 +113,7 @@ test('TC-PRC-08 edit and delete own log @regression', async ({ memberPage }) => 
   await expect(practice.historyRows().first()).toContainText('45 นาที');
 
   await practice.historyRows().first().getByRole('button', { name: 'ลบ', exact: true }).click();
-  const dialog = memberPage.getByRole('dialog', { name: 'ลบบันทึกนี้?' });
+  const dialog = memberPage.getByRole('dialog', { name: 'คุณต้องการจะลบหรือไม่?' });
   await expect(dialog).toBeVisible();
   await expect(dialog.getByRole('button', { name: 'ยกเลิก', exact: true })).toBeFocused();
   await dialog.getByRole('button', { name: 'ยกเลิก', exact: true }).click();
@@ -157,15 +157,19 @@ test('TC-PRC-11 topic, category and feeling show in recent; totals and search on
 
   await memberPage.getByRole('link', { name: /ดูประวัติทั้งหมด/ }).click();
   await expect(memberPage).toHaveURL(/\/practice\/history$/);
-  await expect(memberPage.getByTestId('practice-totals')).toHaveText('ซ้อมมาแล้ว 3 ครั้ง รวม 1 ชม. 25 นาที');
+  await expect(memberPage.getByTestId('practice-totals')).toHaveText('เวลาฝึกซ้อมทั้งหมด 85 นาที · 3 ครั้ง');
   await expect(practice.historyRows().first()).toContainText('ใช้ Anchor Finger');
 
   const search = practice.history().getByRole('searchbox', { name: 'ค้นหาบันทึกการซ้อม' });
   await search.fill('สาย');
+  // typing alone does not filter; Enter runs the search
+  await expect(practice.historyRows()).toHaveCount(3);
+  await search.press('Enter');
   await expect(practice.historyRows()).toHaveCount(1);
   await expect(practice.historyRows().first()).toContainText('ตั้งสายกีตาร์');
   await expect(practice.history().getByRole('status')).toHaveText('พบ 1 รายการ');
   await search.fill('ไม่มีคำนี้แน่นอน');
+  await search.press('Enter');
   await expect(practice.historyRows()).toHaveCount(0);
   await expect(practice.history().getByRole('status')).toContainText('ไม่พบบันทึก');
   await search.fill('');
@@ -179,7 +183,7 @@ test('TC-PRC-12 empty state on both pages, no history link and no search box @re
   await expect(memberPage.getByRole('link', { name: /ดูประวัติทั้งหมด/ })).toHaveCount(0);
   await practice.gotoHistory();
   await expect(memberPage.getByTestId('practice-empty')).toBeVisible();
-  await expect(memberPage.getByTestId('practice-totals')).toHaveText('ซ้อมมาแล้ว 0 ครั้ง รวม 0 นาที');
+  await expect(memberPage.getByTestId('practice-totals')).toHaveText('เวลาฝึกซ้อมทั้งหมด 0 นาที · 0 ครั้ง');
   await expect(memberPage.getByRole('searchbox')).toHaveCount(0);
 });
 
@@ -214,4 +218,42 @@ test('TC-PRC-13 timer keeps running across pages and reloads, with a floating mi
   await practice.save();
   await expect(practice.rows()).toHaveCount(1);
   await expect(memberPage.getByTestId('timer-display')).toHaveText('00:00');
+});
+
+test('TC-PRC-14 practice stage goes full screen and back (button, Escape, finishing a round) @regression', async ({ memberPage }) => {
+  const practice = new PracticePage(memberPage);
+  await memberPage.clock.install();
+  await practice.goto();
+  const stage = memberPage.getByRole('group', { name: 'เครื่องมือระหว่างซ้อม' });
+  const enter = stage.getByRole('button', { name: 'ขยายเต็มจอ' });
+  const exit = stage.getByRole('button', { name: 'ออกจากเต็มจอ' });
+
+  await enter.click();
+  await expect(exit).toBeVisible();
+  // the stage covers the viewport and the log sheet behind it is out of reach
+  // (with real full screen the box is the screen size, so compare with at least the viewport)
+  await expect(stage).toHaveClass(/is-full/);
+  const box = await stage.boundingBox();
+  const vp = memberPage.viewportSize()!;
+  expect(box!.width).toBeGreaterThanOrEqual(vp.width - 1);
+  expect(box!.height).toBeGreaterThanOrEqual(vp.height - 1);
+  // inert elements leave the accessibility tree, so find the sheet by its CSS class here
+  const sheet = memberPage.locator('section.sheet');
+  await expect(sheet).toHaveAttribute('inert', '');
+  await exit.click();
+  await expect(enter).toBeVisible();
+  await expect(sheet).not.toHaveAttribute('inert');
+
+  // Escape right after entering, before the browser finishes going full screen, must still exit
+  await enter.click();
+  await memberPage.keyboard.press('Escape');
+  await expect(enter).toBeVisible();
+
+  // finishing a round leaves full screen and fills the minutes in the sheet
+  await enter.click();
+  await stage.getByRole('button', { name: 'เริ่มจับเวลา' }).click();
+  await memberPage.clock.fastForward('03:10');
+  await stage.getByRole('button', { name: /จบรอบ/ }).click();
+  await expect(enter).toBeVisible();
+  await expect(practice.minutesInput()).toHaveValue('3');
 });

@@ -1,3 +1,4 @@
+import './practice/fields.css';
 import { Field } from '@/components/Field';
 import { ACTIVITIES, FEELINGS } from '@/lib/practice-activities';
 import type { FieldErrors } from '@/lib/validation';

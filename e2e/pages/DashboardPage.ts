@@ -11,7 +11,7 @@ export class DashboardPage {
     return this.page.getByTestId(`stat-${name}`);
   }
 
-  /** "เริ่มบทที่ 1" / "เรียนต่อ" button in the dark continue card. */
+  /** "เริ่มเรียน" / "เรียนต่อ" button in the continue card. */
   continueButton(): Locator {
     return this.page.getByTestId('dash-continue-btn');
   }

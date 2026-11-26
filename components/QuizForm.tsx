@@ -108,7 +108,7 @@ export function QuizForm({
       <button
         type="submit"
         disabled={pending}
-        className="self-start rounded bg-neutral-900 px-4 py-2 font-medium text-white disabled:opacity-60 dark:bg-neutral-100 dark:text-neutral-900"
+        className="fp-primary self-start rounded bg-neutral-900 px-4 py-2 font-medium text-white disabled:opacity-60 dark:bg-neutral-100 dark:text-neutral-900"
       >
         {failedNetwork ? 'ส่งอีกครั้ง' : 'ส่งคำตอบ'}
       </button>

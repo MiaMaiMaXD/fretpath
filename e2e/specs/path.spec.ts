@@ -48,7 +48,7 @@ test('TC-PATH-19 neck shows 22 frets with planned lessons as coming soon, and a 
   }
   await expect(path.card(COURSE_SLUGS[LESSON_COUNT - 1])).toHaveAttribute('id', `fret-${LESSON_COUNT - 1}`);
   await expect(path.card('f-chord-first-song')).toHaveAttribute('id', 'fret-7');
-  await neck.getByRole('link', { name: /^เฟรต 7:/ }).click();
+  await neck.getByRole('link', { name: /^บทที่ 8:/ }).click();
   await expect(path.card('f-chord-first-song')).toBeInViewport();
   // the address stays /path (no #fret-7)
   expect(new URL(page.url()).hash).toBe('');

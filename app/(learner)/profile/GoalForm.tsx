@@ -75,8 +75,10 @@ export function GoalForm({ initialGoal }: { initialGoal: number }) {
         />
         <span className="in-right">
           <span className="unit">นาที</span>
-          <button className="btn btn-dark" disabled={!canSave} aria-label="บันทึกเป้าหมาย">
+          {/* visible text stays "บันทึก"; the hidden word makes the spoken name "บันทึกเป้าหมาย" and still starts with what is shown */}
+          <button className="btn btn-dark" disabled={!canSave}>
             {pending ? 'กำลังบันทึก…' : 'บันทึก'}
+            <span className="sr-only">เป้าหมาย</span>
           </button>
         </span>
       </form>

@@ -68,5 +68,5 @@ test('TC-DSH-05 practice log → dashboard numbers change @smoke @regression', a
 
   await dash.goto();
   await expect(dash.stat('week-minutes')).toContainText('25 นาที');
-  await expect(memberPage.getByRole('img', { name: /นาทีฝึก 7 วันล่าสุด.*25/ })).toBeVisible();
+  await expect(memberPage.getByRole('table', { name: 'ประวัติการฝึกซ้อมล่าสุด' })).toContainText('25 นาที');
 });

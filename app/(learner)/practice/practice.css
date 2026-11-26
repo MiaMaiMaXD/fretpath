@@ -1,6 +1,5 @@
-/* Practice room (design B): dark stage with timer + metronome, a log sheet, recent sessions;
-   plus the full history page. Scoped under .fp-prac. Light panels set their own colours so they
-   read correctly when the browser is in dark mode. */
+/* Practice room (design B): dark stage with timer + metronome, a log sheet, recent sessions.
+   Scoped under .fp-prac. Light panels set their own colours so they read correctly when the browser is in dark mode. */
 
 .fp-prac {
   --tint: #f3f5f8;
@@ -38,7 +37,8 @@
 .fp-prac .stage {
   position: relative; overflow: hidden; isolation: isolate;
   display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: 40px;
-  background: var(--stage); color: #fff; border-radius: 20px; padding: 36px 40px;
+  background: var(--stage); color: #fff; border-radius: 20px; padding: 56px 40px 40px;
+  border: 1px solid #334155; /* the page is the same slate-900, so the border marks the stage */
 }
 .fp-prac .kicker { display: flex; align-items: center; gap: 8px; margin: 0; color: #94a3b8; font-size: .95rem; }
 .fp-prac .rec { width: 8px; height: 8px; border-radius: 50%; background: #475569; }
@@ -100,6 +100,23 @@
 .fp-prac .tempos button[aria-pressed='true'] { border-color: var(--amber-hi); color: var(--amber-hi); }
 .fp-prac .no-audio { margin: 10px 0 0; color: #fca5a5; font-size: .86rem; }
 
+/* full-screen button + mode; .is-full alone covers the viewport (iPhone Safari has no element full screen) */
+.fp-prac .stage-full { position: absolute; top: 10px; right: 10px; width: 40px; height: 40px; display: grid; place-items: center; border: 0; border-radius: 10px; background: transparent; color: #cbd5e1; }
+.fp-prac .stage-full:hover { background: #1e293b; color: #fff; }
+.fp-prac .stage-full:focus-visible { outline: 3px solid var(--amber-hi); outline-offset: -2px; }
+.fp-prac .stage.is-full {
+  position: fixed; inset: 0; z-index: 90; width: 100%; height: 100%; border-radius: 0; overflow: auto;
+  align-items: center; align-content: safe center; gap: clamp(24px, 5vw, 96px);
+  padding: max(60px, env(safe-area-inset-top)) max(24px, 6vw) max(32px, env(safe-area-inset-bottom));
+}
+.fp-prac .stage.is-full::backdrop { background: var(--stage); }
+.fp-prac .stage.is-full .stage-full { top: calc(10px + env(safe-area-inset-top)); right: calc(10px + env(safe-area-inset-right)); }
+.fp-prac .stage.is-full .clock { font-size: clamp(4.5rem, min(15vw, 30vh), 14rem); }
+@media (max-width: 960px) {
+  .fp-prac .stage.is-full { grid-template-columns: minmax(0, 1fr); align-items: start; }
+  .fp-prac .stage.is-full > section { width: 100%; max-width: 560px; justify-self: center; }
+}
+
 /* ---------------------------------------------------------------- sheet (log form) */
 .fp-prac .sheet { background: var(--surface); color: var(--ink); border: 2px solid var(--amber); border-radius: 16px; padding: 22px 24px 24px; scroll-margin-top: 84px; }
 .fp-prac .sheet h2 { margin: 0; font-size: 1.15rem; font-weight: 700; }
@@ -124,100 +141,9 @@
 .fp-prac .feel { display: inline-flex; align-items: center; gap: 6px; color: var(--tone); font-weight: 600; }
 .fp-prac .feel::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
 
-/* ---------------------------------------------------------------- history page */
-.fp-prac .history-head { margin-bottom: 18px; }
-.fp-prac .history-head h1 { margin: 4px 0 0; font-size: clamp(1.6rem, 3vw, 2rem); font-weight: 700; letter-spacing: -.015em; line-height: 1.25; }
-.fp-prac .back { color: var(--amber-ink); font-weight: 600; text-decoration: none; font-size: .93rem; }
-.fp-prac .back:hover { text-decoration: underline; }
-.fp-prac .panel { background: var(--surface); color: var(--ink); border: 1px solid var(--line); border-radius: 14px; padding: 22px 24px 24px; }
-.fp-prac .panel h2 { margin: 0; font-size: 1.15rem; font-weight: 700; }
-@media (prefers-color-scheme: dark) {
-  .fp-prac .recent { background: var(--surface); border-radius: 14px; padding: 18px 20px; }
-  .fp-prac .back { color: var(--amber-hi); }
-}
+.fp-prac .recent { background: var(--surface); border-radius: 14px; padding: 18px 20px; }
 
-/* ---------------------------------------------------------------- form fields (sheet and inline edit) */
-.fp-prac .fields { display: flex; flex-direction: column; gap: 18px; }
-.fp-prac .fields label, .fp-prac .choices legend { font-size: .9rem; font-weight: 600; color: var(--ink); }
-.fp-prac .fields input:not([type='radio']), .fp-prac .fields select, .fp-prac .fields textarea {
-  width: 100%; font: inherit; font-size: .95rem; color: var(--ink); background: #fff;
-  border: 1px solid var(--line-2); border-radius: 10px; padding: 9px 12px; min-height: 44px;
-}
-.fp-prac .fields textarea { min-height: 84px; resize: vertical; }
-.fp-prac .fields ::placeholder { color: #8391a5; }
-.fp-prac .fields input:focus, .fp-prac .fields select:focus, .fp-prac .fields textarea:focus { border-color: var(--amber); outline: 3px solid rgba(227, 139, 18, .22); outline-offset: 0; }
-.fp-prac .fields [aria-invalid='true'] { border-color: #dc2626; }
-.fp-prac .fields p { margin: 0; font-size: .8rem; }
-.fp-prac .fields .text-neutral-600 { color: var(--muted); }
-.fp-prac .fields .text-red-600, .fp-prac .field-error { color: #b91c1c; }
-.fp-prac .fields input.flash { animation: fp-flash 1.4s ease-out; }
-@keyframes fp-flash { 0%, 35% { background: #fef3c7; border-color: var(--amber); } }
-
-
-.fp-prac .choices { border: 0; margin: 0; padding: 0; min-width: 0; }
-.fp-prac .choices legend { padding: 0; margin-bottom: 6px; }
-.fp-prac .choice-row { display: flex; flex-wrap: wrap; gap: 6px; }
-.fp-prac .choice { position: relative; font-weight: 500 !important; }
-.fp-prac .choice input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
-.fp-prac .choice span { display: inline-block; padding: 6px 14px; border-radius: 999px; border: 1px solid var(--line-2); background: #fff; font-size: .9rem; color: var(--ink); cursor: pointer; transition: background-color .12s, border-color .12s, color .12s; }
-.fp-prac .choice:hover span { border-color: var(--ink); }
-.fp-prac .choice input:focus-visible + span { outline: 3px solid var(--amber-hi); outline-offset: 2px; }
-.fp-prac .choice input:checked + span { background: var(--ink); border-color: var(--ink); color: #fff; }
-/* feelings: each answer keeps its own colour once picked */
-.fp-prac .tone-great { --tone: #b45309; --tone-bg: #fef3c7; }
-.fp-prac .tone-progress { --tone: #15803d; --tone-bg: #dcfce7; }
-.fp-prac .tone-sore { --tone: #1d4ed8; --tone-bg: #dbeafe; }
-.fp-prac .tone-tough { --tone: #6d28d9; --tone-bg: #ede9fe; }
-.fp-prac .choice[class*='tone-'] input:checked + span { background: var(--tone-bg); border-color: var(--tone); color: var(--tone); font-weight: 600; }
-.fp-prac .choices[aria-invalid='true'] .choice span { border-color: #f1a5a5; }
-.fp-prac .choices .field-error { margin-top: 6px; }
-
-.fp-prac .pair { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; }
 .fp-prac .save-btn { margin-top: 20px; width: 100%; padding: 12px 16px; font-size: 1rem; font-weight: 700; }
-
-/* ---------------------------------------------------------------- journal */
-.fp-prac .journal-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px 20px; flex-wrap: wrap; margin-bottom: 6px; }
-.fp-prac .totals { margin: 2px 0 0; font-size: .9rem; color: var(--muted); }
-.fp-prac .search { position: relative; display: block; }
-.fp-prac .search svg { position: absolute; left: 11px; top: 50%; width: 16px; height: 16px; transform: translateY(-50%); color: #8391a5; pointer-events: none; }
-.fp-prac .search input { width: 240px; max-width: 100%; font: inherit; font-size: .92rem; color: var(--ink); background: var(--tint); border: 1px solid transparent; border-radius: 10px; padding: 8px 12px 8px 34px; }
-.fp-prac .search input:focus { background: #fff; border-color: var(--amber); outline: 3px solid rgba(227, 139, 18, .22); outline-offset: 0; }
-.fp-prac .search-status { margin: 10px 0 0; font-size: .88rem; color: var(--muted); }
-
-.fp-prac .day { margin-top: 18px; }
-.fp-prac .day-head { display: flex; align-items: center; gap: 10px; margin: 0 0 2px; font-size: .9rem; font-weight: 700; color: var(--ink); }
-.fp-prac .day-head::after { content: ''; flex: 1; height: 1px; background: var(--line); order: 1; }
-.fp-prac .day-sum { order: 2; font-weight: 500; color: var(--muted); font-size: .85rem; }
-.fp-prac .entries { list-style: none; margin: 0; padding: 0; }
-.fp-prac .entry { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 20px; padding: 12px 0; }
-.fp-prac .entry + .entry { border-top: 1px dashed var(--line); }
-.fp-prac .entry.editing { display: block; background: var(--tint); border-radius: 12px; padding: 16px; margin: 8px 0; border-top: 0; }
-.fp-prac .entry h4 { margin: 0; font-size: 1.02rem; font-weight: 600; line-height: 1.45; overflow-wrap: break-word; }
-.fp-prac .entry-meta { display: flex; flex-wrap: wrap; gap: 2px 14px; margin: 2px 0 0; font-size: .86rem; color: var(--muted); }
-.fp-prac .feel { display: inline-flex; align-items: center; gap: 6px; color: var(--tone); font-weight: 600; }
-.fp-prac .feel::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
-.fp-prac .entry-note { margin: 6px 0 0; padding-left: 12px; border-left: 2px solid #f1c88a; font-size: .92rem; color: #3b4a5f; white-space: pre-wrap; overflow-wrap: break-word; }
-.fp-prac .entry-mins { margin: 0; text-align: right; font-size: .85rem; color: var(--muted); white-space: nowrap; }
-.fp-prac .entry-mins b { display: block; font-size: 1.5rem; font-weight: 600; line-height: 1.15; color: var(--ink); font-variant-numeric: tabular-nums; letter-spacing: -.01em; }
-.fp-prac .entry-actions { display: flex; gap: 14px; margin-top: 6px; }
-.fp-prac .link-btn { background: none; border: 0; padding: 2px 0; font-size: .85rem; font-weight: 600; color: var(--muted); text-decoration: underline; text-decoration-color: transparent; text-underline-offset: 3px; }
-.fp-prac .link-btn:hover { color: var(--ink); text-decoration-color: currentColor; }
-.fp-prac .link-btn.danger:hover { color: #b91c1c; }
-.fp-prac .edit-form .fields { margin-bottom: 14px; }
-.fp-prac .edit-form > p[role] { margin: 0 0 10px; }
-
-.fp-prac .empty { margin-top: 18px; border-radius: 12px; background: var(--tint); padding: 28px 24px; color: var(--muted); }
-.fp-prac .empty p { margin: 0; max-width: 46ch; }
-.fp-prac .empty-title { font-weight: 700; color: var(--ink); margin-bottom: 4px !important; font-size: 1.02rem; }
-.fp-prac .more { margin: 18px 0 0; font-size: .85rem; color: var(--muted); }
-
-/* ---------------------------------------------------------------- delete confirmation */
-.fp-prac .confirm { margin: auto; width: min(400px, calc(100% - 32px)); border: 0; border-radius: 14px; padding: 22px 24px; background: #fff; color: var(--ink); box-shadow: 0 24px 60px rgba(15, 23, 42, .28); }
-.fp-prac .confirm::backdrop { background: rgba(15, 23, 42, .5); }
-.fp-prac .confirm h2 { margin: 0 0 6px; font-size: 1.15rem; }
-.fp-prac .confirm p { margin: 0 0 18px; color: var(--muted); font-size: .93rem; overflow-wrap: break-word; }
-.fp-prac .confirm .err { color: #b91c1c; }
-
 
 /* ---------------------------------------------------------------- responsive */
 @media (max-width: 960px) {
@@ -231,13 +157,10 @@
   .fp-prac .btn-big { padding: 11px 18px; font-size: .96rem; }
   .fp-prac .stage-metro { padding: 16px; }
   .fp-prac .ring { width: 84px; height: 84px; }
-  .fp-prac .sheet, .fp-prac .panel { padding: 18px 16px 20px; }
-  .fp-prac .pair { grid-template-columns: minmax(0, 1fr); }
+  .fp-prac .sheet { padding: 18px 16px 20px; }
   .fp-prac .save-btn { width: 100%; }
-  .fp-prac .search, .fp-prac .search input { width: 100%; }
-  .fp-prac .journal-head > div { width: 100%; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .fp-prac .is-running .rec, .fp-prac .fields input.flash { animation: none; }
-  .fp-prac .choice span, .fp-prac .beat-bars span, .fp-prac .ring { transition: none; }
+  .fp-prac .is-running .rec { animation: none; }
+  .fp-prac .beat-bars span, .fp-prac .ring { transition: none; }
 }

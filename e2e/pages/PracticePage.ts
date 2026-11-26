@@ -44,12 +44,12 @@ export class PracticePage {
     return this.page.getByRole('complementary', { name: 'ซ้อมล่าสุด' }).getByRole('listitem');
   }
 
-  /** The notebook on /practice/history. */
+  /** The log card on /practice/history. */
   history(): Locator {
-    return this.page.getByRole('region', { name: 'บันทึกทั้งหมด' });
+    return this.page.getByRole('region', { name: 'รายการบันทึกการซ้อมของคุณ' });
   }
 
   historyRows(): Locator {
-    return this.history().getByRole('listitem');
+    return this.history().locator('tbody tr');
   }
 }

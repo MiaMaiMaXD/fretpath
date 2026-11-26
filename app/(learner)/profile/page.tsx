@@ -38,11 +38,14 @@ export default async function ProfilePage() {
             {p.login.password ? (
               <div className="row" data-testid="profile-password">
                 <dt>รหัสผ่าน</dt>
-                <dd>
-                  <span aria-hidden="true">••••••••••</span>
-                  <span className="sr-only">ตั้งไว้แล้ว (ซ่อน)</span>
+                {/* the change-password button lives inside <dd>: a <dl> row may only hold <dt> and <dd> */}
+                <dd className="with-action">
+                  <span>
+                    <span aria-hidden="true">••••••••••</span>
+                    <span className="sr-only">ตั้งไว้แล้ว (ซ่อน)</span>
+                  </span>
+                  <PasswordReset email={p.email} />
                 </dd>
-                <PasswordReset email={p.email} />
               </div>
             ) : null}
             {p.login.google ? (

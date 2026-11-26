@@ -5,6 +5,7 @@ import { createPracticeLog } from '@/app/(learner)/practice/actions';
 import { FormMessage } from '@/components/FormMessage';
 import { Metronome } from '@/components/Metronome';
 import { timerActions } from '@/components/practice/PracticeSession';
+import { useStageFullscreen } from '@/components/practice/useStageFullscreen';
 import { PracticeFields, type LessonOption } from '@/components/PracticeFields';
 import { PracticeTimer } from '@/components/PracticeTimer';
 import { keepValuesSubmit } from '@/components/useKeepValuesSubmit';
@@ -21,6 +22,7 @@ export function PracticeForm({ today, lessons, week }: { today: string; lessons:
     setSeen(state);
     if (state.ok) setSaves((n) => n + 1);
   }
+  const { ref: stageRef, full, enter, exit } = useStageFullscreen<HTMLDivElement>();
   const formRef = useRef<HTMLFormElement>(null);
   // A saved session clears a paused timer so the next round starts at 00:00 (a running timer is left alone).
   useEffect(() => {
@@ -45,9 +47,26 @@ export function PracticeForm({ today, lessons, week }: { today: string; lessons:
 
   return (
     <>
-      <div className="stage" role="group" aria-label="เครื่องมือระหว่างซ้อม">
-        <PracticeTimer onFinish={fillMinutes} week={week} />
+      <div ref={stageRef} className={`stage${full ? ' is-full' : ''}`} role="group" aria-label="เครื่องมือระหว่างซ้อม">
+        <PracticeTimer
+          onFinish={async (minutes) => {
+            if (full) await exit(); // the log sheet is behind the full-screen stage
+            fillMinutes(minutes);
+          }}
+          week={week}
+        />
         <Metronome />
+        <button
+          type="button"
+          className="stage-full"
+          aria-label={full ? 'ออกจากเต็มจอ' : 'ขยายเต็มจอ'}
+          title={full ? 'ออกจากเต็มจอ (Esc)' : 'ขยายเต็มจอ'}
+          onClick={full ? exit : enter}
+        >
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d={full ? 'M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5' : 'M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5'} />
+          </svg>
+        </button>
       </div>
 
       <section className="sheet" aria-labelledby="form-title">

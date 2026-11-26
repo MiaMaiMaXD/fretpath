@@ -1,0 +1,46 @@
+/* Practice log form fields, shared by the sheet on /practice and the inline edit form in practice tables. */
+
+:is(.fp-prac, .fp-log) .fields { display: flex; flex-direction: column; gap: 18px; }
+:is(.fp-prac, .fp-log) .fields label, :is(.fp-prac, .fp-log) .choices legend { font-size: .9rem; font-weight: 600; color: var(--ink); }
+:is(.fp-prac, .fp-log) .fields input:not([type='radio']), :is(.fp-prac, .fp-log) .fields select, :is(.fp-prac, .fp-log) .fields textarea {
+  width: 100%; font: inherit; font-size: .95rem; color: var(--ink); background: #fff;
+  border: 1px solid var(--line-2); border-radius: 10px; padding: 9px 12px; min-height: 44px;
+}
+:is(.fp-prac, .fp-log) .fields textarea { min-height: 84px; resize: vertical; }
+:is(.fp-prac, .fp-log) .fields ::placeholder { color: #8391a5; }
+:is(.fp-prac, .fp-log) .fields input:focus, :is(.fp-prac, .fp-log) .fields select:focus, :is(.fp-prac, .fp-log) .fields textarea:focus { border-color: var(--amber); outline: 3px solid rgba(227, 139, 18, .22); outline-offset: 0; }
+:is(.fp-prac, .fp-log) .fields [aria-invalid='true'] { border-color: #dc2626; }
+:is(.fp-prac, .fp-log) .fields p { margin: 0; font-size: .8rem; }
+:is(.fp-prac, .fp-log) .fields .text-neutral-600 { color: var(--muted); }
+:is(.fp-prac, .fp-log) .fields .text-red-600, :is(.fp-prac, .fp-log) .field-error { color: #b91c1c; }
+:is(.fp-prac, .fp-log) .fields input.flash { animation: fp-flash 1.4s ease-out; }
+@keyframes fp-flash { 0%, 35% { background: #fef3c7; border-color: var(--amber); } }
+
+
+:is(.fp-prac, .fp-log) .choices { border: 0; margin: 0; padding: 0; min-width: 0; }
+:is(.fp-prac, .fp-log) .choices legend { padding: 0; margin-bottom: 6px; }
+:is(.fp-prac, .fp-log) .choice-row { display: flex; flex-wrap: wrap; gap: 6px; }
+:is(.fp-prac, .fp-log) .choice { position: relative; font-weight: 500 !important; }
+:is(.fp-prac, .fp-log) .choice input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
+:is(.fp-prac, .fp-log) .choice span { display: inline-block; padding: 6px 14px; border-radius: 999px; border: 1px solid var(--line-2); background: #fff; font-size: .9rem; color: var(--ink); cursor: pointer; transition: background-color .12s, border-color .12s, color .12s; }
+:is(.fp-prac, .fp-log) .choice:hover span { border-color: var(--ink); }
+:is(.fp-prac, .fp-log) .choice input:focus-visible + span { outline: 3px solid var(--amber-hi); outline-offset: 2px; }
+:is(.fp-prac, .fp-log) .choice input:checked + span { background: var(--ink); border-color: var(--ink); color: #fff; }
+/* feelings: each answer keeps its own colour once picked */
+:is(.fp-prac, .fp-log) .tone-great { --tone: #b45309; --tone-bg: #fef3c7; }
+:is(.fp-prac, .fp-log) .tone-progress { --tone: #15803d; --tone-bg: #dcfce7; }
+:is(.fp-prac, .fp-log) .tone-sore { --tone: #1d4ed8; --tone-bg: #dbeafe; }
+:is(.fp-prac, .fp-log) .tone-tough { --tone: #6d28d9; --tone-bg: #ede9fe; }
+:is(.fp-prac, .fp-log) .choice[class*='tone-'] input:checked + span { background: var(--tone-bg); border-color: var(--tone); color: var(--tone); font-weight: 600; }
+:is(.fp-prac, .fp-log) .choices[aria-invalid='true'] .choice span { border-color: #f1a5a5; }
+:is(.fp-prac, .fp-log) .choices .field-error { margin-top: 6px; }
+
+:is(.fp-prac, .fp-log) .pair { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; }
+
+@media (max-width: 560px) {
+  :is(.fp-prac, .fp-log) .pair { grid-template-columns: minmax(0, 1fr); }
+}
+@media (prefers-reduced-motion: reduce) {
+  :is(.fp-prac, .fp-log) .fields input.flash { animation: none; }
+  :is(.fp-prac, .fp-log) .choice span { transition: none; }
+}
