@@ -4,7 +4,7 @@ import { useState } from 'react';
 import type { LessonOption } from '@/components/PracticeFields';
 import { PracticeTable } from '@/components/practice/PracticeTable';
 import type { PracticeLog } from '@/lib/data/practice';
-import { activityLabel, feelingLabel } from '@/lib/practice-activities';
+import { practiceTitle } from '@/lib/practice-activities';
 
 /** The card on /practice/history: lifetime total, search, and every session as an editable table. */
 export function PracticeList({
@@ -25,13 +25,8 @@ export function PracticeList({
   const [query, setQuery] = useState('');
   const [term, setTerm] = useState('');
   const q = term.toLowerCase();
-  const shown = q
-    ? logs.filter((l) =>
-        [l.topic, l.note, l.lessonTitle, activityLabel(l.activity), feelingLabel(l.feeling), l.practicedOn]
-          .filter(Boolean)
-          .some((s) => s!.toLowerCase().includes(q)),
-      )
-    : logs;
+  // Search matches the session name only ("วันนี้ฝึกอะไร", or "ฝึก<หมวด>" when it was left empty) — what the row shows as its title.
+  const shown = q ? logs.filter((l) => practiceTitle(l).toLowerCase().includes(q)) : logs;
 
   return (
     <section className="hist-card" aria-labelledby="history">

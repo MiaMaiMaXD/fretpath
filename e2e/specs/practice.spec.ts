@@ -168,6 +168,16 @@ test('TC-PRC-11 topic, category and feeling show in recent; totals and search on
   await expect(practice.historyRows()).toHaveCount(1);
   await expect(practice.historyRows().first()).toContainText('ตั้งสายกีตาร์');
   await expect(practice.history().getByRole('status')).toHaveText('พบ 1 รายการ');
+  // only the session name counts: "คอร์ด" finds the named session and the unnamed one shown as "ฝึกคอร์ด"
+  await search.fill('คอร์ด');
+  await search.press('Enter');
+  await expect(practice.historyRows()).toHaveCount(2);
+  // words that are only in a note ("Anchor") or the feeling ("เจ็บนิ้ว") are not searched
+  for (const word of ['Anchor', 'เจ็บนิ้ว']) {
+    await search.fill(word);
+    await search.press('Enter');
+    await expect(practice.historyRows()).toHaveCount(0);
+  }
   await search.fill('ไม่มีคำนี้แน่นอน');
   await search.press('Enter');
   await expect(practice.historyRows()).toHaveCount(0);
