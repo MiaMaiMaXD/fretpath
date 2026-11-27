@@ -64,14 +64,14 @@
 .fp-path a.row-inner:hover { background: var(--tint); }
 .fp-path .lesson-row .no { width: 50px; height: 50px; border-radius: 50%; display: grid; place-items: center; justify-self: center; font-weight: 700; font-size: 1.15rem; background: #e5e7eb; color: #1e293b; }
 .fp-path .lesson-row.completed .no { background: #047857; color: #fff; }
-.fp-path .lesson-row.unlocked .no, .fp-path .lesson-row.now .no { background: #b45309; color: #fff; }
+.fp-path .lesson-row.unlocked .no, .fp-path .lesson-row.now .no { background: #d97706; color: #1a1205; }
 .fp-path .row-main { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
 .fp-path .row-title { font-weight: 700; font-size: 1.05rem; line-height: 1.45; overflow-wrap: break-word; }
 .fp-path .row-summary { font-size: .9rem; color: #55657d; overflow-wrap: break-word; } /* >= 4.5:1 also on the hover tint */
 .fp-path .row-side { display: flex; flex-direction: column; align-items: center; gap: 6px; min-width: 130px; }
 .fp-path .row-state { font-size: .82rem; font-weight: 600; white-space: nowrap; border-radius: 999px; padding: 3px 14px; }
 .fp-path .row-state.completed { background: #dcfce7; color: #047857; }
-.fp-path .row-state.unlocked { background: #fef3c7; color: #92400e; } /* >= 4.5:1 */
+.fp-path .row-state.unlocked { background: #fef3c7; color: #b45309; } /* >= 4.5:1 */
 .fp-path .row-state.locked { background: #e5e7eb; color: #475569; }
 .fp-path .row-score { font-size: .8rem; font-weight: 700; color: #2563eb; white-space: nowrap; }
 .fp-path .lesson-row.soon .no { background: transparent; border: 2px dashed #94a3b8; color: var(--muted); }

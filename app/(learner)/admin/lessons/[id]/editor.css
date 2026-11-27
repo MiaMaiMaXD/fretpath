@@ -18,8 +18,8 @@
 .fp-lm .pill.green { background: #047857; } /* white text: >= 4.5:1 */
 .fp-lm .pill.green:hover:not(:disabled) { background: #065f46; }
 .fp-lm .pill.green:disabled { background: #b8c0cc; }
-.fp-lm .pill.amber { background: #b45309; }
-.fp-lm .pill.amber:hover:not(:disabled) { background: #92400e; }
+.fp-lm .pill.amber { background: #d97706; color: #1a1205; } /* original orange, dark text for contrast */
+.fp-lm .pill.amber:hover:not(:disabled) { background: #e38b12; }
 .fp-lm .pill.red { background: #dc2626; }
 .fp-lm .pill.red:hover:not(:disabled) { background: #b91c1c; }
 .fp-lm .pill.wide { width: 100%; padding: .55em 1em; font-size: .9rem; }

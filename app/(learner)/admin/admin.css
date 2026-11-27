@@ -9,8 +9,8 @@
 
 .fp-lm .btn { display: inline-flex; align-items: center; justify-content: center; gap: .4em; font: inherit; font-weight: 600; font-size: .92rem; border: 0; cursor: pointer; text-decoration: none; border-radius: 999px; padding: .5em 1.2em; white-space: nowrap; }
 .fp-lm .btn span { font-size: 1.25em; line-height: 1; font-weight: 400; }
-.fp-lm .btn-primary { background: #b45309; color: #fff; } /* white text needs >= 4.5:1 (axe) */
-.fp-lm .btn-primary:hover:not(:disabled) { background: #92400e; }
+.fp-lm .btn-primary { background: #d97706; color: #1a1205; } /* original orange; dark text keeps >= 4.5:1 (axe) */
+.fp-lm .btn-primary:hover:not(:disabled) { background: #e38b12; }
 .fp-lm .btn:disabled { opacity: .55; cursor: not-allowed; }
 .fp-lm .btn-wide { display: flex; width: 100%; margin-top: 14px; }
 .fp-lm button.btn-wide { font-size: .92rem; }
@@ -96,8 +96,8 @@
 .fp-confirm button { font: inherit; font-weight: 600; font-size: .9rem; border: 0; border-radius: 999px; padding: .55em 1em; cursor: pointer; color: #fff; }
 .fp-confirm .ok { background: #dc2626; }
 .fp-confirm .ok:hover:not(:disabled) { background: #b91c1c; }
-.fp-confirm.primary .ok { background: #b45309; }
-.fp-confirm.primary .ok:hover:not(:disabled) { background: #92400e; }
+.fp-confirm.primary .ok { background: #d97706; color: #1a1205; }
+.fp-confirm.primary .ok:hover:not(:disabled) { background: #e38b12; }
 .fp-confirm .cancel { background: #64748b; }
 .fp-confirm .cancel:hover:not(:disabled) { background: #475569; }
 .fp-confirm button:disabled { opacity: .6; cursor: not-allowed; }

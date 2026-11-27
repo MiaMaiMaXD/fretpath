@@ -7,8 +7,8 @@
 .lv-card { background: #fff; color: var(--lv-ink); border-radius: 16px; box-shadow: 0 10px 30px rgba(2, 6, 23, .25); }
 
 .lv-pill { display: inline-flex; align-items: center; justify-content: center; gap: .4em; font: inherit; font-size: .9rem; font-weight: 600; border: 0; border-radius: 999px; padding: .5em 1.4em; color: #fff; cursor: pointer; text-decoration: none; white-space: nowrap; }
-.lv-pill.amber { background: #b45309; } /* white text: >= 4.5:1 */
-.lv-pill.amber:hover { background: #92400e; }
+.lv-pill.amber { background: #d97706; color: #1a1205; } /* original orange, dark text for contrast */
+.lv-pill.amber:hover { background: #e38b12; }
 .lv-pill.slate { background: #64748b; }
 .lv-pill.slate:hover:not(:disabled) { background: #475569; }
 .lv-pill.slate:disabled { background: #cbd5e1; opacity: 1; }
@@ -142,7 +142,7 @@
 .lv-quota-row { flex-basis: 100%; text-align: center; }
 .lv-pill.amber:disabled { background: #b8c0cc; opacity: 1; }
 
-.lv-chip.score.warn { background: #b45309; color: #fff; }
+.lv-chip.score.warn { background: #d97706; color: #1a1205; }
 .lv-chip.score.good { background: #047857; color: #fff; }
 
 /* result: only the learner's own answer, marked right/wrong (no key, no explanation) */
