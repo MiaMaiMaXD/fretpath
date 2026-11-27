@@ -23,7 +23,27 @@ export type Database = {
           }
         },"public": {
           Tables: {
-            "courses": {
+            "course_sections": {
+                  Row: {
+                    "course_id": string,"created_at": string,"id": string,"sort_order": number,"title": string,"updated_at": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "course_id": string,"created_at"?: string,"id"?: string,"sort_order": number,"title"?: string,"updated_at"?: string
+                  }
+                  Update: {
+                    "course_id"?: string,"created_at"?: string,"id"?: string,"sort_order"?: number,"title"?: string,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "course_sections_course_id_fkey"
+      columns: ["course_id"]
+isOneToOne: false
+      referencedRelation: "courses"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"courses": {
                   Row: {
                     "cover_url": string | null,"created_at": string,"description": string | null,"id": string,"is_free": boolean,"price_thb": number | null,"slug": string,"sort_order": number,"status": Database["public"]['Enums']["content_status"],"title": string,"updated_at": string
                   }
@@ -83,6 +103,52 @@ isOneToOne: true
       referencedColumns: ["id"]
     }
                   ]
+                },"lesson_drafts": {
+                  Row: {
+                    "created_at": string,"data": NonNullable<Json>,"lesson_id": string,"updated_at": string,"updated_by": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"data": NonNullable<Json>,"lesson_id": string,"updated_at"?: string,"updated_by"?: string | null
+                  }
+                  Update: {
+                    "created_at"?: string,"data"?: NonNullable<Json>,"lesson_id"?: string,"updated_at"?: string,"updated_by"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "lesson_drafts_lesson_id_fkey"
+      columns: ["lesson_id"]
+isOneToOne: true
+      referencedRelation: "lessons"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "lesson_drafts_updated_by_fkey"
+      columns: ["updated_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"lesson_pages": {
+                  Row: {
+                    "body_html": string | null,"body_md": string | null,"created_at": string,"id": string,"kind": string,"lesson_id": string,"sort_order": number,"title": string,"updated_at": string,"video_url": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "body_html"?: string | null,"body_md"?: string | null,"created_at"?: string,"id"?: string,"kind": string,"lesson_id": string,"sort_order": number,"title"?: string,"updated_at"?: string,"video_url"?: string | null
+                  }
+                  Update: {
+                    "body_html"?: string | null,"body_md"?: string | null,"created_at"?: string,"id"?: string,"kind"?: string,"lesson_id"?: string,"sort_order"?: number,"title"?: string,"updated_at"?: string,"video_url"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "lesson_pages_lesson_id_fkey"
+      columns: ["lesson_id"]
+isOneToOne: false
+      referencedRelation: "lessons"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"lesson_progress": {
                   Row: {
                     "best_score": number | null,"completed_at": string | null,"created_at": string,"lesson_id": string,"status": Database["public"]['Enums']["progress_status"],"updated_at": string,"user_id": string
@@ -111,14 +177,14 @@ isOneToOne: false
                   ]
                 },"lessons": {
                   Row: {
-                    "course_id": string,"created_at": string,"id": string,"pass_score": number,"slug": string,"sort_order": number,"status": Database["public"]['Enums']["content_status"],"summary": string | null,"title": string,"updated_at": string
+                    "course_id": string,"created_at": string,"example_chords": (string)[],"id": string,"pass_score": number,"quiz_max_attempts": number | null,"section_id": string | null,"slug": string,"sort_order": number,"status": Database["public"]['Enums']["content_status"],"summary": string | null,"title": string,"updated_at": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "course_id": string,"created_at"?: string,"id"?: string,"pass_score"?: number,"slug": string,"sort_order": number,"status"?: Database["public"]['Enums']["content_status"],"summary"?: string | null,"title": string,"updated_at"?: string
+                    "course_id": string,"created_at"?: string,"example_chords"?: (string)[],"id"?: string,"pass_score"?: number,"quiz_max_attempts"?: number | null,"section_id"?: string | null,"slug": string,"sort_order": number,"status"?: Database["public"]['Enums']["content_status"],"summary"?: string | null,"title": string,"updated_at"?: string
                   }
                   Update: {
-                    "course_id"?: string,"created_at"?: string,"id"?: string,"pass_score"?: number,"slug"?: string,"sort_order"?: number,"status"?: Database["public"]['Enums']["content_status"],"summary"?: string | null,"title"?: string,"updated_at"?: string
+                    "course_id"?: string,"created_at"?: string,"example_chords"?: (string)[],"id"?: string,"pass_score"?: number,"quiz_max_attempts"?: number | null,"section_id"?: string | null,"slug"?: string,"sort_order"?: number,"status"?: Database["public"]['Enums']["content_status"],"summary"?: string | null,"title"?: string,"updated_at"?: string
                   }
                   Relationships: [
                     {
@@ -126,6 +192,12 @@ isOneToOne: false
       columns: ["course_id"]
 isOneToOne: false
       referencedRelation: "courses"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "lessons_section_id_fkey"
+      columns: ["section_id"]
+isOneToOne: false
+      referencedRelation: "course_sections"
       referencedColumns: ["id"]
     }
                   ]
@@ -275,14 +347,14 @@ isOneToOne: false
                   ]
                 },"quiz_questions": {
                   Row: {
-                    "created_at": string,"id": string,"image_url": string | null,"lesson_id": string,"prompt": string,"sort_order": number,"updated_at": string
+                    "created_at": string,"id": string,"image_url": string | null,"kind": string,"lesson_id": string,"practical_chords": (string)[],"prompt": string,"sort_order": number,"updated_at": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "created_at"?: string,"id"?: string,"image_url"?: string | null,"lesson_id": string,"prompt": string,"sort_order"?: number,"updated_at"?: string
+                    "created_at"?: string,"id"?: string,"image_url"?: string | null,"kind"?: string,"lesson_id": string,"practical_chords"?: (string)[],"prompt": string,"sort_order"?: number,"updated_at"?: string
                   }
                   Update: {
-                    "created_at"?: string,"id"?: string,"image_url"?: string | null,"lesson_id"?: string,"prompt"?: string,"sort_order"?: number,"updated_at"?: string
+                    "created_at"?: string,"id"?: string,"image_url"?: string | null,"kind"?: string,"lesson_id"?: string,"practical_chords"?: (string)[],"prompt"?: string,"sort_order"?: number,"updated_at"?: string
                   }
                   Relationships: [
                     {
@@ -299,11 +371,20 @@ isOneToOne: false
             [_ in never]: never
           }
           Functions: {
-            "admin_create_lesson":
+            "admin_add_lesson":
+{ Args: { "p_section": string }; Returns: string
+                           },
+"admin_add_section":
+{ Args: { "p_course": string,"p_title": string }; Returns: string
+                           },
+"admin_create_lesson":
 { Args: { "p_content_md": string,"p_course": string,"p_pass_score": number,"p_slug": string,"p_summary": string,"p_title": string,"p_video_url": string }; Returns: string
                            },
 "admin_delete_question":
 { Args: { "p_question": string }; Returns: undefined
+                           },
+"admin_delete_section":
+{ Args: { "p_section": string }; Returns: undefined
                            },
 "admin_last_practice":
 { Args: Record<PropertyKey, never>; Returns: {
@@ -313,8 +394,20 @@ isOneToOne: false
 "admin_move_question":
 { Args: { "p_direction": string,"p_question": string }; Returns: undefined
                            },
+"admin_rename_section":
+{ Args: { "p_section": string,"p_title": string }; Returns: undefined
+                           },
+"admin_save_lesson_editor":
+{ Args: { "p_chords": (string)[],"p_lesson": string,"p_max_attempts": number,"p_pages": Json,"p_pass_score": number,"p_questions": Json,"p_summary": string,"p_title": string }; Returns: Json
+                           },
+"admin_save_lesson_pages":
+{ Args: { "p_chords": (string)[],"p_lesson": string,"p_pages": Json,"p_summary": string,"p_title": string }; Returns: (string)[]
+                           },
 "admin_save_question":
 { Args: { "p_choice_ids": (string)[],"p_choices": (string)[],"p_correct": number,"p_explanation": string,"p_lesson": string,"p_prompt": string,"p_question": string }; Returns: string
+                           },
+"admin_save_quiz":
+{ Args: { "p_lesson": string,"p_max_attempts": number,"p_pass_score": number,"p_questions": Json }; Returns: (string)[]
                            },
 "admin_update_lesson":
 { Args: { "p_content_md": string,"p_id": string,"p_pass_score": number,"p_slug": string,"p_summary": string,"p_title": string,"p_video_url": string }; Returns: undefined
@@ -337,6 +430,28 @@ isOneToOne: false
 "lesson_publish_problems_internal":
 { Args: { "p_lesson": string }; Returns: (string)[]
                            },
+"pages_from_legacy_content":
+{ Args: { "p_lesson": string }; Returns: undefined
+                           },
+"quiz_attempts_left":
+{ Args: { "p_lesson": string }; Returns: number
+                           },
+"quiz_attempts_left_for":
+{ Args: { "p_lesson": string,"p_user": string }; Returns: number
+                           },
+"quiz_quota":
+{ Args: { "p_lesson": string }; Returns: {
+              "max_attempts": number,"retry_at": string,"used": number
+            }[]
+                           },
+"quiz_quota_for":
+{ Args: { "p_lesson": string,"p_user": string }; Returns: {
+              "max_attempts": number,"retry_at": string,"used": number
+            }[]
+                           },
+"renumber_course_lessons":
+{ Args: { "p_course": string }; Returns: undefined
+                           },
 "reorder_lessons":
 { Args: { "p_course": string,"p_lesson_ids": (string)[] }; Returns: undefined
                            },
@@ -345,6 +460,9 @@ isOneToOne: false
                            },
 "set_user_role":
 { Args: { "p_role": Database["public"]['Enums']["user_role"],"p_user": string }; Returns: undefined
+                           },
+"split_course_into_sections":
+{ Args: { "p_course": string,"p_names": (string)[],"p_sizes": (number)[] }; Returns: undefined
                            },
 "submit_quiz":
 { Args: { "p_answers": Json,"p_lesson_id": string }; Returns: Json

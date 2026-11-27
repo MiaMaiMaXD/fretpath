@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { FretNeck } from '@/components/path/FretNeck';
 import { LessonRow, SoonRow } from '@/components/path/LessonRow';
 import { getPath } from '@/lib/data/path';
-import { layoutPath, unitsFor } from '@/lib/path-frets';
+import { FRET_COUNT, layoutPath, sectionUnits } from '@/lib/path-frets';
 import { lockedNotice } from '@/lib/path-state';
 import { lessonsProgress, nextLesson } from '@/lib/stats';
 import './path.css';
@@ -26,6 +26,9 @@ export default async function PathPage({ searchParams }: { searchParams: Promise
   const notice = slug ? lockedNotice(lessons, slug) : null;
   const next = nextLesson(lessons);
   const slots = layoutPath(path.course.slug, lessons);
+  const units = sectionUnits(slots, path.sections);
+  // frets with no lesson yet (the neck always shows 22 frets)
+  const hasEmptyFrets = slots.length < FRET_COUNT || slots.some((s) => !s.lesson);
   const nextFret = next ? slots.findIndex((s) => s.lesson?.id === next.id) : -1;
   const progress = lessonsProgress(lessons);
   const allDone = progress.total > 0 && progress.completed === progress.total;
@@ -47,11 +50,11 @@ export default async function PathPage({ searchParams }: { searchParams: Promise
         </p>
       ) : null}
 
-      <FretNeck slots={slots} currentId={next?.id ?? null} />
+      <FretNeck slots={slots} units={units} currentId={next?.id ?? null} />
 
       <div className="path-grid">
         <div className="lessons">
-          {unitsFor(slots.length).map((u) => {
+          {units.map((u) => {
             const inUnit = slots.slice(u.from, u.to + 1);
             const real = inUnit.flatMap((s) => (s.lesson ? [s.lesson] : []));
             const done = real.filter((l) => l.state === 'completed').length;
@@ -59,12 +62,12 @@ export default async function PathPage({ searchParams }: { searchParams: Promise
             return (
               <section key={u.from} className="unit" aria-labelledby={`unit-${u.from}`}>
                 <div className="unit-head">
-                  <h2 id={`unit-${u.from}`}>{u.name}</h2>
-                  <small>
+                  <h2 id={`unit-${u.from}`}>{u.name.replace(' · ', ' : ')}</h2>
+                  <span className="sr-only">
                     บทที่ {u.from + 1}–{u.to + 1}
-                    {real.length > 0 ? ` · จบ ${done}/${real.length}` : ''}
-                    {soon > 0 ? ` · อีก ${soon} บทเร็ว ๆ นี้` : ''}
-                  </small>
+                    {real.length > 0 ? ` เรียนจบ ${done} จาก ${real.length} บท` : ''}
+                    {soon > 0 ? ` อีก ${soon} บทเร็ว ๆ นี้` : ''}
+                  </span>
                 </div>
                 <ol className="lesson-list">
                   {inUnit.map((s) =>
@@ -109,20 +112,34 @@ export default async function PathPage({ searchParams }: { searchParams: Promise
             <ul className="legend">
               <li>
                 <i className="dot done" />
-                เรียนจบแล้ว
+                <span>
+                  <b>เรียนจบแล้ว</b>
+                  <small>สอบผ่านแล้ว กลับไปทบทวนได้ทุกเมื่อ</small>
+                </span>
               </li>
               <li>
                 <i className="dot now" />
-                บทที่เรียนต่อได้
+                <span>
+                  <b>พร้อมเข้าเรียน</b>
+                  <small>บทที่เรียนต่อได้ตอนนี้</small>
+                </span>
               </li>
               <li>
                 <i className="dot lock" />
-                ยังล็อก ต้องผ่านบทก่อนหน้า
+                <span>
+                  <b>ไม่พร้อมเข้าเรียน</b>
+                  <small>ต้องสอบผ่านบทก่อนหน้าก่อน</small>
+                </span>
               </li>
-              <li>
-                <i className="dot empty" />
-                เร็ว ๆ นี้ บทใหม่กำลังจะมา
-              </li>
+              {hasEmptyFrets ? (
+                <li>
+                  <i className="dot empty" />
+                  <span>
+                    <b>เร็ว ๆ นี้</b>
+                    <small>บทใหม่กำลังจะมา</small>
+                  </span>
+                </li>
+              ) : null}
             </ul>
           </div>
         </aside>

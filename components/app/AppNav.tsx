@@ -13,13 +13,13 @@ function isCurrent(pathname: string, href: string) {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
-/** Desktop tabs in the header (hidden below 900px, where BottomNav takes over). */
-export function HeaderTabs({ isAdmin }: { isAdmin: boolean }) {
+/** Desktop tabs in the header (hidden below 900px, where BottomNav takes over). Admin tools live in the
+    account menu (UserMenu), not here. */
+export function HeaderTabs() {
   const pathname = usePathname();
-  const tabs = isAdmin ? [...TABS, { href: '/admin', label: 'หลังบ้าน' }] : TABS;
   return (
     <nav className="tabs" aria-label="เมนูหลัก">
-      {tabs.map((t) => (
+      {TABS.map((t) => (
         <Link key={t.href} href={t.href} aria-current={isCurrent(pathname, t.href) ? 'page' : undefined}>
           {t.label}
         </Link>
@@ -49,12 +49,6 @@ const ICONS: Record<string, React.ReactNode> = {
       <path d="M4 21a8 8 0 0 1 16 0" />
     </>
   ),
-  '/admin': (
-    <>
-      <circle cx="12" cy="12" r="3" />
-      <path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1 7 17M17 7l2.1-2.1" />
-    </>
-  ),
 };
 const BOTTOM = [
   { href: '/dashboard', label: 'ภาพรวม' },
@@ -64,12 +58,11 @@ const BOTTOM = [
 ];
 
 /** Fixed bottom bar on phones and small tablets. */
-export function BottomNav({ isAdmin }: { isAdmin: boolean }) {
+export function BottomNav() {
   const pathname = usePathname();
-  const items = isAdmin ? [...BOTTOM, { href: '/admin', label: 'หลังบ้าน' }] : BOTTOM;
   return (
     <nav className="bottom-nav" aria-label="เมนูหลัก (มือถือ)">
-      {items.map((t) => (
+      {BOTTOM.map((t) => (
         <Link key={t.href} href={t.href} aria-current={isCurrent(pathname, t.href) ? 'page' : undefined}>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
             {ICONS[t.href]}

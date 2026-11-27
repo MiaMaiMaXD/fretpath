@@ -46,10 +46,11 @@
 .fp-app .avatar { width: 34px; height: 34px; border-radius: 50%; background: var(--amber); color: #1a1205; display: grid; place-items: center; font-weight: 700; object-fit: cover; }
 .fp-app .user .name { font-size: .95rem; max-width: 14em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .fp-app .user .caret { color: #94a3b8; font-size: .8rem; }
-.fp-app .menu { position: absolute; right: 0; top: calc(100% + 8px); background: #fff; color: var(--ink); border-radius: var(--radius-sm); box-shadow: 0 12px 32px rgba(15, 23, 42, .18); min-width: 200px; padding: 6px; margin: 0; list-style: none; }
-.fp-app .menu a, .fp-app .menu button { display: block; width: 100%; text-align: left; padding: 9px 12px; border-radius: 8px; text-decoration: none; font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
-.fp-app .menu a:hover, .fp-app .menu button:hover { background: var(--paper); }
-.fp-app .menu .sep { border-top: 1px solid var(--line); margin: 6px 0; }
+/* account dropdown (2026-11 design): navy panel, icon + label rows */
+.fp-app .menu { position: absolute; right: 0; top: calc(100% + 8px); background: #2b3a5c; color: #fff; border-radius: 12px; box-shadow: 0 14px 36px rgba(2, 6, 23, .45); min-width: 220px; padding: 8px; margin: 0; list-style: none; }
+.fp-app .menu a, .fp-app .menu button { display: flex; align-items: center; gap: 14px; width: 100%; text-align: left; padding: 11px 14px; border-radius: 8px; text-decoration: none; font: inherit; font-size: .95rem; font-weight: 600; color: inherit; background: none; border: 0; cursor: pointer; }
+.fp-app .menu svg { width: 22px; height: 22px; flex-shrink: 0; }
+.fp-app .menu a:hover, .fp-app .menu button:hover { background: rgba(255, 255, 255, .1); }
 
 /* Shared lesson/quiz components were styled for a light page; on the dark learner page their primary
    button is amber and chord-diagram finger numbers sit dark on the light dots. */

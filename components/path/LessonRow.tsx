@@ -23,12 +23,14 @@ export function SoonRow({ plan, fret }: { plan: PlannedLesson; fret: number }) {
   );
 }
 
-export const STATE_LABEL: Record<LessonState, string> = { locked: 'ล็อก', unlocked: 'เรียนได้', completed: 'จบแล้ว' };
+export const STATE_LABEL: Record<LessonState, string> = {
+  locked: 'ไม่พร้อมเข้าเรียน',
+  unlocked: 'พร้อมเข้าเรียน',
+  completed: 'เรียนจบแล้ว',
+};
 
 /** One lesson in the path list. Locked lessons render no link, so their content can't be opened from here. */
 export function LessonRow({ lesson, fret, current }: { lesson: PathLesson; fret: number; current: boolean }) {
-  const score =
-    lesson.bestScore === null ? `เกณฑ์ผ่าน ${lesson.passScore}%` : `คะแนนสูงสุด ${lesson.bestScore}% · เกณฑ์ผ่าน ${lesson.passScore}%`;
   const body = (
     <>
       <span className="no" aria-hidden="true">
@@ -40,9 +42,11 @@ export function LessonRow({ lesson, fret, current }: { lesson: PathLesson; fret:
           {lesson.title}
         </span>
         {lesson.summary ? <span className="row-summary">{lesson.summary}</span> : null}
-        <span className="row-score">{score}</span>
       </span>
-      <span className={`row-state ${lesson.state}`}>{STATE_LABEL[lesson.state]}</span>
+      <span className="row-side">
+        <span className={`row-state ${lesson.state}`}>{STATE_LABEL[lesson.state]}</span>
+        {lesson.bestScore !== null ? <span className="row-score">คะแนนสอบ: {lesson.bestScore}%</span> : null}
+      </span>
     </>
   );
   return (

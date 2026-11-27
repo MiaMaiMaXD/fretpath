@@ -1,0 +1,163 @@
+/* Paged lesson view (2026-11 "ดูตัวอย่าง" design), shared by the learner lesson page and the admin
+   preview. Cards set their own colours so the page reads the same on the dark app background. */
+
+.lv { --lv-ink: #1e293b; --lv-muted: #55657d; --lv-amber: #d97706; --lv-navy: #1e293b;
+  display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 16px; align-items: start; color: var(--lv-ink); scroll-margin-top: 90px; }
+.lv-side { display: flex; flex-direction: column; gap: 12px; position: sticky; top: 84px; }
+.lv-card { background: #fff; color: var(--lv-ink); border-radius: 16px; box-shadow: 0 10px 30px rgba(2, 6, 23, .25); }
+
+.lv-pill { display: inline-flex; align-items: center; justify-content: center; gap: .4em; font: inherit; font-size: .9rem; font-weight: 600; border: 0; border-radius: 999px; padding: .5em 1.4em; color: #fff; cursor: pointer; text-decoration: none; white-space: nowrap; }
+.lv-pill.amber { background: var(--lv-amber); }
+.lv-pill.amber:hover { background: #e38b12; }
+.lv-pill.slate { background: #64748b; }
+.lv-pill.slate:hover:not(:disabled) { background: #475569; }
+.lv-pill.slate:disabled { background: #cbd5e1; opacity: 1; }
+.lv-pill:disabled { opacity: .45; cursor: not-allowed; }
+.lv-exit { width: 100%; }
+
+/* chord lab */
+.lv-lab { background: #24324d; color: #fff; border-radius: 16px; padding: 16px; display: flex; flex-direction: column; gap: 12px; box-shadow: 0 10px 30px rgba(2, 6, 23, .25); }
+.lv-lab-head { display: flex; justify-content: space-between; gap: 10px; }
+.lv-lab h2 { margin: 0; font-size: .95rem; font-weight: 700; color: #f5a524; }
+.lv-lab-head p { margin: 2px 0 0; font-size: .78rem; color: #cbd5e1; }
+.lv-play { width: 38px; height: 38px; flex-shrink: 0; border-radius: 50%; border: 0; background: #f5a524; color: #1a1205; display: grid; place-items: center; cursor: pointer; }
+.lv-play:disabled { opacity: .5; cursor: not-allowed; }
+.lv-play svg { width: 20px; height: 20px; }
+.lv-lab-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.lv-lab-chips button { min-width: 36px; padding: 4px 10px; border-radius: 6px; border: 0; background: #34456a; color: #e2e8f0; font: inherit; font-size: .85rem; font-weight: 600; cursor: pointer; }
+.lv-lab-chips button.on { background: #f5a524; color: #1a1205; }
+.lv-lab-card { background: #2e3f62; border-radius: 12px; padding: 12px; display: flex; flex-direction: column; align-items: center; gap: 6px; color: #e2e8f0; }
+.lv-lab-name { margin: 0; font-weight: 700; font-size: .9rem; }
+.lv-lab-card svg circle[fill='currentColor'] { fill: #f5a524; }
+.lv-lab-card svg .chord-num { fill: #1a1205; }
+.lv-strings { padding: 14px 16px; font-size: .9rem; }
+.lv-strings h2 { font-size: 1rem !important; }
+.lv-strings .grid { grid-template-columns: 1fr 1fr !important; }
+.lv-strings button { border-color: #d6dbe3; }
+
+/* main card */
+.lv-main { padding: 22px 28px 24px; min-width: 0; }
+.lv-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 14px; }
+.lv-chip { font-size: .78rem; padding: 3px 10px; border-radius: 999px; background: #f1f5f9; color: var(--lv-muted); }
+.lv-chip.pass { background: #dcfce7; color: #047857; font-weight: 600; }
+.lv-badge { margin-left: auto; font-size: .78rem; font-weight: 600; padding: 3px 12px; border-radius: 999px; background: #fef3c7; color: #b45309; }
+.lv-title { margin: 0; font-size: 1.35rem; font-weight: 700; line-height: 1.4; overflow-wrap: anywhere; }
+.lv-summary { margin: 6px 0 0; color: #8a97aa; }
+.lv-sub { margin: 10px 0 0; font-size: 1.05rem; font-weight: 600; }
+.lv-main hr { border: 0; border-top: 1px solid #eadfce; margin: 16px 0; }
+.lv-kicker { margin: 0 0 2px; font-size: .8rem; font-weight: 600; color: var(--lv-amber); }
+.lv-empty { color: #8a97aa; }
+
+.lv-html { line-height: 1.75; font-size: .95rem; overflow-wrap: anywhere; }
+.lv-html > * + * { margin-top: .6em; }
+.lv-html h2 { font-size: 1.2rem; font-weight: 700; margin-top: 1.2em; }
+.lv-html h3 { font-size: 1.05rem; font-weight: 700; margin-top: 1em; }
+.lv-html ul { list-style: disc; padding-left: 1.5em; }
+.lv-html ol { list-style: decimal; padding-left: 1.5em; }
+.lv-html a { color: #2563eb; text-decoration: underline; }
+.lv-html img { max-width: 100%; height: auto; border-radius: 10px; }
+.lv-html table { border-collapse: collapse; display: block; overflow-x: auto; }
+.lv-html th, .lv-html td { border: 1px solid #d6dbe3; padding: 4px 10px; }
+
+.lv-nav { display: flex; justify-content: center; gap: 10px; margin-top: 24px; }
+
+/* quiz step */
+.lv-quiz-start { display: flex; flex-direction: column; align-items: flex-start; gap: 12px; margin-top: 12px; }
+.lv-questions { list-style: none; margin: 16px 0 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
+.lv-q { border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px 16px; background: #f8fafc; }
+.lv-q-prompt { margin: 0 0 10px; font-weight: 600; }
+.lv-choices { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.lv-choices label { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border: 1px solid #e2e8f0; border-radius: 8px; background: #fff; font-size: .9rem; cursor: pointer; }
+.lv-q.practical { background: #24324d; color: #fff; border: 0; }
+.lv-chords { margin: 0; font-size: 1.4rem; font-weight: 700; color: #f5a524; }
+.lv-note { margin: 8px 0 0; font-size: .8rem; color: #cbd5e1; }
+
+@media (max-width: 900px) {
+  .lv { grid-template-columns: minmax(0, 1fr); }
+  .lv-side { position: static; order: 2; }
+  .lv-main { order: 1; }
+}
+@media (max-width: 560px) {
+  .lv-main { padding: 18px; }
+  .lv-choices { grid-template-columns: 1fr; }
+}
+
+/* ---------------------------------------------------------------- learner quiz (form + result) */
+.lv-attempts { margin: 6px 0 0; font-size: .88rem; color: var(--lv-muted, #55657d); }
+.lv-attempts b { color: #d97706; }
+.lv-form { margin-top: 4px; }
+.lv-q.missing { border-color: #fca5a5; background: #fff5f5; }
+.lv-q-missing { margin: 8px 0 0; font-size: .85rem; font-weight: 600; color: #dc2626; }
+.lv-q-img { max-width: 100%; border-radius: 10px; margin-bottom: 10px; }
+.lv-choices label:has(input:checked), .lv-choices label.on { border-color: #d97706; background: #fff7ed; }
+.lv-choices input { accent-color: #2563eb; width: 16px; height: 16px; flex-shrink: 0; }
+.lv-choices label:focus-within { outline: 2px solid #f5a524; outline-offset: 1px; }
+.lv-alert { margin: 14px 0 0; padding: 10px 14px; border-radius: 10px; background: #fee2e2; color: #b91c1c; font-weight: 600; font-size: .9rem; }
+.lv-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 16px; }
+.lv-actions.center { justify-content: center; margin-top: 22px; }
+.lv-exhausted { margin-top: 14px; padding: 14px 16px; border-radius: 12px; background: #fff7ed; border: 1px solid #fed7aa; color: #7c2d12; font-size: .9rem; }
+.lv-exhausted p { margin: 0 0 6px; }
+.lv-actions .lv-exhausted { margin-top: 0; }
+
+.lv-result { margin-top: 8px; }
+.lv-score { display: flex; align-items: center; gap: 18px; padding: 16px 20px; border-radius: 14px; }
+.lv-score.pass { background: #dcfce7; color: #065f46; }
+.lv-score.fail { background: #fee2e2; color: #991b1b; }
+.lv-score-n { margin: 0; font-size: 2.4rem; font-weight: 700; line-height: 1; outline: none; }
+.lv-score-verdict { margin: 0; font-weight: 700; font-size: 1.1rem; }
+.lv-score-sub { margin: 2px 0 0; font-size: .88rem; }
+.lv-q.right { border-color: #bbf7d0; }
+.lv-q.wrong { border-color: #fecaca; }
+.lv-q-prompt { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+.lv-mark { flex-shrink: 0; font-size: .75rem; font-weight: 700; padding: 2px 10px; border-radius: 999px; }
+.lv-q.right .lv-mark { background: #dcfce7; color: #059669; }
+.lv-q.wrong .lv-mark { background: #fee2e2; color: #dc2626; }
+.lv-choices.result { list-style: none; margin: 0; padding: 0; }
+.lv-choices.result li { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 8px 12px; border: 1px solid #e2e8f0; border-radius: 8px; background: #fff; font-size: .9rem; }
+.lv-choices.result li.correct { border-color: #059669; background: #ecfdf5; }
+.lv-choices.result li.chosen { border-color: #dc2626; background: #fef2f2; }
+.lv-choices.result small { font-size: .75rem; font-weight: 600; white-space: nowrap; }
+.lv-choices.result li.correct small { color: #059669; }
+.lv-choices.result li.chosen small { color: #dc2626; }
+.lv-explain { margin: 10px 0 0; font-size: .85rem; color: #475569; }
+.lv-done { margin: 0; font-weight: 700; color: #059669; }
+.lv-solo { max-width: 880px; margin: 0 auto; display: flex; flex-direction: column; gap: 12px; color: #1e293b; }
+.lv-back { align-self: flex-start; color: #cbd5e1; text-decoration: none; font-size: .9rem; }
+.lv-back:hover { color: #fff; text-decoration: underline; }
+
+/* 2026-11 lesson flow refinements */
+.lv.full { grid-template-columns: minmax(0, 1fr); }
+.lv-main > hr:first-of-type, .lv-quiz-intro > hr { margin-top: 14px; }
+.lv-meta { margin-bottom: 0; }
+.lv-title.sm { font-size: 1.15rem; }
+.lv-page-title { margin: 0 0 16px; font-size: 1.1rem; font-weight: 600; color: #64748b; }
+.lv-video { background: #1e293b; border-radius: 12px; padding: 14px; }
+.lv-lab-guide { margin: 0; font-size: .75rem; color: #f5a524; text-align: center; line-height: 1.5; }
+.lv-quiz-intro .lv-kicker { margin-top: 4px; }
+.lv-quiz-intro .lv-summary { margin-top: 6px; font-size: .9rem; }
+.lv-quiz-intro .lv-attempts { margin-top: 14px; color: #d97706; font-weight: 600; }
+.lv-quiz-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+.lv-chip.score { background: #e5e7eb; color: #475569; font-weight: 600; white-space: nowrap; }
+.lv-quota-out { margin: 6px 0 0; font-size: .82rem; font-weight: 600; color: #ef4444; }
+.lv-quota-row { flex-basis: 100%; text-align: center; }
+.lv-pill.amber:disabled { background: #b8c0cc; opacity: 1; }
+
+.lv-chip.score.warn { background: #d97706; color: #fff; }
+.lv-chip.score.good { background: #10b981; color: #fff; }
+
+/* result: only the learner's own answer, marked right/wrong (no key, no explanation) */
+.lv-answer { margin: 0; padding: 9px 12px; border-radius: 8px; border: 1px solid #e2e8f0; background: #fff; font-size: .9rem; }
+.lv-answer.right { border-color: #059669; background: #ecfdf5; }
+.lv-answer.wrong { border-color: #ef4444; background: #fef2f2; }
+
+/* result choices: same grid as the quiz, the learner's own choice marked green (right) or red (wrong) */
+.lv-choices.result > div { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border: 1px solid #e2e8f0; border-radius: 8px; background: #fff; font-size: .9rem; color: #64748b; }
+.lv-choices.result > div.chosen { color: #1e293b; font-weight: 600; }
+.lv-choices.result > div.right { border-color: #059669; background: #ecfdf5; }
+.lv-choices.result > div.wrong { border-color: #ef4444; background: #fef2f2; }
+.lv-choices.result small { margin-left: auto; font-size: .75rem; font-weight: 600; white-space: nowrap; }
+.lv-choices.result > div.right small { color: #059669; }
+.lv-choices.result > div.wrong small { color: #dc2626; }
+.lv-dot { width: 16px; height: 16px; flex-shrink: 0; border-radius: 50%; border: 1.5px solid #cbd5e1; background: #fff; }
+.lv-choices.result > div.right .lv-dot { border: 5px solid #059669; }
+.lv-choices.result > div.wrong .lv-dot { border: 5px solid #ef4444; }

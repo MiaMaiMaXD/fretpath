@@ -1,17 +1,36 @@
 import { notFound, redirect } from 'next/navigation';
-import { QuizForm } from '@/components/QuizForm';
+import { QuizPanel } from '@/components/lesson/QuizPanel';
 import { getQuiz } from '@/lib/data/quiz';
+import { getPath } from '@/lib/data/path';
+import { layoutPath, lessonNumbers } from '@/lib/path-frets';
+import '@/components/lesson/lesson-viewer.css';
 
+/* Direct link to a lesson's quiz: straight to the quiz screen; กลับ on the intro returns to the lesson. */
 export default async function QuizPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const quiz = await getQuiz(slug);
+  const [quiz, path] = await Promise.all([getQuiz(slug), getPath()]);
   if (quiz.status === 'locked') redirect('/path?locked=' + encodeURIComponent(slug));
   if (quiz.status === 'not_found') notFound();
+  const no = path ? (lessonNumbers(layoutPath(path.course.slug, path.lessons))[quiz.lessonId] ?? 0) : 0;
   return (
-    <section className="flex flex-col gap-4">
-      <h1 className="text-2xl font-semibold break-words">แบบทดสอบ: {quiz.title}</h1>
-      <p>ต้องได้อย่างน้อย {quiz.passScore}% จึงจะผ่าน</p>
-      <QuizForm lessonId={quiz.lessonId} slug={slug} questions={quiz.questions} />
-    </section>
+    <div className="lv full">
+      <section className="lv-card lv-main">
+        <QuizPanel
+          start="quiz"
+          backHref={`/lessons/${slug}`}
+          quiz={{
+            lessonId: quiz.lessonId,
+            slug,
+            lessonNo: no,
+            title: `แบบทดสอบ${quiz.title}`,
+            passScore: quiz.passScore,
+            questions: quiz.questions,
+            maxAttempts: quiz.maxAttempts,
+            attemptsLeft: quiz.attemptsLeft,
+            retryAt: quiz.retryAt,
+          }}
+        />
+      </section>
+    </div>
   );
 }

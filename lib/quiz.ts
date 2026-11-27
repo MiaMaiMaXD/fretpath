@@ -5,12 +5,12 @@ export type QuizQuestion = {
   choices: { id: string; text: string }[];
 };
 
+/** Per-question result as learners see it: their own choice and whether it was right. The answer key and
+    explanation are not sent to the browser (the quiz is not revealed). */
 export type QuizQuestionResult = {
   question_id: string;
   choice_id: string;
-  correct_choice_id: string;
   is_correct: boolean;
-  explanation: string | null;
 };
 
 export type QuizResult = {
@@ -19,6 +19,8 @@ export type QuizResult = {
   passed: boolean;
   pass_score: number;
   next_lesson_slug: string | null;
+  /** attempts left today after this one; null = unlimited */
+  attempts_left?: number | null;
   results: QuizQuestionResult[];
 };
 

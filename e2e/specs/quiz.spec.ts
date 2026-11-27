@@ -43,14 +43,14 @@ test('TC-QZ-25 failing score shows review and retry, next lesson stays locked @s
   await expect(memberPage.getByTestId('quiz-score')).toHaveText('40%');
   expect(await quiz.score()).toBe(40);
   await expect(memberPage.getByText('ไม่ผ่าน', { exact: true })).toBeVisible();
-  await expect(memberPage.getByRole('link', { name: 'ทบทวนบทเรียน' })).toHaveAttribute('href', `/lessons/${L1}`);
+  await expect(memberPage.getByRole('link', { name: 'ทบทวนบทเรียน' })).toHaveAttribute('href', '/path');
   await expect(memberPage.getByRole('button', { name: 'สอบใหม่' })).toBeVisible();
   const path = new PathPage(memberPage);
   await path.goto();
   expect(await path.lessonState(SECOND_LESSON)).toBe('locked');
 });
 
-test('TC-QZ-21 passing score shows explanations and unlocks next lesson @smoke @regression', async ({
+test('TC-QZ-21 passing score marks each answer without revealing the key and unlocks next lesson @smoke @regression', async ({
   memberPage,
   adminDb,
 }) => {
@@ -63,8 +63,10 @@ test('TC-QZ-21 passing score shows explanations and unlocks next lesson @smoke @
   await expect(memberPage.getByText('ผ่าน', { exact: true })).toBeVisible();
   const items = memberPage.getByRole('list', { name: 'ผลรายข้อ' }).getByRole('listitem');
   await expect(items).toHaveCount(5);
+  // each answer is marked right or wrong; the key and explanations are not shown
   for (let i = 0; i < 5; i++) {
-    await expect(items.nth(i).getByText('คำอธิบาย')).toBeVisible();
+    await expect(items.nth(i).getByText(/^(ถูก|ผิด)$/)).toBeVisible();
+    await expect(items.nth(i).getByText('คำอธิบาย')).toHaveCount(0);
   }
   await memberPage.getByRole('link', { name: 'ไปบทถัดไป' }).click();
   await expect(memberPage).toHaveURL(new RegExp(`/lessons/${SECOND_LESSON}$`));

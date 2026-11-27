@@ -54,23 +54,36 @@ export function UserMenu({ name, avatarUrl, isAdmin }: { name: string; avatarUrl
       <ul className="menu">
         <li>
           <Link href="/profile" data-testid="menu-profile">
-            โปรไฟล์และเป้าหมาย
+            <MenuIcon d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4 21a8 8 0 0 1 16 0" />
+            โปรไฟล์
           </Link>
         </li>
+        {/* admin tools (more may join "จัดการบทเรียน" later) */}
         {isAdmin ? (
           <li>
-            <Link href="/admin">หลังบ้าน</Link>
+            <Link href="/admin/lessons" data-testid="menu-admin-lessons">
+              <MenuIcon d="M2 5h7a3 3 0 0 1 3 3v12a2 2 0 0 0-2-2H2zM22 5h-7a3 3 0 0 0-3 3v12a2 2 0 0 1 2-2h8z" />
+              จัดการบทเรียน
+            </Link>
           </li>
         ) : null}
-        <li className="sep" role="separator" />
         <li>
           <form action={signOut}>
             <button type="submit" data-testid="menu-logout">
+              <MenuIcon d="M10 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h4M21 12H9M13 8l-4 4 4 4" />
               ออกจากระบบ
             </button>
           </form>
         </li>
       </ul>
     </details>
+  );
+}
+
+function MenuIcon({ d }: { d: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d={d} />
+    </svg>
   );
 }

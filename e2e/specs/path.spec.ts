@@ -12,8 +12,8 @@ test('TC-PATH-14 new learner sees lesson 1 unlocked and others locked @smoke @re
   await expect(page.getByTestId(/^lesson-card-/)).toHaveCount(LESSON_COUNT);
   expect(await path.lessonState(SLUGS[0])).toBe('unlocked');
   for (const s of SLUGS.slice(1)) expect(await path.lessonState(s)).toBe('locked');
-  await expect(path.card(SLUGS[0]).getByText('เรียนได้')).toBeVisible();
-  await expect(path.card(SLUGS[1]).getByText('ล็อก')).toBeVisible();
+  await expect(path.card(SLUGS[0]).getByText('พร้อมเข้าเรียน', { exact: true })).toBeVisible();
+  await expect(path.card(SLUGS[1]).getByText('ไม่พร้อมเข้าเรียน')).toBeVisible();
   await expect(path.card(SLUGS[0]).getByRole('link')).toHaveAttribute('href', `/lessons/${SLUGS[0]}`);
 });
 
@@ -43,7 +43,7 @@ test('TC-PATH-19 neck shows 22 frets with planned lessons as coming soon, and a 
   await expect(page.getByRole('heading', { name: 'ช่วงที่ 4 · ทั่วคอกีตาร์' })).toBeVisible();
   // Once every planned lesson is written there are no "coming soon" slots left to inspect.
   if (LESSON_COUNT < 22) {
-    await expect(page.getByTestId('lesson-soon').first()).not.toContainText('ล็อก');
+    await expect(page.getByTestId('lesson-soon').first()).not.toContainText('ไม่พร้อมเข้าเรียน');
     await expect(page.getByTestId('lesson-soon').getByRole('link')).toHaveCount(0);
   }
   await expect(path.card(COURSE_SLUGS[LESSON_COUNT - 1])).toHaveAttribute('id', `fret-${LESSON_COUNT - 1}`);

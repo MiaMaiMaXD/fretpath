@@ -9,6 +9,8 @@ export type PathLesson = {
   passScore: number;
   state: LessonState;
   bestScore: number | null;
+  /** The lesson's section ("ช่วง"), when loaded. */
+  sectionId?: string | null;
 };
 
 type LessonRow = {
@@ -18,6 +20,7 @@ type LessonRow = {
   summary: string | null;
   sort_order: number;
   pass_score: number;
+  section_id?: string | null;
 };
 
 type ProgressRow = { lesson_id: string; status: string; best_score: number | null };
@@ -38,6 +41,7 @@ export function toPathLessons(lessons: LessonRow[], progress: ProgressRow[]): Pa
         passScore: x.pass_score,
         state,
         bestScore: p?.best_score ?? null,
+        ...(x.section_id !== undefined ? { sectionId: x.section_id } : {}),
       };
     });
 }
