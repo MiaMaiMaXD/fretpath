@@ -18,7 +18,7 @@
 .fp-lm .pill.green { background: #047857; } /* white text: >= 4.5:1 */
 .fp-lm .pill.green:hover:not(:disabled) { background: #065f46; }
 .fp-lm .pill.green:disabled { background: #b8c0cc; }
-.fp-lm .pill.amber { background: #d97706; color: #1a1205; } /* original orange, dark text for contrast */
+.fp-lm .pill.amber { background: #d97706; color: #fff; } /* design orange with white text (3.2:1, below WCAG AA by the design owner's choice; excluded in e2e/specs/a11y.spec.ts) */
 .fp-lm .pill.amber:hover:not(:disabled) { background: #e38b12; }
 .fp-lm .pill.red { background: #dc2626; }
 .fp-lm .pill.red:hover:not(:disabled) { background: #b91c1c; }

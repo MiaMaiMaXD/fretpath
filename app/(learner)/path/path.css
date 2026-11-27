@@ -64,7 +64,7 @@
 .fp-path a.row-inner:hover { background: var(--tint); }
 .fp-path .lesson-row .no { width: 50px; height: 50px; border-radius: 50%; display: grid; place-items: center; justify-self: center; font-weight: 700; font-size: 1.15rem; background: #e5e7eb; color: #1e293b; }
 .fp-path .lesson-row.completed .no { background: #047857; color: #fff; }
-.fp-path .lesson-row.unlocked .no, .fp-path .lesson-row.now .no { background: #d97706; color: #1a1205; }
+.fp-path .lesson-row.unlocked .no, .fp-path .lesson-row.now .no { background: #d97706; color: #fff; }
 .fp-path .row-main { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
 .fp-path .row-title { font-weight: 700; font-size: 1.05rem; line-height: 1.45; overflow-wrap: break-word; }
 .fp-path .row-summary { font-size: .9rem; color: #55657d; overflow-wrap: break-word; } /* >= 4.5:1 also on the hover tint */
