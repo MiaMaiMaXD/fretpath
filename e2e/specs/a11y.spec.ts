@@ -3,11 +3,20 @@ import type { Page } from '@playwright/test';
 import { test, expect } from '../fixtures';
 import { createCompleteLesson, createCourse, deleteCourse } from '../utils/adminCourse';
 
+/* The design's orange buttons and score pill keep white text on #d97706 (3.2:1) by the design owner's
+   choice (2026-11-27). Only that colour-contrast finding is waived; every other element and rule is checked. */
+const DESIGN_ORANGE = /class="[^"]*\b(amber|btn-primary|score warn)\b[^"]*"/;
+
 async function serious(page: Page) {
   const results = await new AxeBuilder({ page }).analyze();
   return results.violations
     .filter((v) => v.impact === 'serious' || v.impact === 'critical')
-    .map((v) => ({ id: v.id, impact: v.impact, nodes: v.nodes.map((n) => n.target.join(' ')) }));
+    .map((v) => ({
+      id: v.id,
+      impact: v.impact,
+      nodes: v.nodes.filter((n) => !(v.id === 'color-contrast' && DESIGN_ORANGE.test(n.html))).map((n) => n.target.join(' ')),
+    }))
+    .filter((v) => v.nodes.length > 0);
 }
 
 test('TC-SEC-18 home, login and path have no serious axe violations @regression', async ({ page, memberPage }) => {

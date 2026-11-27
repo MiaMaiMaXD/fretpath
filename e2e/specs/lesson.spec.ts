@@ -8,12 +8,11 @@ test('TC-LSN-01 unlocked lesson renders markdown headings without HTML comments 
   const lesson = new LessonPage(page);
   await lesson.goto('guitar-anatomy-tuning');
   await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
-  await expect(page.locator('article').getByRole('heading', { level: 2 }).first()).toBeVisible();
+  await expect(page.locator('.lv-html').getByRole('heading', { level: 2 }).first()).toBeVisible();
   await expect(page.getByText('TODO')).toHaveCount(0);
-  await expect(page.getByRole('link', { name: 'ทำแบบทดสอบ' })).toHaveAttribute(
-    'href',
-    '/lessons/guitar-anatomy-tuning/quiz',
-  );
+  // the lesson ends with its quiz: ถัดไป leads to the quiz intro
+  await lesson.toQuizIntro();
+  await expect(page.getByTestId('quiz-start')).toBeEnabled();
 });
 
 test('TC-LSN-02 lesson without video shows no broken frame @regression', async ({ page }) => {

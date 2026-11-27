@@ -5,7 +5,7 @@ import { PracticeTable } from '@/components/practice/PracticeTable';
 import { bangkokToday, bangkokWeekRange } from '@/lib/bangkok';
 import { chartSummary } from '@/lib/chart';
 import { getDashboard } from '@/lib/data/dashboard';
-import { layoutPath, lessonNumbers, unitsFor } from '@/lib/path-frets';
+import { layoutPath, lessonNumbers, sectionUnits } from '@/lib/path-frets';
 import { averageBestScore, lessonsProgress, nextLesson, weeklyMinutes } from '@/lib/stats';
 import './dashboard.css';
 
@@ -178,7 +178,7 @@ export default async function DashboardPage() {
       <section className="card" aria-labelledby="scores-title" data-testid="chart-scores">
         <h2 id="scores-title">คะแนนแบบทดสอบรายบทเรียน (%)</h2>
         <p className="card-sub">เกณฑ์ผ่านขั้นต่ำ {pass}% เพื่อปลดล็อกบทเรียนถัดไป</p>
-        <ScoresChart columns={columns} units={unitsFor(slots.length)} pass={pass} current={nextNo} summary={scoresSummary} />
+        <ScoresChart columns={columns} units={sectionUnits(slots, data.sections)} pass={pass} current={nextNo} summary={scoresSummary} />
       </section>
 
       <section className="card recent" aria-labelledby="recent-title" data-testid="dash-recent">

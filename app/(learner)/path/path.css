@@ -51,34 +51,32 @@
 .fp-path .units-bar span.on { border-color: var(--amber); color: #fff; font-weight: 600; }
 
 /* ---------------------------------------------------------------- lesson map */
+/* 2026-11 "Card Learning list": one white card per unit; green = done, amber = ready, grey = locked. */
 .fp-path .path-grid { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 36px; align-items: start; }
-.fp-path .unit { margin-bottom: 28px; }
-.fp-path .lessons { background: var(--surface); color: var(--ink); border-radius: 16px; padding: 20px 22px 6px; }
-.fp-path .unit-head { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 12px; padding-bottom: 8px; border-bottom: 2px solid var(--ink); }
-.fp-path .unit-head h2 { margin: 0; font-size: 1.1rem; font-weight: 700; }
-.fp-path .unit-head small { color: var(--muted); font-size: .85rem; }
+.fp-path .lessons { display: flex; flex-direction: column; gap: 20px; }
+.fp-path .unit { background: var(--surface); color: var(--ink); border: 1px solid #e7dccb; border-radius: 16px; padding: 22px 30px 8px; box-shadow: 0 4px 14px rgba(15, 23, 42, .08); }
+.fp-path .unit-head { padding-bottom: 14px; border-bottom: 1px solid #e3d3bd; }
+.fp-path .unit-head h2 { margin: 0; font-size: 1.05rem; font-weight: 700; }
 .fp-path .lesson-list { list-style: none; margin: 0; padding: 0; }
-.fp-path .lesson-row { border-bottom: 1px solid var(--line); scroll-margin-top: 96px; }
-.fp-path .row-inner { display: grid; grid-template-columns: 52px minmax(0, 1fr) auto; gap: 14px; align-items: center; padding: 14px 12px 14px 0; color: inherit; text-decoration: none; border-radius: 12px; transition: background .4s; }
+.fp-path .lesson-row { border-bottom: 1px solid #eef0f3; scroll-margin-top: 96px; }
+.fp-path .lesson-row:last-child { border-bottom-color: #e3d3bd; }
+.fp-path .row-inner { display: grid; grid-template-columns: 76px minmax(0, 1fr) auto; gap: 14px; align-items: center; padding: 22px 12px 22px 0; color: inherit; text-decoration: none; border-radius: 12px; transition: background .4s; }
 .fp-path a.row-inner:hover { background: var(--tint); }
-.fp-path .lesson-row .no { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; justify-self: center; font-weight: 700; font-size: .85rem; background: var(--neck); color: #94a3b8; border: 2px solid #475569; }
-.fp-path .lesson-row.completed .no { background: var(--amber); border-color: var(--amber); color: #1a1205; }
-.fp-path .lesson-row.unlocked .no { border-color: var(--amber-hi); color: #fff; }
-.fp-path .lesson-row.now .no { background: #fff; border: 3px solid var(--amber-hi); color: var(--ink); box-shadow: 0 0 0 5px rgba(245, 165, 36, .3); }
-.fp-path .lesson-row.now { border-bottom-color: transparent; }
-.fp-path .lesson-row.now .row-inner { background: #fff8eb; }
-.fp-path .row-main { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-.fp-path .row-title { font-weight: 600; line-height: 1.45; overflow-wrap: break-word; }
-.fp-path .lesson-row.locked .row-title { color: var(--muted); font-weight: 500; }
-.fp-path .row-summary { font-size: .9rem; color: var(--muted); overflow-wrap: break-word; }
-.fp-path .row-score { font-size: .85rem; color: var(--muted); }
-.fp-path .row-state { font-size: .88rem; font-weight: 600; white-space: nowrap; }
-.fp-path .row-state.completed { color: var(--done); }
-.fp-path .row-state.unlocked { color: var(--amber-ink); }
-.fp-path .row-state.locked { color: var(--muted); font-weight: 500; }
+.fp-path .lesson-row .no { width: 50px; height: 50px; border-radius: 50%; display: grid; place-items: center; justify-self: center; font-weight: 700; font-size: 1.15rem; background: #e5e7eb; color: #1e293b; }
+.fp-path .lesson-row.completed .no { background: #047857; color: #fff; }
+.fp-path .lesson-row.unlocked .no, .fp-path .lesson-row.now .no { background: #d97706; color: #fff; }
+.fp-path .row-main { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.fp-path .row-title { font-weight: 700; font-size: 1.05rem; line-height: 1.45; overflow-wrap: break-word; }
+.fp-path .row-summary { font-size: .9rem; color: #55657d; overflow-wrap: break-word; } /* >= 4.5:1 also on the hover tint */
+.fp-path .row-side { display: flex; flex-direction: column; align-items: center; gap: 6px; min-width: 130px; }
+.fp-path .row-state { font-size: .82rem; font-weight: 600; white-space: nowrap; border-radius: 999px; padding: 3px 14px; }
+.fp-path .row-state.completed { background: #dcfce7; color: #047857; }
+.fp-path .row-state.unlocked { background: #fef3c7; color: #b45309; } /* >= 4.5:1 */
+.fp-path .row-state.locked { background: #e5e7eb; color: #475569; }
+.fp-path .row-score { font-size: .8rem; font-weight: 700; color: #2563eb; white-space: nowrap; }
 .fp-path .lesson-row.soon .no { background: transparent; border: 2px dashed #94a3b8; color: var(--muted); }
 .fp-path .lesson-row.soon .row-title { color: var(--muted); font-weight: 500; }
-.fp-path .row-state.soon { color: var(--muted); font-weight: 500; background: var(--tint); border-radius: 999px; padding: 1px 10px; font-size: .8rem; }
+.fp-path .row-state.soon { color: var(--muted); font-weight: 500; background: var(--tint); }
 .fp-path .lesson-row:target .row-inner, .fp-path .lesson-row.is-flash .row-inner { animation: fp-path-flash 1.2s ease-out; }
 @keyframes fp-path-flash { from { background: #fde9c4; } }
 
@@ -87,21 +85,29 @@
 .fp-path .next-card { background: var(--night-2); color: #fff; border-radius: 16px; padding: 18px 20px 20px; }
 .fp-path .next-card .k { margin: 0; color: #cbd5e1; font-size: .88rem; }
 .fp-path .next-card h2 { margin: 2px 0 14px; font-size: 1.15rem; line-height: 1.4; font-weight: 700; overflow-wrap: break-word; }
-.fp-path .legend-card { background: var(--surface); color: var(--ink); border: 1px solid var(--line-2); border-radius: 16px; padding: 16px 20px; }
-.fp-path .legend-card h3 { margin: 0 0 6px; font-size: .98rem; }
-.fp-path .legend { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; font-size: .88rem; color: var(--muted); }
-.fp-path .dot { display: inline-block; width: 13px; height: 13px; border-radius: 50%; margin-right: 8px; vertical-align: -2px; }
+.fp-path .legend-card { background: var(--surface); color: var(--ink); border: 1px solid #e7dccb; border-radius: 16px; padding: 18px 20px; box-shadow: 0 4px 14px rgba(15, 23, 42, .08); }
+.fp-path .legend-card h3 { margin: 0 0 12px; padding-bottom: 10px; border-bottom: 1px solid #e3d3bd; font-size: 1rem; font-weight: 700; }
+.fp-path .legend { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; font-size: .88rem; }
+.fp-path .legend li { display: flex; align-items: flex-start; }
+.fp-path .legend li > span { display: flex; flex-direction: column; line-height: 1.35; }
+.fp-path .legend b { font-weight: 600; color: var(--ink); }
+.fp-path .legend small { color: var(--muted); font-size: .8rem; }
+.fp-path .dot { position: relative; flex-shrink: 0; display: inline-block; width: 18px; height: 18px; border-radius: 50%; margin: 1px 10px 0 0; }
 .fp-path .dot.done { background: var(--amber); }
+/* same check mark as a finished fret on the neck */
+.fp-path .dot.done::after { content: ''; position: absolute; left: 6px; top: 3px; width: 4px; height: 8px; border: solid #1a1205; border-width: 0 2px 2px 0; transform: rotate(45deg); }
 .fp-path .dot.now { background: #fff; border: 3px solid var(--amber-hi); }
-.fp-path .dot.lock { background: var(--neck); }
+.fp-path .dot.lock { background: var(--neck); border: 2px solid #475569; }
 .fp-path .dot.empty { border: 2px dashed #64748b; }
 
 @media (max-width: 900px) {
   .fp-path .path-grid { grid-template-columns: minmax(0, 1fr); gap: 24px; }
   .fp-path .side { position: static; order: -1; }
   .fp-path .legend-card { display: none; }
-  .fp-path .row-inner { grid-template-columns: 44px minmax(0, 1fr); gap: 10px; }
-  .fp-path .row-state { grid-column: 2; justify-self: start; }
+  .fp-path .unit { padding: 18px 16px 4px; }
+  .fp-path .row-inner { grid-template-columns: 56px minmax(0, 1fr); gap: 10px; padding: 16px 0; }
+  .fp-path .lesson-row .no { width: 42px; height: 42px; font-size: 1rem; }
+  .fp-path .row-side { grid-column: 2; align-items: flex-start; min-width: 0; flex-direction: row; flex-wrap: wrap; }
 }
 @media (prefers-reduced-motion: reduce) {
   .fp-path .fret.now .stone, .fp-path .lesson-row:target .row-inner, .fp-path .lesson-row.is-flash .row-inner { animation: none; }

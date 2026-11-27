@@ -1,15 +1,17 @@
 'use client';
 
 import { useState } from 'react';
-import { CHORDS, chordFrequencies, type ChordName } from '@/lib/audio/chords';
+import { chordFrequencies, type ChordName } from '@/lib/audio/chords';
 import { getAudioContext, pluck } from '@/lib/audio/strings';
 import { ChordDiagram } from './ChordDiagram';
 import { useAudioSupported } from './StringPlayer';
 
-const NAMES = Object.keys(CHORDS) as ChordName[];
+const DEFAULT: ChordName[] = ['Em', 'Am', 'C', 'D', 'G', 'F'];
 
-export function ChordLab() {
-  const [name, setName] = useState<ChordName>('Em');
+/** Pick a chord, see its diagram and hear it. `chords` = the lesson's example chords. */
+export function ChordLab({ chords = DEFAULT }: { chords?: ChordName[] }) {
+  const NAMES = chords.length > 0 ? chords : DEFAULT;
+  const [name, setName] = useState<ChordName>(NAMES[0]);
   const supported = useAudioSupported();
   return (
     <section className="flex flex-col gap-3">

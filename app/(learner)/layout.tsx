@@ -24,7 +24,7 @@ export default async function LearnerLayout({ children }: { children: React.Reac
             <LogoMark />
             FretPath
           </Link>
-          <HeaderTabs isAdmin={Boolean(isAdmin)} />
+          <HeaderTabs />
           <UserMenu name={name} avatarUrl={prof?.avatar_url ?? null} isAdmin={Boolean(isAdmin)} />
         </div>
       </header>
@@ -32,7 +32,7 @@ export default async function LearnerLayout({ children }: { children: React.Reac
         <div className="app-main wrap">{children}</div>
         <MiniPlayer />
       </PracticeSessionProvider>
-      <BottomNav isAdmin={Boolean(isAdmin)} />
+      <BottomNav />
     </div>
   );
 }

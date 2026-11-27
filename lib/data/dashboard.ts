@@ -3,11 +3,13 @@ import { bangkokWeekRange } from '@/lib/bangkok';
 import { getPath } from '@/lib/data/path';
 import { getMyProfile, type MyProfile } from '@/lib/data/profile';
 import { listMyPracticeLogs, myPracticeTotals, type PracticeLog } from '@/lib/data/practice';
+import type { SectionInfo } from '@/lib/path-frets';
 import type { PathLesson } from '@/lib/path-state';
 
 export type Dashboard = {
   courseSlug: string;
   lessons: PathLesson[];
+  sections: SectionInfo[];
   profile: MyProfile;
   recentLogs: PracticeLog[];
   totals: { sessions: number; minutes: number };
@@ -34,6 +36,7 @@ export async function getDashboard(): Promise<Dashboard | null> {
   return {
     courseSlug: path.course.slug,
     lessons: path.lessons,
+    sections: path.sections,
     profile,
     recentLogs,
     totals,

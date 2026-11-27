@@ -1,7 +1,8 @@
 import { randomUUID } from 'node:crypto';
 import { test, expect, watchCsp } from '../fixtures';
 import { LoginPage } from '../pages/LoginPage';
-import { AdminLessonEditPage } from '../pages/admin/AdminLessonEditPage';
+import { AdminLessonsPage } from '../pages/admin/AdminLessonsPage';
+import { LessonEditorPage } from '../pages/admin/LessonEditorPage';
 import { PathPage } from '../pages/PathPage';
 import { createCompleteLesson, createCourse, deleteCourse } from '../utils/adminCourse';
 import { adminClient } from '../utils/supabaseAdmin';
@@ -26,24 +27,22 @@ test('TC-ADM-18 admin creates draft → learner cannot see → publish → learn
     const controlSlug = `control-${randomUUID().slice(0, 8)}`;
     await createCompleteLesson(courseId, controlSlug, 'บทควบคุม', true);
 
-    // Admin creates the lesson and a question in the UI.
-    const slug = `qa-${randomUUID().slice(0, 8)}`;
+    // Admin creates the lesson from the list, names it and adds a question in the editor.
     const title = `บทเดินทาง ${randomUUID().slice(0, 8)}`;
-    const edit = new AdminLessonEditPage(adminPage);
-    await edit.gotoNew(courseId);
-    await edit.fill({ title, slug, summary: 'สรุปสั้น', contentMd: '# เนื้อหา', passScore: '60' });
-    await edit.create();
+    const list = new AdminLessonsPage(adminPage);
+    await list.goto(courseId);
+    await list.sections().first().getByRole('button', { name: 'เพิ่มบทเรียน' }).click();
+    await list.lessonMenu('บทเรียนใหม่!', 'แก้ไข');
     await expect(adminPage).toHaveURL(/\/admin\/lessons\/[0-9a-f-]{36}$/);
-    await expect(adminPage.getByText('สถานะ: ฉบับร่าง')).toBeVisible();
-
-    await adminPage.getByRole('button', { name: 'เพิ่มคำถาม', exact: true }).click();
-    const form = adminPage.getByRole('group', { name: 'คำถามใหม่', exact: true });
-    await form.getByLabel('คำถาม', { exact: true }).fill('คอร์ด C คือคอร์ดอะไร?');
-    await form.getByLabel('ตัวเลือก 1', { exact: true }).fill('C เมเจอร์');
-    await form.getByLabel('ตัวเลือก 2', { exact: true }).fill('A ไมเนอร์');
-    await form.getByRole('radio', { name: 'ตัวเลือก 1 เป็นข้อที่ถูก' }).check();
-    await form.getByRole('button', { name: 'บันทึกคำถาม' }).click();
-    await expect(adminPage.getByRole('group', { name: 'ข้อ 1', exact: true })).toBeVisible();
+    const edit = new LessonEditorPage(adminPage);
+    await expect(edit.status()).toHaveText('แบบร่าง');
+    await adminPage.getByLabel('ชื่อบทเรียน').fill(title);
+    await edit.openQuiz();
+    await edit.addChoiceQuestion('คอร์ด C คือคอร์ดอะไร?', ['C เมเจอร์', 'A ไมเนอร์', 'G เซเว่น', 'D เมเจอร์'], 0);
+    await edit.saveDraft();
+    const created = await db.from('lessons').select('slug').eq('course_id', courseId).eq('title', title).single();
+    expect(created.error).toBeNull();
+    const slug = created.data!.slug;
 
     // Learner: draft is not visible.
     const memberPage = await ctx.newPage();
@@ -57,8 +56,9 @@ test('TC-ADM-18 admin creates draft → learner cannot see → publish → learn
     await expect(path.card(slug)).toHaveCount(0);
 
     // Admin publishes.
-    await adminPage.getByRole('button', { name: 'เผยแพร่', exact: true }).click();
-    await expect(adminPage.getByText('สถานะ: เผยแพร่')).toBeVisible();
+    await edit.status().click();
+    await edit.dialog().getByRole('button', { name: 'ตกลง' }).click();
+    await expect(edit.status()).toHaveText('เผยแพร่');
 
     // Learner reloads and sees the lesson card.
     await memberPage.reload();

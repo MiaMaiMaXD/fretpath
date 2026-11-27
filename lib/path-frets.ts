@@ -2,9 +2,8 @@ import type { PathLesson } from '@/lib/path-state';
 
 /* The learning path drawn as a guitar neck: one lesson per fret. `FretSlot.fret` is a 0-based slot index;
    learners see slot n as lesson n + 1 drawn on real fret n + 1 (fret 1 is the first after the nut), so
-   lesson numbers and inlay dots line up with a 22-fret guitar. For the guitar-basics course the planned
-   22-lesson curriculum fills the slots that have no lesson yet, shown as "coming soon". Other courses
-   simply place their lessons on slots 0, 1, 2, ... */
+   lesson numbers and inlay dots line up with a 22-fret guitar. Lessons take slots 0, 1, 2, ... in course
+   order; units ("ช่วง") come from the course_sections table (see sectionUnits). */
 
 export const FRET_COUNT = 22;
 
@@ -22,7 +21,7 @@ export const UNITS: readonly PathUnit[] = [
 
 export type PlannedLesson = { slug: string; title: string; summary: string };
 
-/** Planned guitar-basics curriculum, fret 0..21. A lesson created with one of these slugs takes that fret. */
+/** Planned guitar-basics curriculum, fret 0..21 (home page copy, and "coming soon" slots past the last lesson). */
 export const CURRICULUM: Record<string, readonly PlannedLesson[]> = {
   'guitar-basics': [
     { slug: 'guitar-anatomy-tuning', title: 'รู้จักกีตาร์ ท่านั่ง และการตั้งสาย', summary: 'ส่วนประกอบ ชื่อสาย E A D G B E และตั้งสายด้วยจูนเนอร์' },
@@ -53,31 +52,53 @@ export const CURRICULUM: Record<string, readonly PlannedLesson[]> = {
 export type FretSlot = { fret: number } & ({ lesson: PathLesson; plan?: undefined } | { lesson?: undefined; plan: PlannedLesson });
 
 /**
- * Places a course's lessons (already in sort order) on frets. A lesson whose slug is in the plan takes
- * its planned fret when that keeps the order; any other lesson takes the next free fret. Planned frets
- * left without a lesson become "coming soon" slots.
+ * Places a course's lessons (already in sort order) on frets 0, 1, 2, ... in order. When the course has
+ * a planned curriculum longer than its lessons, the planned lessons past the last real one become
+ * "coming soon" slots. (Lessons used to be pinned to their planned fret by slug, which left gaps once
+ * admins reordered lessons; sections now come from the database instead.)
  */
 export function layoutPath(courseSlug: string, lessons: PathLesson[]): FretSlot[] {
   const plan = CURRICULUM[courseSlug] ?? [];
-  const fretOf = new Map(plan.map((p, i) => [p.slug, i]));
-  const slots: FretSlot[] = [];
-  let cursor = 0;
-  for (const lesson of lessons) {
-    const planned = fretOf.get(lesson.slug);
-    const fret = planned !== undefined && planned >= cursor ? planned : cursor;
-    for (; cursor < fret; cursor++) slots.push({ fret: cursor, plan: plan[cursor] });
-    slots.push({ fret, lesson });
-    cursor = fret + 1;
-  }
-  for (; cursor < plan.length; cursor++) slots.push({ fret: cursor, plan: plan[cursor] });
+  const slots: FretSlot[] = lessons.map((lesson, fret) => ({ fret, lesson }));
+  for (let fret = lessons.length; fret < plan.length; fret++) slots.push({ fret, plan: plan[fret] });
   return slots;
 }
 
-/** Units that hold at least one of `count` slots; past fret 21 everything goes in one extra unit. */
+/** Fallback units by slot count (used when a course has no section data): the fixed UNITS ranges. */
 export function unitsFor(count: number): PathUnit[] {
   const units = UNITS.filter((u) => u.from < count).map((u) => ({ ...u, to: Math.min(u.to, count - 1) }));
   if (count > FRET_COUNT) units.push({ name: 'บทเพิ่มเติม', from: FRET_COUNT, to: count - 1 });
   return units;
+}
+
+export type SectionInfo = { id: string; title: string };
+
+/** "ช่วงที่ 2 · เล่นเพลงแรก", or just "ช่วงที่ 2" while the section has no name. */
+export function sectionName(n: number, title: string): string {
+  return title.trim() ? `ช่วงที่ ${n} · ${title.trim()}` : `ช่วงที่ ${n}`;
+}
+
+/**
+ * Units from the course's sections: consecutive slots whose lesson belongs to the same section form one
+ * unit, numbered in order of appearance. Trailing "coming soon" slots form one more unit. Without any
+ * section data it falls back to the fixed ranges.
+ */
+export function sectionUnits(slots: FretSlot[], sections: SectionInfo[]): PathUnit[] {
+  if (sections.length === 0 || !slots.some((s) => s.lesson?.sectionId)) return unitsFor(slots.length);
+  const title = new Map(sections.map((s) => [s.id, s.title]));
+  const units: (PathUnit & { key: string })[] = [];
+  for (const s of slots) {
+    const key = s.lesson ? (s.lesson.sectionId ?? '') : 'soon';
+    const last = units.at(-1);
+    if (last && last.key === key) last.to = s.fret;
+    else units.push({ key, name: '', from: s.fret, to: s.fret });
+  }
+  let n = 0;
+  return units.map(({ key, from, to }) => ({
+    name: key === 'soon' ? 'เร็ว ๆ นี้' : sectionName(++n, title.get(key) ?? ''),
+    from,
+    to,
+  }));
 }
 
 /** Lesson id → the lesson number learners see (slot + 1): "บทที่ 1" on fret 1 to "บทที่ 22" on fret 22. */

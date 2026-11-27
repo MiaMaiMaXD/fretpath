@@ -3,6 +3,16 @@
 -- config.toml [db.seed] sql_paths loads first so handle_new_user enrolls these users
 -- and unlocks lesson 1.
 
+-- Sections: content files insert lessons after migrations, so the lessons_default_section trigger put
+-- them all in one section. Split guitar-basics into its four units (same as the production backfill).
+select public.split_course_into_sections(c.id,
+  array['จับกีตาร์ครั้งแรก', 'เล่นเพลงแรก', 'เข้าใจคอร์ด', 'ทั่วคอกีตาร์'], array[5, 5, 5, 7])
+from public.courses c where c.slug = 'guitar-basics';
+
+-- Example chords for the chord-lab lessons (same as the production backfill in 20261127000025).
+update public.lessons set example_chords = array['Em', 'Am', 'C', 'D', 'G', 'F']
+  where slug in ('first-chords', 'open-chords-changes', 'strumming-4-4', 'f-chord-first-song');
+
 -- Users (content is loaded first, so handle_new_user enrolls them and unlocks lesson 1)
 insert into auth.users (
   instance_id, id, aud, role, email, encrypted_password, email_confirmed_at,
