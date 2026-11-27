@@ -22,7 +22,8 @@ export function sanitizeLessonHtml(html: string): string {
       ol: ['start'],
     },
     allowedSchemes: ['https', 'http', 'mailto'],
-    allowedSchemesByTag: { img: ['https'] },
+    // images come from Supabase storage (https in production, http on a local stack); CSP img-src limits where
+    allowedSchemesByTag: { img: ['https', 'http'] },
     allowedStyles: {
       span: { color: [SAFE_COLOR], 'font-size': [SAFE_SIZE] },
       p: { 'text-align': [SAFE_ALIGN] },

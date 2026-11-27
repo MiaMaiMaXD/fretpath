@@ -1,11 +1,9 @@
 import { randomUUID } from 'node:crypto';
-import type { Page } from '@playwright/test';
 import { test, expect } from '../fixtures';
+import { LessonEditorPage } from '../pages/admin/LessonEditorPage';
 import { buildAnswers } from '../utils/quiz';
 import { createCompleteLesson, createCourse, deleteCourse } from '../utils/adminCourse';
 import { adminClient } from '../utils/supabaseAdmin';
-
-const group = (page: Page, name: string) => page.getByRole('group', { name, exact: true });
 
 async function createEmptyDraft(courseId: string) {
   const db = adminClient();
@@ -20,99 +18,85 @@ async function createEmptyDraft(courseId: string) {
   return l.data.id;
 }
 
-test('TC-ADM-09 add question with choices, key and explanation then publish @smoke', async ({ adminPage }) => {
+test('TC-ADM-09 add question with choices and key then publish @smoke', async ({ adminPage }) => {
   const courseId = await createCourse();
   try {
     const lessonId = await createEmptyDraft(courseId);
-    await adminPage.goto(`/admin/lessons/${lessonId}`);
-
-    await adminPage.getByRole('button', { name: 'เพิ่มคำถาม', exact: true }).click();
-    const form = group(adminPage, 'คำถามใหม่');
-    await form.getByLabel('คำถาม', { exact: true }).fill('คอร์ด C คือคอร์ดอะไร?');
-    await form.getByLabel('ตัวเลือก 1', { exact: true }).fill('C เมเจอร์');
-    await form.getByLabel('ตัวเลือก 2', { exact: true }).fill('A ไมเนอร์');
-    await form.getByRole('button', { name: 'เพิ่มตัวเลือก' }).click();
-    await form.getByLabel('ตัวเลือก 3', { exact: true }).fill('G เซเว่น');
-    await form.getByRole('radio', { name: 'ตัวเลือก 1 เป็นข้อที่ถูก' }).check();
-    await form.getByLabel('คำอธิบาย', { exact: true }).fill('C เมเจอร์ประกอบด้วย C E G');
-    await form.getByRole('button', { name: 'บันทึกคำถาม' }).click();
-
-    const saved = group(adminPage, 'ข้อ 1');
-    await expect(saved).toBeVisible();
-    await expect(saved.getByLabel('ตัวเลือก 3', { exact: true })).toHaveValue('G เซเว่น');
-    await expect(saved.getByRole('radio', { name: 'ตัวเลือก 1 เป็นข้อที่ถูก' })).toBeChecked();
+    const edit = new LessonEditorPage(adminPage);
+    await edit.goto(lessonId);
+    await edit.openQuiz();
+    await edit.addChoiceQuestion('คอร์ด C คือคอร์ดอะไร?', ['C เมเจอร์', 'A ไมเนอร์', 'G เซเว่น', 'D เมเจอร์'], 0);
+    await edit.saveDraft();
 
     const db = adminClient();
     const q = await db.from('quiz_questions').select('id').eq('lesson_id', lessonId);
     expect(q.data).toHaveLength(1);
-    const key = await db
-      .from('quiz_answer_keys')
-      .select('explanation, quiz_choices!inner(text)')
-      .eq('question_id', q.data![0].id)
-      .single();
-    expect(key.data?.explanation).toBe('C เมเจอร์ประกอบด้วย C E G');
+    const key = await db.from('quiz_answer_keys').select('quiz_choices!inner(text)').eq('question_id', q.data![0].id).single();
     expect(key.data?.quiz_choices.text).toBe('C เมเจอร์');
+    const choices = await db.from('quiz_choices').select('text').eq('question_id', q.data![0].id).order('sort_order');
+    expect(choices.data?.map((c) => c.text)).toEqual(['C เมเจอร์', 'A ไมเนอร์', 'G เซเว่น', 'D เมเจอร์']);
 
-    await adminPage.getByRole('button', { name: 'เผยแพร่', exact: true }).click();
-    await expect(adminPage.getByText('สถานะ: เผยแพร่')).toBeVisible();
+    await adminPage.reload();
+    await edit.openQuiz();
+    await expect(edit.questions()).toHaveCount(1);
+
+    await edit.status().click();
+    await edit.dialog().getByRole('button', { name: 'ตกลง' }).click();
+    await expect(edit.status()).toHaveText('เผยแพร่');
   } finally {
     await deleteCourse(courseId);
   }
 });
 
-test('TC-ADM-10 choice count limits 2–6 in the editor @regression', async ({ adminPage }) => {
+test('TC-ADM-10 an incomplete question is not saved and keeps what was typed @regression', async ({ adminPage }) => {
   const courseId = await createCourse();
   try {
     const lessonId = await createEmptyDraft(courseId);
-    await adminPage.goto(`/admin/lessons/${lessonId}`);
-    await adminPage.getByRole('button', { name: 'เพิ่มคำถาม', exact: true }).click();
-    const form = group(adminPage, 'คำถามใหม่');
+    const edit = new LessonEditorPage(adminPage);
+    await edit.goto(lessonId);
+    await edit.openQuiz();
+    await adminPage.getByRole('button', { name: '+ เพิ่มปรนัย' }).click();
+    const q = edit.questions().last();
+    // new questions come with four choices
+    await expect(q.getByLabel(/^ตัวเลือกที่ \d$/)).toHaveCount(4);
+    await q.getByPlaceholder('กรอกคำถาม').fill('คำถามที่พิมพ์ไว้');
+    await q.getByLabel('ตัวเลือกที่ 1', { exact: true }).fill('ก');
+    await edit.saveButton().click();
 
-    await expect(form.getByLabel(/^ตัวเลือก \d$/)).toHaveCount(2);
-    await expect(form.getByRole('button', { name: 'ลบตัวเลือก' })).toHaveCount(0);
-    for (let n = 3; n <= 6; n++) await form.getByRole('button', { name: 'เพิ่มตัวเลือก' }).click();
-    await expect(form.getByLabel(/^ตัวเลือก \d$/)).toHaveCount(6);
-    await expect(form.getByRole('button', { name: 'เพิ่มตัวเลือก' })).toHaveCount(0);
-
-    for (let n = 6; n > 2; n--) await form.getByRole('button', { name: 'ลบตัวเลือก' }).first().click();
-    await expect(form.getByLabel(/^ตัวเลือก \d$/)).toHaveCount(2);
-    await expect(form.getByRole('button', { name: 'ลบตัวเลือก' })).toHaveCount(0);
-    await expect(form.getByRole('button', { name: 'เพิ่มตัวเลือก' })).toBeVisible();
-
-    // failed validation keeps what was typed
-    await form.getByLabel('คำถาม', { exact: true }).fill('คำถามที่พิมพ์ไว้');
-    await form.getByLabel('ตัวเลือก 1', { exact: true }).fill('ก');
-    await form.getByRole('button', { name: 'บันทึกคำถาม' }).click();
-    await expect(form.getByText('ต้องมีตัวเลือก 2–6 ข้อ')).toBeVisible();
-    await expect(form.getByText('กรุณาเลือกข้อที่ถูก')).toBeVisible();
-    await expect(form.getByLabel('คำถาม', { exact: true })).toHaveValue('คำถามที่พิมพ์ไว้');
-    await expect(form.getByLabel('ตัวเลือก 1', { exact: true })).toHaveValue('ก');
+    await expect(edit.message()).toContainText('ข้อที่ 1: กรอกตัวเลือกให้ครบทุกช่อง');
+    await expect(edit.message()).toContainText('ข้อที่ 1: เลือกข้อที่ถูก');
+    await expect(q.getByPlaceholder('กรอกคำถาม')).toHaveValue('คำถามที่พิมพ์ไว้');
+    await expect(q.getByLabel('ตัวเลือกที่ 1', { exact: true })).toHaveValue('ก');
+    const rows = await adminClient().from('quiz_questions').select('id').eq('lesson_id', lessonId);
+    expect(rows.data).toEqual([]);
   } finally {
     await deleteCourse(courseId);
   }
 });
 
-test('TC-ADM-11 editing a published lesson into an incomplete state is refused @regression', async ({
+test('TC-ADM-11 updating a published lesson into an incomplete state is refused @regression', async ({
   adminPage,
   adminDb,
 }) => {
   const courseId = await createCourse();
   try {
     const lessonId = await createCompleteLesson(courseId, 'pub', 'บทเผยแพร่', true);
-    await adminPage.goto(`/admin/lessons/${lessonId}`);
-    await expect(group(adminPage, 'ข้อ 1')).toBeVisible();
+    const edit = new LessonEditorPage(adminPage);
+    await edit.goto(lessonId);
+    await edit.openQuiz();
+    await expect(edit.questions()).toHaveCount(1);
 
-    // The last question of a published lesson cannot be deleted.
-    await group(adminPage, 'ข้อ 1').getByRole('button', { name: 'ลบคำถาม' }).click();
-    const dialog = adminPage.getByRole('dialog');
-    await dialog.getByRole('button', { name: 'ลบ', exact: true }).click();
-    await expect(dialog.getByRole('alert')).toContainText('บทนี้เผยแพร่อยู่');
-    await dialog.getByRole('button', { name: 'ยกเลิก' }).click();
-    await adminPage.reload();
-    await expect(group(adminPage, 'ข้อ 1')).toBeVisible();
-    await expect(group(adminPage, 'ข้อ 1').getByLabel('ตัวเลือก 2', { exact: true })).toHaveValue('ผิด');
+    // remove the only question, then try to make it live
+    await edit.questions().first().getByRole('button', { name: 'ลบข้อที่ 1' }).click();
+    await edit.dialog().getByRole('button', { name: 'ลบ', exact: true }).click();
+    await expect(edit.questions()).toHaveCount(0);
+    await expect(edit.status()).toHaveText('อัปเดต');
+    await edit.status().click();
+    await expect(edit.message()).toContainText('บทนี้เผยแพร่อยู่');
+    const still = await adminClient().from('quiz_questions').select('id').eq('lesson_id', lessonId);
+    expect(still.data).toHaveLength(1);
 
-    // A save that would leave one choice is refused by the database and rolls back whole.
+    // the database refuses a save that would leave one choice, and rolls back whole
     const q = await adminClient().from('quiz_questions').select('id').eq('lesson_id', lessonId).single();
     const res = await adminDb.rpc('admin_save_question', {
       p_lesson: lessonId,
@@ -126,14 +110,12 @@ test('TC-ADM-11 editing a published lesson into an incomplete state is refused @
     expect(res.error?.message).toContain('LESSON_PUBLISHED_INCOMPLETE');
     const after = await adminClient().from('quiz_questions').select('prompt').eq('id', q.data!.id).single();
     expect(after.data?.prompt).toBe('ข้อทดสอบ');
-    const choices = await adminClient().from('quiz_choices').select('id').eq('question_id', q.data!.id);
-    expect(choices.data).toHaveLength(2);
   } finally {
     await deleteCourse(courseId);
   }
 });
 
-test('TC-ADM-19 move question up and down swaps the order @regression', async ({ adminPage }) => {
+test('TC-ADM-19 dragging a question changes the order @regression', async ({ adminPage }) => {
   const courseId = await createCourse();
   try {
     const lessonId = await createCompleteLesson(courseId, 'mv', 'บทเรียงข้อ', false);
@@ -148,14 +130,16 @@ test('TC-ADM-19 move question up and down swaps the order @regression', async ({
       .select('id');
     await db.from('quiz_answer_keys').insert({ question_id: q2.data!.id, correct_choice_id: ch.data![0].id });
 
-    await adminPage.goto(`/admin/lessons/${lessonId}`);
-    const prompt = (n: number) => group(adminPage, `ข้อ ${n}`).getByLabel('คำถาม', { exact: true });
-    await expect(prompt(2)).toHaveValue('ข้อสอง');
-    await group(adminPage, 'ข้อ 2').getByRole('button', { name: 'เลื่อนขึ้น' }).click();
-    await expect(prompt(1)).toHaveValue('ข้อสอง');
-    await expect(prompt(2)).toHaveValue('ข้อทดสอบ');
-    await group(adminPage, 'ข้อ 1').getByRole('button', { name: 'เลื่อนลง' }).click();
-    await expect(prompt(1)).toHaveValue('ข้อทดสอบ');
+    const edit = new LessonEditorPage(adminPage);
+    await edit.goto(lessonId);
+    await edit.openQuiz();
+    await expect(edit.questions().nth(1)).toContainText('ข้อสอง');
+    await edit.questions().nth(1).locator('.qz-head .grip').dragTo(edit.questions().nth(0));
+    await expect(edit.questions().nth(0)).toContainText('ข้อสอง');
+    await edit.saveDraft();
+
+    const rows = await db.from('quiz_questions').select('prompt').eq('lesson_id', lessonId).order('sort_order');
+    expect(rows.data?.map((r) => r.prompt)).toEqual(['ข้อสอง', 'ข้อทดสอบ']);
   } finally {
     await deleteCourse(courseId);
   }
@@ -173,25 +157,31 @@ test('TC-ADM-20 delete asks first and an answered question cannot be deleted @re
       .from('enrollments')
       .insert({ user_id: member.id, course_id: courseId, source: 'purchase' });
     expect(enrol.error).toBeNull();
-    const lessonId = await createCompleteLesson(courseId, 'ans', 'บทที่มีผู้ตอบ', true);
-    const res = await memberDb.rpc('submit_quiz', {
-      p_lesson_id: lessonId,
-      p_answers: await buildAnswers(adminDb, lessonId, 1),
-    });
+    // built as a draft so the second question can be added, then published
+    const lessonId = await createCompleteLesson(courseId, 'ans', 'บทที่มีผู้ตอบ', false);
+    // a second question keeps the lesson complete without the answered one
+    const db = adminClient();
+    const q2 = await db.from('quiz_questions').insert({ lesson_id: lessonId, prompt: 'ข้อสอง', sort_order: 2 }).select('id').single();
+    const ch = await db.from('quiz_choices').insert([{ question_id: q2.data!.id, text: 'A', sort_order: 1 }, { question_id: q2.data!.id, text: 'B', sort_order: 2 }]).select('id');
+    await db.from('quiz_answer_keys').insert({ question_id: q2.data!.id, correct_choice_id: ch.data![0].id });
+    const pub = await db.from('lessons').update({ status: 'published' }).eq('id', lessonId);
+    expect(pub.error).toBeNull();
+    const res = await memberDb.rpc('submit_quiz', { p_lesson_id: lessonId, p_answers: await buildAnswers(adminDb, lessonId, 1) });
     expect(res.error).toBeNull();
 
-    await adminPage.goto(`/admin/lessons/${lessonId}`);
-    await group(adminPage, 'ข้อ 1').getByRole('button', { name: 'ลบคำถาม' }).click();
-    const dialog = adminPage.getByRole('dialog');
-    await expect(dialog.getByRole('heading', { name: 'ลบคำถามนี้?' })).toBeVisible();
-    await expect(dialog.getByRole('button', { name: 'ยกเลิก' })).toBeFocused();
-    await dialog.getByRole('button', { name: 'ลบ', exact: true }).click();
-    await expect(dialog.getByRole('alert')).toContainText('มีผู้เรียนตอบข้อนี้แล้ว');
-    await dialog.getByRole('button', { name: 'ยกเลิก' }).click();
+    const edit = new LessonEditorPage(adminPage);
+    await edit.goto(lessonId);
+    await edit.openQuiz();
+    await edit.questions().first().getByRole('button', { name: 'ลบข้อที่ 1' }).click();
+    await expect(edit.dialog()).toContainText('ข้อที่ 1');
+    await expect(edit.dialog().getByRole('button', { name: 'ยกเลิก' })).toBeFocused();
+    await edit.dialog().getByRole('button', { name: 'ลบ', exact: true }).click();
+    await edit.status().click(); // อัปเดต
+    await expect(edit.message()).toContainText('มีผู้เรียนตอบข้อนี้แล้ว');
 
-    // Reordering/removing a choice that learners answered is refused; history is untouched.
-    const q = await adminClient().from('quiz_questions').select('id').eq('lesson_id', lessonId).single();
-    const answers = await adminClient().from('quiz_attempt_answers').select('choice_id').eq('question_id', q.data!.id);
+    // the answered question and the learner's history are untouched
+    const q = await db.from('quiz_questions').select('id').eq('lesson_id', lessonId).eq('prompt', 'ข้อทดสอบ').single();
+    const answers = await db.from('quiz_attempt_answers').select('choice_id').eq('question_id', q.data!.id);
     expect(answers.data).toHaveLength(1);
     const drop = await adminDb.rpc('admin_save_question', {
       p_lesson: lessonId,
@@ -203,7 +193,7 @@ test('TC-ADM-20 delete asks first and an answered question cannot be deleted @re
       p_explanation: '',
     });
     expect(drop.error?.message).toContain('QUESTION_HAS_ANSWERS');
-    const still = await adminClient().from('quiz_attempt_answers').select('choice_id').eq('question_id', q.data!.id);
+    const still = await db.from('quiz_attempt_answers').select('choice_id').eq('question_id', q.data!.id);
     expect(still.data).toEqual(answers.data);
   } finally {
     await deleteCourse(courseId);

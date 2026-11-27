@@ -1,4 +1,6 @@
 import { test, expect } from '../fixtures';
+import { AdminLessonsPage } from '../pages/admin/AdminLessonsPage';
+import { LessonEditorPage } from '../pages/admin/LessonEditorPage';
 import { createCompleteLesson, createCourse, deleteCourse } from '../utils/adminCourse';
 import { adminClient } from '../utils/supabaseAdmin';
 
@@ -8,7 +10,12 @@ async function twoLessons(courseId: string) {
   return { a, b };
 }
 
-test('TC-ADM-12 reorder by number swaps lessons in one save @regression', async ({ adminPage, member }) => {
+async function order(courseId: string) {
+  const rows = await adminClient().from('lessons').select('id, sort_order').eq('course_id', courseId);
+  return Object.fromEntries((rows.data ?? []).map((r) => [r.id, r.sort_order]));
+}
+
+test('TC-ADM-12 dragging a lesson swaps the order in one save @regression', async ({ adminPage, member }) => {
   const courseId = await createCourse();
   try {
     const { a, b } = await twoLessons(courseId);
@@ -17,44 +24,31 @@ test('TC-ADM-12 reorder by number swaps lessons in one save @regression', async 
       .insert({ user_id: member.id, course_id: courseId, source: 'purchase' });
     expect(enrol.error).toBeNull();
 
-    await adminPage.goto(`/admin/lessons?course=${courseId}`);
-    await adminPage.getByLabel('ลำดับของ บทแรกเดิม').fill('2');
-    await adminPage.getByLabel('ลำดับของ บทสองเดิม').fill('1');
-    await adminPage.getByRole('button', { name: 'บันทึกลำดับ' }).click();
-    await expect(adminPage.getByRole('status')).toContainText('บันทึกลำดับแล้ว');
+    const list = new AdminLessonsPage(adminPage);
+    await list.goto(courseId);
+    await list.row('บทสองเดิม').dragTo(list.row('บทแรกเดิม'));
+    await expect(list.status()).toContainText('บันทึกลำดับแล้ว');
 
-    const rows = await adminClient().from('lessons').select('id, sort_order').eq('course_id', courseId);
-    const order = Object.fromEntries((rows.data ?? []).map((r) => [r.id, r.sort_order]));
-    expect(order[b]).toBe(1);
-    expect(order[a]).toBe(2);
-
-    // Review Focus 3: the new first lesson is unlocked for the enrolled member.
+    expect(await order(courseId)).toEqual({ [b]: 1, [a]: 2 });
+    // the new first lesson is unlocked for the enrolled member
     const prog = await adminClient().from('lesson_progress').select('lesson_id').eq('user_id', member.id).eq('lesson_id', b);
     expect(prog.data).toHaveLength(1);
 
     await adminPage.reload();
-    await expect(adminPage.getByLabel('ลำดับของ บทสองเดิม')).toHaveValue('1');
+    await expect(list.row('บทสองเดิม').locator('.no')).toHaveText('1');
   } finally {
     await deleteCourse(courseId);
   }
 });
 
-test('TC-ADM-13 non-integer order shows Thai error and keeps values @regression', async ({ adminPage }) => {
+test('TC-ADM-13 an invalid order is refused and nothing moves @regression', async ({ adminDb }) => {
   const courseId = await createCourse();
   try {
     const { a, b } = await twoLessons(courseId);
-    await adminPage.goto(`/admin/lessons?course=${courseId}`);
-    await adminPage.getByLabel('ลำดับของ บทแรกเดิม').fill('1.5');
-    await adminPage.getByLabel('ลำดับของ บทสองเดิม').fill('0');
-    await adminPage.getByRole('button', { name: 'บันทึกลำดับ' }).click();
-    await expect(adminPage.getByRole('alert').filter({ hasText: 'ลำดับต้องเป็นจำนวนเต็มบวก' })).toBeVisible();
-    await expect(adminPage.getByLabel('ลำดับของ บทแรกเดิม')).toHaveValue('1.5');
-    await expect(adminPage.getByLabel('ลำดับของ บทสองเดิม')).toHaveValue('0');
-
-    const rows = await adminClient().from('lessons').select('id, sort_order').eq('course_id', courseId);
-    const order = Object.fromEntries((rows.data ?? []).map((r) => [r.id, r.sort_order]));
-    expect(order[a]).toBe(1);
-    expect(order[b]).toBe(2);
+    // the same lesson twice (the other missing) is not a valid order
+    const res = await adminDb.rpc('reorder_lessons', { p_course: courseId, p_lesson_ids: [a, a] });
+    expect(res.error?.message).toContain('INVALID_ORDER');
+    expect(await order(courseId)).toEqual({ [a]: 1, [b]: 2 });
   } finally {
     await deleteCourse(courseId);
   }
@@ -64,21 +58,28 @@ test('TC-ADM-14 preview shows draft lesson as learners would see it @regression'
   const courseId = await createCourse();
   try {
     const id = await createCompleteLesson(courseId, 'draft-prev', 'บทร่างตัวอย่าง', false);
-    const md = await adminClient()
-      .from('lesson_contents')
-      .update({ content_md: '## หัวข้อย่อยตัวอย่าง\n\nเนื้อหา **ตัวหนา**' })
-      .eq('lesson_id', id);
-    expect(md.error).toBeNull();
+    const html = await adminClient()
+      .from('lesson_pages')
+      .update({ body_md: null, body_html: '<h2>หัวข้อย่อยตัวอย่าง</h2><p>เนื้อหา <strong>ตัวหนา</strong></p>' })
+      .eq('lesson_id', id)
+      .eq('kind', 'text');
+    expect(html.error).toBeNull();
 
-    await adminPage.goto(`/admin/lessons/${id}`);
-    await adminPage.getByRole('link', { name: 'ดูตัวอย่าง' }).click();
-    await expect(adminPage).toHaveURL(new RegExp(`/admin/lessons/${id}/preview$`));
-    await expect(adminPage.getByText('ตัวอย่างสำหรับผู้ดูแล — ผู้เรียนยังไม่เห็นถ้าเป็นฉบับร่าง')).toBeVisible();
-    await expect(adminPage.getByRole('heading', { level: 1, name: 'บทร่างตัวอย่าง' })).toBeVisible();
+    const edit = new LessonEditorPage(adminPage);
+    await edit.goto(id);
+    await adminPage.getByTestId('le-preview').click();
+    await expect(adminPage.locator('.lv-badge')).toHaveText('ตัวอย่าง');
+    await expect(adminPage.getByRole('heading', { level: 1, name: /บทร่างตัวอย่าง/ })).toBeVisible();
     await expect(adminPage.getByRole('heading', { name: 'หัวข้อย่อยตัวอย่าง' })).toBeVisible();
+
+    // the quiz step lists the questions without marking the right answer
+    await adminPage.getByRole('button', { name: 'ถัดไป' }).click();
     await expect(adminPage.getByText('ข้อทดสอบ')).toBeVisible();
     await expect(adminPage.getByText('ผิด', { exact: true })).toBeVisible();
     await expect(adminPage.getByText('ข้อที่ถูก')).toHaveCount(0);
+
+    await adminPage.getByRole('button', { name: /กลับไปหน้าแก้ไขบทเรียน/ }).click();
+    await expect(edit.status()).toBeVisible();
   } finally {
     await deleteCourse(courseId);
   }

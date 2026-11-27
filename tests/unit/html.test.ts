@@ -13,9 +13,11 @@ describe('sanitizeLessonHtml', () => {
     expect(out).toContain('t');
   });
 
-  it('drops unsafe styles and non-https images', () => {
+  it('drops unsafe styles and non-web image sources', () => {
     expect(sanitizeLessonHtml('<span style="position:fixed;color:red">x</span>')).toBe('<span>x</span>');
-    expect(sanitizeLessonHtml('<img src="http://a/b.png" alt="x">')).not.toContain('http://');
+    expect(sanitizeLessonHtml('<img src="javascript:alert(1)" alt="x">')).not.toContain('javascript');
+    expect(sanitizeLessonHtml('<img src="data:image/png;base64,AAAA" alt="x">')).not.toContain('data:');
+    expect(sanitizeLessonHtml('<img src="https://a/b.png" alt="x">')).toContain('src="https://a/b.png"');
   });
 
   it('opens links in a new tab safely and turns h1 into h2', () => {

@@ -15,13 +15,13 @@
 .fp-lm .pill:disabled { cursor: not-allowed; }
 .fp-lm .pill.slate { background: #64748b; }
 .fp-lm .pill.slate:hover { background: #475569; }
-.fp-lm .pill.green { background: #10b981; }
-.fp-lm .pill.green:hover:not(:disabled) { background: #059669; }
+.fp-lm .pill.green { background: #047857; } /* white text: >= 4.5:1 */
+.fp-lm .pill.green:hover:not(:disabled) { background: #065f46; }
 .fp-lm .pill.green:disabled { background: #b8c0cc; }
-.fp-lm .pill.amber { background: var(--bar); }
-.fp-lm .pill.amber:hover:not(:disabled) { background: var(--amber); }
-.fp-lm .pill.red { background: #ef4444; }
-.fp-lm .pill.red:hover:not(:disabled) { background: #dc2626; }
+.fp-lm .pill.amber { background: #b45309; }
+.fp-lm .pill.amber:hover:not(:disabled) { background: #92400e; }
+.fp-lm .pill.red { background: #dc2626; }
+.fp-lm .pill.red:hover:not(:disabled) { background: #b91c1c; }
 .fp-lm .pill.wide { width: 100%; padding: .55em 1em; font-size: .9rem; }
 .fp-lm .pill:disabled:not(.green) { opacity: .55; }
 

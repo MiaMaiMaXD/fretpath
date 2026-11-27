@@ -180,6 +180,7 @@ function Toolbar({ editor, lessonId }: { editor: Editor; lessonId: string }) {
         accept="image/png,image/jpeg,image/webp,image/gif"
         className="sr-only"
         tabIndex={-1}
+        aria-label="เลือกไฟล์รูป"
         onChange={(e) => {
           const f = e.target.files?.[0];
           e.target.value = '';

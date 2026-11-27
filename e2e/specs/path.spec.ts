@@ -40,7 +40,7 @@ test('TC-PATH-19 neck shows 22 frets with planned lessons as coming soon, and a 
   const neck = page.getByTestId('fret-neck');
   await expect(neck.locator('.fret')).toHaveCount(22);
   await expect(page.getByTestId('lesson-soon')).toHaveCount(22 - LESSON_COUNT);
-  await expect(page.getByRole('heading', { name: 'ช่วงที่ 4 · ทั่วคอกีตาร์' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'ช่วงที่ 4 : ทั่วคอกีตาร์' })).toBeVisible();
   // Once every planned lesson is written there are no "coming soon" slots left to inspect.
   if (LESSON_COUNT < 22) {
     await expect(page.getByTestId('lesson-soon').first()).not.toContainText('ไม่พร้อมเข้าเรียน');

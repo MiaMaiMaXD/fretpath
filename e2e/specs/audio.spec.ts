@@ -31,7 +31,7 @@ test.describe('shared member', () => {
     await expect(page.getByText('เบราว์เซอร์นี้ไม่รองรับเสียง').first()).toBeVisible();
     for (const name of STRING_NAMES) await expect(page.getByRole('button', { name })).toBeDisabled();
     await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
-    await expect(page.getByRole('link', { name: 'ทำแบบทดสอบ' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'ถัดไป' })).toBeEnabled();
   });
 });
 

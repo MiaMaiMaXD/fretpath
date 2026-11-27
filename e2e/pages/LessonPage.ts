@@ -7,6 +7,12 @@ export class LessonPage {
     await this.page.goto(`/lessons/${slug}`);
   }
 
+  /** Pages through the lesson (ถัดไป) to the quiz intro. */
+  async toQuizIntro() {
+    const start = this.page.getByTestId('quiz-start');
+    while (!(await start.isVisible())) await this.page.getByRole('button', { name: 'ถัดไป' }).click();
+  }
+
   async startQuiz() {
     const name = 'ทำแบบทดสอบ';
     await this.page

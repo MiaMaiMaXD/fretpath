@@ -66,7 +66,8 @@ export function LessonViewer({
   const first = useRef(true);
   const page = pages[i];
   const last = i === pages.length - 1;
-  const onQuiz = page?.kind === 'quiz';
+  // learners take the quiz full width; the admin preview keeps its side column (and its way back to the editor)
+  const onQuiz = page?.kind === 'quiz' && mode === 'learner';
 
   // pick up where the learner left off
   useEffect(() => {

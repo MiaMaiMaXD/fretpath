@@ -156,6 +156,8 @@ export function QuizEditor({
                               if (drag?.q === q.key && drag.choice !== undefined) e.preventDefault();
                             }}
                             onDrop={(e) => {
+                              // only a choice being dragged is handled here; a question drag bubbles up to its row
+                              if (drag?.choice === undefined) return;
                               e.preventDefault();
                               e.stopPropagation();
                               dropChoice(q, ci);
