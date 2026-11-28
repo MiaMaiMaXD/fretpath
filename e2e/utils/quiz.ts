@@ -33,6 +33,7 @@ export async function buildAnswers(
     .from('quiz_questions')
     .select('id')
     .eq('lesson_id', lessonId)
+    .eq('kind', 'choice') // practical (microphone) questions have no answer key
     .order('sort_order');
   if (qs.error) throw new Error(`questions failed: ${qs.error.message}`);
   const ids = qs.data.map((q) => q.id);

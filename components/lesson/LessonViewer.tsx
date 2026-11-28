@@ -218,7 +218,7 @@ function QuizStep({
               <li key={q.key} className="lv-q practical">
                 <p className="lv-q-prompt">ข้อปฏิบัติ: {q.prompt}</p>
                 <p className="lv-chords">{q.chords.join(' → ')}</p>
-                <p className="lv-note">ผู้เรียนยังไม่เห็นข้อนี้ — ระบบตรวจด้วยไมโครโฟนกำลังพัฒนา</p>
+                <p className="lv-note">ผู้เรียนต้องดีดคอร์ดผ่านไมโครโฟนให้ผ่านก่อนจึงจะส่งแบบทดสอบได้</p>
               </li>
             ),
           )}
