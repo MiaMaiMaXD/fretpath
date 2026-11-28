@@ -44,6 +44,7 @@ export default async function LessonPage({ params }: { params: Promise<{ slug: s
               title: view.find((p) => p.kind === 'quiz')?.title || 'แบบทดสอบท้ายบท',
               passScore: quiz.passScore,
               questions: quiz.questions,
+              practical: quiz.practical,
               maxAttempts: quiz.maxAttempts,
               attemptsLeft: quiz.attemptsLeft,
             retryAt: quiz.retryAt,

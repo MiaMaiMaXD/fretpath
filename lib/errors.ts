@@ -17,6 +17,7 @@ export type ErrorCode =
   | 'SECTION_NOT_FOUND'
   | 'ATTEMPTS_EXHAUSTED'
   | 'SECTION_NOT_EMPTY'
+  | 'PRACTICAL_NOT_PASSED'
   | 'INVALID_CREDENTIALS'
   | 'EMAIL_NOT_CONFIRMED'
   | 'NETWORK'
@@ -44,6 +45,7 @@ const MESSAGES: Record<ErrorCode, string> = {
   SECTION_NOT_FOUND: 'ไม่พบช่วงนี้ กรุณาโหลดหน้าใหม่',
   ATTEMPTS_EXHAUSTED: 'คุณใช้โควต้าครบจำนวนแล้ว ทำแบบทดสอบได้อีกครั้งเมื่อครบ 24 ชั่วโมง',
   SECTION_NOT_EMPTY: 'ลบช่วงนี้ไม่ได้เพราะยังมีบทเรียนอยู่ — ลบบทเรียนในช่วงนี้ก่อน',
+  PRACTICAL_NOT_PASSED: 'ต้องดีดข้อปฏิบัติให้ผ่านก่อนส่งคำตอบ',
   INVALID_CREDENTIALS: 'อีเมลหรือรหัสผ่านไม่ถูกต้อง',
   EMAIL_NOT_CONFIRMED: 'กรุณายืนยันอีเมลก่อนเข้าสู่ระบบ',
   NETWORK: 'เชื่อมต่อไม่สำเร็จ กรุณาลองใหม่',

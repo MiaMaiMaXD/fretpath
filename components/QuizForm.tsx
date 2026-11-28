@@ -3,7 +3,8 @@
 import { useEffect, useRef, useState, useTransition } from 'react';
 import { QuizResultView } from '@/components/QuizResultView';
 import { thaiError } from '@/lib/errors';
-import { unansweredIds, type QuizQuestion, type QuizResult } from '@/lib/quiz';
+import { unansweredIds, type PracticalQuestion, type QuizQuestion, type QuizResult } from '@/lib/quiz';
+import { PracticalCheck } from '@/components/lesson/PracticalCheck';
 import { submitQuiz } from '@/app/(learner)/lessons/[slug]/quiz/actions';
 import './lesson/lesson-viewer.css';
 
@@ -43,9 +44,16 @@ export function QuizForm({
   questions,
   title = 'แบบทดสอบ',
   onBack,
+  practical = null,
+  practicalPassed = false,
+  onPracticalPassed,
 }: {
   lessonId: string;
   questions: QuizQuestion[];
+  /** the chord question graded with the microphone; it must pass before the answers can be sent */
+  practical?: PracticalQuestion | null;
+  practicalPassed?: boolean;
+  onPracticalPassed?: () => void;
   title?: string;
   /** กลับ: back to the quiz intro */
   onBack?: () => void;
@@ -80,13 +88,17 @@ export function QuizForm({
     const missingIds = unansweredIds(questions, answers);
     setMissing(missingIds);
     if (missingIds.length > 0) return;
+    if (practical && !practicalPassed) {
+      setError(thaiError('PRACTICAL_NOT_PASSED'));
+      return;
+    }
     inFlight.current = true;
     setError(null);
     setFailedNetwork(false);
     const payload = questions.map((q) => ({ question_id: q.id, choice_id: answers[q.id] }));
     startTransition(async () => {
       try {
-        const res = await submitQuiz(lessonId, payload);
+        const res = await submitQuiz(lessonId, payload, practicalPassed);
         if (res.ok) {
           setResult(res.result);
           writeDraft(lessonId, {}); // sent: start the next try fresh
@@ -169,6 +181,19 @@ export function QuizForm({
             </li>
           );
         })}
+        {practical ? (
+          <li className="lv-q-practical">
+            <PracticalCheck
+              prompt={practical.prompt}
+              chords={practical.chords}
+              passed={practicalPassed}
+              onPassed={() => {
+                setError(null);
+                onPracticalPassed?.();
+              }}
+            />
+          </li>
+        ) : null}
       </ol>
       {missing.length > 0 ? (
         <p role="alert" className="lv-alert">

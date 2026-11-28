@@ -21,6 +21,6 @@ for (const path of ['/', '/login', '/api/health']) {
     }
     expect(h['x-content-type-options']).toBe('nosniff');
     expect(h['referrer-policy']).toBe('strict-origin-when-cross-origin');
-    expect(h['permissions-policy']).toBe('camera=(), microphone=(), geolocation=()');
+    expect(h['permissions-policy']).toBe('camera=(), microphone=(self), geolocation=()');
   });
 }

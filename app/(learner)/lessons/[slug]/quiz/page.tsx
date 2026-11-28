@@ -25,6 +25,7 @@ export default async function QuizPage({ params }: { params: Promise<{ slug: str
             title: `แบบทดสอบ${quiz.title}`,
             passScore: quiz.passScore,
             questions: quiz.questions,
+            practical: quiz.practical,
             maxAttempts: quiz.maxAttempts,
             attemptsLeft: quiz.attemptsLeft,
             retryAt: quiz.retryAt,

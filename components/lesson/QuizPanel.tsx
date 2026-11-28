@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useState } from 'react';
 import { QuizForm } from '@/components/QuizForm';
 import { RetryCountdown } from '@/components/RetryCountdown';
-import type { QuizQuestion } from '@/lib/quiz';
+import type { PracticalQuestion, QuizQuestion } from '@/lib/quiz';
 
 export type LearnerQuiz = {
   lessonId: string;
@@ -14,6 +14,7 @@ export type LearnerQuiz = {
   title: string;
   passScore: number;
   questions: QuizQuestion[];
+  practical: PracticalQuestion | null;
   maxAttempts: number | null;
   attemptsLeft: number | null;
   /** when a used-up quota reopens (ISO time) */
@@ -41,6 +42,8 @@ export function QuizPanel({
   backHref?: string;
 }) {
   const [step, setStep] = useState(start);
+  // the practical question stays passed for this visit (e.g. after กลับ to the intro, or a retry)
+  const [practicalPassed, setPracticalPassed] = useState(false);
   const exhausted = quiz.attemptsLeft === 0;
   const used = quiz.maxAttempts !== null && quiz.attemptsLeft !== null ? quiz.maxAttempts - quiz.attemptsLeft : null;
 
@@ -49,6 +52,9 @@ export function QuizPanel({
       <QuizForm
         lessonId={quiz.lessonId}
         questions={quiz.questions}
+        practical={quiz.practical}
+        practicalPassed={practicalPassed}
+        onPracticalPassed={() => setPracticalPassed(true)}
         title={quiz.title}
         onBack={() => setStep('intro')}
       />

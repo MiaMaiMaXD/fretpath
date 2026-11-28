@@ -1,3 +1,8 @@
+import type { ChordName } from '@/lib/audio/chords';
+
+/** A practical question: play these chords string by string into the microphone. */
+export type PracticalQuestion = { id: string; prompt: string; chords: ChordName[] };
+
 export type QuizQuestion = {
   id: string;
   prompt: string;
