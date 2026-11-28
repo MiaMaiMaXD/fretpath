@@ -38,9 +38,10 @@ test('TC-QZ-30 practical question: wrong string is named, chord passes, then the
     await page.goto(`/lessons/${slug}/quiz`);
     await page.getByRole('radiogroup', { name: 'ข้อ 1', exact: true }).getByRole('radio', { name: 'ถูก' }).check();
 
-    // sending before the chord has passed is refused, and nothing is saved
-    await page.getByRole('button', { name: 'ส่งคำตอบ' }).click();
-    await expect(page.getByRole('alert').filter({ hasText: 'ต้องดีดข้อปฏิบัติให้ผ่านก่อนส่งคำตอบ' })).toBeVisible();
+    // the answers cannot be sent before the chord has passed
+    await expect(page.getByTestId('quiz-points')).toHaveText('คะแนน: 0/2');
+    await expect(page.getByRole('button', { name: 'ส่งคำตอบ' })).toBeDisabled();
+    await expect(page.getByTestId('pc-count')).toHaveText('0 / 1');
 
     await page.getByTestId('pc-start').click();
     await expect(page.getByTestId('pc-string-6')).toHaveAttribute('data-state', 'muted');
@@ -48,10 +49,11 @@ test('TC-QZ-30 practical question: wrong string is named, chord passes, then the
     await expect(page.getByTestId('pc-string-2')).toHaveAttribute('data-state', 'bad', { timeout: 20_000 });
     await expect(page.getByTestId('pc-msg')).toContainText('สาย 2: ได้ยินเสียง D#4 แต่ควรเป็น D4');
     // then D4 and F#4 complete the chord
-    await expect(page.getByTestId('pc-msg')).toHaveText('ถูกต้อง! คอร์ด D ผ่านครบทุกสาย', { timeout: 20_000 });
+    await expect(page.getByTestId('pc-msg')).toHaveText('ถูกต้อง! ผ่านครบทุกคอร์ดแล้ว', { timeout: 20_000 });
     for (const s of [4, 3, 2, 1]) await expect(page.getByTestId(`pc-string-${s}`)).toHaveAttribute('data-state', 'ok');
-    await page.getByTestId('pc-next').click();
-    await expect(page.getByTestId('practical-passed')).toBeVisible();
+    await expect(page.getByTestId('practical-passed')).toHaveText('ผ่าน');
+    await expect(page.getByTestId('pc-count')).toHaveText('1 / 1');
+    await expect(page.getByTestId('quiz-points')).toHaveText('คะแนน: 1/2');
 
     await page.getByRole('button', { name: 'ส่งคำตอบ' }).click();
     await expect(page.getByTestId('quiz-score')).toHaveText('100%');

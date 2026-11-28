@@ -1,5 +1,5 @@
-// Note detection from microphone audio (YIN). From the instructor's chord-meter (2026-11); the detection
-// code is unchanged so the app matches the published evaluation. Chroma ranking is not used here.
+// Note and chord detection from microphone audio. From the instructor's chord-meter (2026-11); the code is
+// unchanged so the app matches the published evaluation, except CHORD_TONES also lists Dm, A, E and Bm.
 import { CHORDS, type ChordName } from './chords';
 
 // MIDI numbers of the open strings, string 6 -> 1 (E2 A2 D3 G3 B3 E4).
@@ -17,8 +17,26 @@ export function midiName(midi: number): string {
 
 export const NOTE_NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'] as const;
 
+/** Pitch classes (C = 0) of each chord's triad. */
+export const CHORD_TONES: Record<ChordName, number[]> = {
+  Em: [4, 7, 11],
+  Am: [9, 0, 4],
+  C: [0, 4, 7],
+  D: [2, 6, 9],
+  G: [7, 11, 2],
+  F: [5, 9, 0],
+  Dm: [2, 5, 9],
+  A: [9, 1, 4],
+  E: [4, 8, 11],
+  Bm: [11, 2, 6],
+};
+
 export function hzToMidi(hz: number): number {
   return 69 + 12 * Math.log2(hz / 440);
+}
+
+export function pitchClass(hz: number): number {
+  return ((Math.round(hzToMidi(hz)) % 12) + 12) % 12;
 }
 
 /** Cents off the nearest equal-tempered note. */
@@ -31,6 +49,46 @@ export function rms(buf: Float32Array): number {
   let s = 0;
   for (let i = 0; i < buf.length; i++) s += buf[i] * buf[i];
   return Math.sqrt(s / buf.length);
+}
+
+/**
+ * 12-bin chroma from an analyser's dB spectrum. Only spectral peaks within 45 dB of
+ * the loudest one count, so the noise floor does not smear across every pitch class.
+ */
+export function chroma(db: Float32Array, sampleRate: number, fftSize: number): number[] {
+  const out = new Array<number>(12).fill(0);
+  const binHz = sampleRate / fftSize;
+  const lo = Math.max(1, Math.floor(70 / binHz));
+  const hi = Math.min(db.length - 2, Math.ceil(1400 / binHz));
+  let max = -Infinity;
+  for (let i = lo; i <= hi; i++) if (db[i] > max) max = db[i];
+  if (!Number.isFinite(max)) return out;
+  const floor = max - 45;
+  for (let i = lo; i <= hi; i++) {
+    const v = db[i];
+    if (v < floor || v < db[i - 1] || v < db[i + 1]) continue;
+    const a = db[i - 1];
+    const c = db[i + 1];
+    const denom = a - 2 * v + c;
+    const p = denom === 0 ? 0 : (0.5 * (a - c)) / denom;
+    const hz = (i + p) * binHz;
+    const weight = 10 ** ((v - max) / 20) * (hz > 1000 ? 0.5 : 1);
+    out[pitchClass(hz)] += weight;
+  }
+  const top = Math.max(...out);
+  return top > 0 ? out.map((x) => x / top) : out;
+}
+
+/** Cosine similarity of the chroma against each chord's triad template, best first. */
+export function rankChords(c: number[]): { name: ChordName; score: number }[] {
+  const norm = Math.sqrt(c.reduce((s, x) => s + x * x, 0));
+  return (Object.keys(CHORD_TONES) as ChordName[])
+    .map((name) => {
+      const tones = CHORD_TONES[name];
+      const dot = tones.reduce((s, pc) => s + c[pc], 0);
+      return { name, score: norm > 0 ? dot / (norm * Math.sqrt(tones.length)) : 0 };
+    })
+    .sort((x, y) => y.score - x.score);
 }
 
 /** YIN pitch estimate for a single note; null when no clear period is found. */

@@ -66,7 +66,10 @@ export function QuizForm({
   const [pending, startTransition] = useTransition();
   const inFlight = useRef(false);
 
-  const correct = result ? result.results.filter((r) => r.is_correct).length : 0;
+  // the practical question counts as one point once it has passed (design: คะแนน 2/2 with one choice question)
+  const correct = (result ? result.results.filter((r) => r.is_correct).length : 0) + (practical && practicalPassed ? 1 : 0);
+  const total = questions.length + (practical ? 1 : 0);
+  const locked = Boolean(practical) && !practicalPassed;
 
   // bring back answers picked before กลับ / leaving the page (after hydration: storage is client-only)
   useEffect(() => {
@@ -119,7 +122,7 @@ export function QuizForm({
         <h1 className="lv-title">{title}</h1>
       </div>
       <span className={`lv-chip score ${result ? (result.passed ? 'good' : 'warn') : ''}`} data-testid="quiz-points">
-        คะแนน: {correct}/{questions.length}
+        คะแนน: {correct}/{total}
       </span>
     </div>
   );
@@ -211,7 +214,12 @@ export function QuizForm({
             กลับ
           </button>
         ) : null}
-        <button type="submit" disabled={pending} className="lv-pill amber">
+        <button
+          type="submit"
+          disabled={pending || locked}
+          className="lv-pill amber"
+          title={locked ? 'ต้องดีดข้อปฏิบัติให้ผ่านก่อนส่งคำตอบ' : undefined}
+        >
           {pending ? 'กำลังส่ง…' : failedNetwork ? 'ส่งอีกครั้ง' : 'ส่งคำตอบ'}
         </button>
       </div>
