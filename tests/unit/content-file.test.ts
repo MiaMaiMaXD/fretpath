@@ -90,3 +90,27 @@ describe('supabase/content/guitar-basics-round3.sql', () => {
     }
   })
 })
+
+describe('supabase/content/guitar-basics-choices4.sql', () => {
+  const file = join(process.cwd(), 'supabase', 'content', 'guitar-basics-choices4.sql')
+
+  it('contains no user accounts or known passwords', () => {
+    const sql = readFileSync(file, 'utf8')
+    for (const banned of ['auth.users', 'auth.identities', '@fretpath.test', 'Passw0rd']) {
+      expect(sql).not.toContain(banned)
+    }
+  })
+
+  it('adds a fourth choice to each of the 46 three-choice questions, at positions 1-4, without touching answer keys', () => {
+    const sql = readFileSync(file, 'utf8')
+    const calls = [...sql.matchAll(/perform pg_temp\.add_choice\('[^']+', '[^']+', '[^']+', (\d)\);/g)]
+    expect(calls).toHaveLength(46)
+    expect(new Set(calls.map((m) => m[1]))).toEqual(new Set(['1', '2', '3', '4']))
+    expect(sql).not.toMatch(/quiz_answer_keys/)
+  })
+
+  it('is loaded by the local seed after round 3', () => {
+    const toml = readFileSync(join(process.cwd(), 'supabase', 'config.toml'), 'utf8')
+    expect(toml).toContain('"./content/guitar-basics-round3.sql", "./content/guitar-basics-choices4.sql", "./seed.sql"')
+  })
+})
