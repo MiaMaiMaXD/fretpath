@@ -15,7 +15,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "FretPath — เรียนกีตาร์พื้นฐานทีละก้าว",
+  title: "FretPath — ระบบเรียนกีตาร์พื้นฐานออนไลน์",
 };
 
 export default function RootLayout({

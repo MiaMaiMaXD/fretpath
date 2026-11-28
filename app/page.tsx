@@ -9,7 +9,7 @@ import { LogoMark } from '@/components/LogoMark';
 import './home.css';
 
 export const metadata: Metadata = {
-  title: 'FretPath — เรียนกีตาร์จากศูนย์ ทีละก้าว',
+  title: 'FretPath — ระบบเรียนกีตาร์พื้นฐานออนไลน์',
 };
 
 const PAINS = [
