@@ -1,6 +1,5 @@
 import { randomUUID } from 'node:crypto';
 import { test, expect } from '../fixtures';
-import { AdminLessonEditPage } from '../pages/admin/AdminLessonEditPage';
 import { AdminLessonsPage } from '../pages/admin/AdminLessonsPage';
 import { LessonEditorPage } from '../pages/admin/LessonEditorPage';
 import { buildAnswers } from '../utils/quiz';
@@ -115,26 +114,21 @@ test('TC-ADM-07 untouched draft can be deleted @regression', async ({ adminPage 
   }
 });
 
-test('TC-ADM-08 lesson form validation keeps values @regression', async ({ adminPage }) => {
+test('TC-ADM-08 lesson editor validation keeps values and saves nothing @regression', async ({ adminPage }) => {
   const courseId = await createCourse();
   try {
-    const edit = new AdminLessonEditPage(adminPage);
-    await edit.gotoNew(courseId);
-    await edit.fill({
-      title: 'ชื่อที่พิมพ์ไว้',
-      slug: 'typed-slug',
-      summary: 'สรุปที่พิมพ์ไว้',
-      contentMd: 'เนื้อหาที่พิมพ์ไว้',
-      passScore: '101',
-    });
-    await edit.create();
+    const lessonId = await createCompleteLesson(courseId, `qa-${randomUUID().slice(0, 8)}`, 'ชื่อเดิม', false);
+    const edit = new LessonEditorPage(adminPage);
+    await edit.goto(lessonId);
+    await adminPage.getByLabel('ชื่อบทเรียน').fill('');
+    await adminPage.getByLabel('คำอธิบาย').fill('สรุปที่พิมพ์ไว้');
+    await edit.saveButton().click();
 
-    await expect(adminPage.getByText('เกณฑ์ผ่านต้องเป็นจำนวนเต็ม 1–100')).toBeVisible();
-    await expect(adminPage.getByLabel('เกณฑ์ผ่าน (%)')).toHaveValue('101');
-    await expect(adminPage.getByLabel('ชื่อบท', { exact: true })).toHaveValue('ชื่อที่พิมพ์ไว้');
-    await expect(adminPage.getByLabel('slug', { exact: true })).toHaveValue('typed-slug');
-    await expect(adminPage.getByLabel('เนื้อหา (Markdown)')).toHaveValue('เนื้อหาที่พิมพ์ไว้');
-    await expect(adminPage).toHaveURL(/\/admin\/lessons\/new/);
+    await expect(edit.message()).toContainText('กรุณากรอกชื่อบทเรียน');
+    await expect(adminPage.getByLabel('คำอธิบาย')).toHaveValue('สรุปที่พิมพ์ไว้');
+    await expect(edit.saveButton()).toBeEnabled();
+    const row = await adminClient().from('lessons').select('title, summary').eq('id', lessonId).single();
+    expect(row.data).toEqual({ title: 'ชื่อเดิม', summary: null });
   } finally {
     await deleteCourse(courseId);
   }

@@ -64,47 +64,6 @@ export async function getAdminSections(courseId: string): Promise<AdminSection[]
   return (data ?? []).map((s) => ({ id: s.id, title: s.title, sortOrder: s.sort_order }));
 }
 
-export type AdminLessonDetail = {
-  id: string;
-  courseId: string;
-  slug: string;
-  title: string;
-  summary: string;
-  status: 'draft' | 'published';
-  passScore: number;
-  contentMd: string;
-  videoUrl: string;
-  /** Question ids in sort_order, used to label publish problems as "ข้อ N". */
-  questionIds: string[];
-};
-
-export async function getAdminLesson(id: string): Promise<AdminLessonDetail | null> {
-  await requireAdmin();
-  const supabase = await createClient();
-  const [lesson, content, questions] = await Promise.all([
-    supabase.from('lessons').select('id, course_id, slug, title, summary, status, pass_score').eq('id', id).maybeSingle(),
-    supabase.from('lesson_contents').select('content_md, video_url').eq('lesson_id', id).maybeSingle(),
-    supabase.from('quiz_questions').select('id').eq('lesson_id', id).order('sort_order').order('created_at'),
-  ]);
-  if (lesson.error) throw new Error(lesson.error.message);
-  if (content.error) throw new Error(content.error.message);
-  if (questions.error) throw new Error(questions.error.message);
-  if (!lesson.data) return null;
-  const l = lesson.data;
-  return {
-    id: l.id,
-    courseId: l.course_id,
-    slug: l.slug,
-    title: l.title,
-    summary: l.summary ?? '',
-    status: l.status,
-    passScore: l.pass_score,
-    contentMd: content.data?.content_md ?? '',
-    videoUrl: content.data?.video_url ?? '',
-    questionIds: (questions.data ?? []).map((q) => q.id),
-  };
-}
-
 export type AdminQuestion = {
   id: string;
   prompt: string;
@@ -148,8 +107,6 @@ export async function getAdminQuestions(lessonId: string): Promise<AdminQuestion
     };
   });
 }
-
-/** The lesson's position in its course (drives which learner tools the preview mirrors). */
 
 export type AdminLessonEditor = {
   id: string;
